@@ -4,7 +4,7 @@ const path = require("path")
 //? For upload the Image
 const uploadImage = multer({
   storage: multer.diskStorage({}),
-  profileImg: (req, file, cb) => {
+  avatar: (req, file, cb) => {
     const ext = path.extname(file.originalname);
     if (ext !== ".jpg" && ext !== ".jpeg" && ext !== ".png") {
       cb(new Error("File type not supported"), false);

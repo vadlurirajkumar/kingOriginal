@@ -53,15 +53,63 @@ const createCategoryWithImage = async (req, res) => {
 };
 
 //update category
+// const updateCategory = async (req, res) => {
+//   try {
+//     const categoryId = await categoryModel.findById(req.params.id);
+//     const { categoryName, status, avatar } = req.body;
+
+//     const updatedFields = {};
+//     if (categoryName) updatedFields.categoryName = categoryName;
+//     if (status) updatedFields.status = status;
+//     if (avatar) {
+//       const result = await cloudinary.v2.uploader.upload(req.file.path);
+//       if (!result) {
+//         return res.status(500).json({
+//           status: false,
+//           message: "Error while uploading image",
+//         });
+//       }
+//       updatedFields.avatar = {
+//         public_id: result.public_id,
+//         url: result.secure_url,
+//       };
+//     }
+//     const updatedCategory = await categoryModel.findByIdAndUpdate(
+//       categoryId,
+//       { $set: updatedFields },
+//       { new: true }
+//     );
+
+//     // const response = {
+//     //   id: updatedCategory._id,
+//     //   categoryName: updatedCategory.categoryName,
+//     //   status: updatedCategory.status,
+//     //   categoryImage: updatedCategory.avatar.url,
+//     //   products: updatedCategory.products,
+//     // };
+
+//     res.status(200).send({
+//       status: true,
+//       message: "Category updated successfully",
+//       response: updatedCategory,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({
+//       status: false,
+//       error,
+//       message: "Error in updating category",
+//     });
+//   }
+// };
 const updateCategory = async (req, res) => {
   try {
-    const categoryId = await categoryModel.findById(req.params.id);
-    const { categoryName, status, avatar } = req.body;
+    const categoryId = req.params.id;
+    const { categoryName, status } = req.body;
 
-    const updatedFields = {};
-    if (categoryName) updatedFields.categoryName = categoryName;
-    if (status) updatedFields.status = status;
-    if (avatar) {
+    let updatedFields = { categoryName, status };
+    
+    if (req.file) {
       const result = await cloudinary.v2.uploader.upload(req.file.path);
       if (!result) {
         return res.status(500).json({
@@ -74,12 +122,12 @@ const updateCategory = async (req, res) => {
         url: result.secure_url,
       };
     }
+
     const updatedCategory = await categoryModel.findByIdAndUpdate(
       categoryId,
       { $set: updatedFields },
       { new: true }
     );
-
     const response = {
       id: updatedCategory._id,
       categoryName: updatedCategory.categoryName,
@@ -102,6 +150,7 @@ const updateCategory = async (req, res) => {
     });
   }
 };
+
 
 // get all categories
 const getAllCategories = async (req, res) => {
