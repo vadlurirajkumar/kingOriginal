@@ -9,4 +9,5 @@ adminRouter.get("/allusers", isAdminAuth, totalUsers);
 adminRouter.put('/:id', isAdminAuth, updateUserStatus);
 adminRouter.delete("/user/:id", isAdminAuth, deleteUser);
 
+
 module.exports =  adminRouter;

@@ -90,12 +90,38 @@ const totalUsers = async (req, res) => {
 // };
 
 // updateUser_status
+// const updateUserStatus = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { status } = req.body;
+
+//     const user = await User.findByIdAndUpdate(id, { status });
+
+//     if (!user) {
+//       return res
+//         .status(404)
+//         .json({ status: false, message: "User not found", response: [] });
+//     }
+
+//     return res
+//       .status(200)
+//       .json({
+//         status: true,
+//         message: "User updated successfully",
+//         response: [user],
+//       });
+//   } catch (error) {
+//     return res
+//       .status(500)
+//       .json({ status: false, message: error.message, response: [] });
+//   }
+// };
+
+
 const updateUserStatus = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { status } = req.body;
-
-    const user = await User.findByIdAndUpdate(id, { status });
+    const userId = req.params.id;
+    const user = await User.findById(userId);
 
     if (!user) {
       return res
@@ -103,12 +129,19 @@ const updateUserStatus = async (req, res) => {
         .json({ status: false, message: "User not found", response: [] });
     }
 
+    const newStatus = user.status === "active" ? "inactive" : "active";
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { status: newStatus },
+      { new: true }
+    );
+
     return res
       .status(200)
       .json({
         status: true,
-        message: "User updated successfully",
-        response: [user],
+        message: "User status updated successfully",
+        response: [updatedUser],
       });
   } catch (error) {
     return res
@@ -116,6 +149,7 @@ const updateUserStatus = async (req, res) => {
       .json({ status: false, message: error.message, response: [] });
   }
 };
+
 
 // delete a user
 const deleteUser = async (req, res) => {
