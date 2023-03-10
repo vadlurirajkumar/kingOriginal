@@ -7,7 +7,8 @@ const {
   createCategoryWithImage,
   deleteCategory,
   getSingleCategory,
-  updateCategory
+  updateCategory,
+  toggleCategoryStatus
 } = require("./../controllers/categoryController");
 const uploadImage = require("../utils/multer");
 
@@ -34,6 +35,10 @@ categoryRoute.get("/get-category", getAllCategories);
 
 //get all categories with products
 categoryRoute.get("/get-category-with-products", getAllCategoriesWithProducts);
+
+//updateStatus 
+categoryRoute.patch("/single-category/toggleStatus/:id",isAdminAuth, toggleCategoryStatus);
+
 
 //single category
 categoryRoute.get("/single-category/:id", getSingleCategory);

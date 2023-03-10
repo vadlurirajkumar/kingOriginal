@@ -8,7 +8,8 @@ const {
   getAllVegProducts,
   getAllNonVegProducts,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  toggleProductStatus
 } = require("./../controllers/productController");
 const uploadImage = require("../utils/multer");
 
@@ -31,6 +32,9 @@ productRoute.get("/non-veg-products", getAllNonVegProducts)
 
 // update a product
 productRoute.patch("/update-product/:id", isAdminAuth, uploadImage.single("avatar"), updateProduct)
+
+//update status
+productRoute.patch("/single-product/toggleStatus/:id", isAdminAuth, toggleProductStatus)
 
 //delete a product
 productRoute.delete("/delete-product/:id", isAdminAuth, deleteProduct)

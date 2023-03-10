@@ -151,11 +151,52 @@ const updateCategory = async (req, res) => {
   }
 };
 
+//updateStatus
+const toggleCategoryStatus = async (req, res) => {
+  try {
+    const categoryId = req.params.id;
+    const category = await categoryModel.findById(categoryId);
+    if (!category) {
+      return res.status(404).send({
+        status: false,
+        message: "Category not found",
+      });
+    }
+    const newStatus = category.status === "active" ? "inactive" : "active";
+    const updatedCategory = await categoryModel.findByIdAndUpdate(
+      categoryId,
+      { $set: { status: newStatus } },
+      { new: true }
+    );
+    const response = {
+      id: updatedCategory._id,
+      categoryName: updatedCategory.categoryName,
+      status: updatedCategory.status,
+      categoryImage: updatedCategory.avatar.url,
+      products: updatedCategory.products,
+    };
+    res.status(200).send({
+      status: true,
+      message: "Category status updated successfully",
+      response: [response],
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      status: false,
+      error,
+      message: "Error in updating category status",
+    });
+  }
+};
+
+
+
 
 // get all categories
 const getAllCategories = async (req, res) => {
   try {
-    const categories = await categoryModel.find({ status: "active" });
+    const categories = await categoryModel.find();
 
     const response = categories.map((category) => {
       return {
@@ -186,7 +227,7 @@ const getAllCategories = async (req, res) => {
 const getAllCategoriesWithProducts = async (req, res) => {
   try {
     const categories = await categoryModel
-      .find({ status: "active" })
+      .find()
       .populate("products");
 
     const response = categories.map((category) => {
@@ -299,4 +340,5 @@ module.exports = {
   getAllCategoriesWithProducts,
   getSingleCategory,
   deleteCategory,
+  toggleCategoryStatus
 };

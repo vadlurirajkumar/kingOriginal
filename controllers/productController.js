@@ -75,7 +75,7 @@ const createProduct = async (req, res) => {
 // get all products
 const getAllProducts = async (req, res) => {
   try {
-    const products = await productModel.find({ status: "active" });
+    const products = await productModel.find();
     res.status(200).send({
       status: true,
       message: "All Products List",
@@ -142,7 +142,7 @@ const getSingleProduct = async (req, res) => {
 //get all veg products
 const getAllVegProducts = async (req, res) => {
   try {
-    const products = await productModel.find({ status: "active", foodType: "veg" });
+    const products = await productModel.find({foodType: "veg" });
     res.status(200).send({
       status: true,
       message: "All Veg Products List",
@@ -167,7 +167,7 @@ const getAllVegProducts = async (req, res) => {
 //get all non-veg products
 const getAllNonVegProducts = async (req, res) => {
   try {
-    const products = await productModel.find({ status: "active", foodType: "non-veg" });
+    const products = await productModel.find({foodType: "non-veg" });
     res.status(200).send({
       status: true,
       message: "All Veg Products List",
@@ -244,6 +244,50 @@ const updateProduct = async (req, res) => {
   }
 };
 
+//update status
+const toggleProductStatus = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const product = await productModel.findById(productId);
+    if (!product) {
+      return res.status(404).send({
+        status: false,
+        message: "Product not found",
+      });
+    }
+    const newStatus = product.status === "active" ? "inactive" : "active";
+    const updatedProduct = await productModel.findByIdAndUpdate(
+      productId,
+      { $set: { status: newStatus } },
+      { new: true }
+    );
+    const { avatar, ...rest } = updatedProduct._doc;
+    const response = {
+      id: updatedProduct._id,
+      productName: updatedProduct.productName,
+      description: updatedProduct.description,
+      price: updatedProduct.price,
+      categoryId: updatedProduct.categoryId,
+      foodType: updatedProduct.foodType,
+      status: updatedProduct.status,
+      productImage: avatar?.url || null,
+    };
+    res.status(200).send({
+      status: true,
+      message: "Product status updated successfully",
+      response: [response],
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      status: false,
+      error,
+      message: "Error in updating product status",
+    });
+  }
+};
+
+
 // delete a product
 const deleteProduct = async (req, res) => {
   try {
@@ -265,4 +309,4 @@ const deleteProduct = async (req, res) => {
 
 
 
-module.exports = {createProduct, getAllProducts, getSingleProduct, getAllVegProducts, getAllNonVegProducts, updateProduct, deleteProduct}
+module.exports = {createProduct, getAllProducts, getSingleProduct, getAllVegProducts, getAllNonVegProducts, updateProduct, deleteProduct, toggleProductStatus}
