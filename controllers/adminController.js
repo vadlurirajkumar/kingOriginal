@@ -7,7 +7,7 @@ const adminLogin = async (req, res) => {
   try {
     const { userId, password } = req.body;
     if (!userId || !password) {
-      return res.json({
+      return res.status(400).json({
         status: false,
         message: "please enter all fields",
         response: [],
@@ -17,14 +17,14 @@ const adminLogin = async (req, res) => {
     // * Checking if Admin has registered or not
     let user = await Admin.findOne({ userId });
     if (!user) {
-      return res.json({
+      return res.status(400).json({
         status: false,
         message: "invalid userId",
         response: [],
       });
     }
     if (user.password !== password) {
-      return res.json({
+      return res.status(400).json({
         status: false,
         message: "invalid password",
         response: [],
