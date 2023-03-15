@@ -17,14 +17,14 @@ const addToCart = async (req, res) => {
     let existingCart = await Cart.findOne({ buyer: userId });
     if (existingCart) {
       // Check if product already exists in cart
-      const existingProduct = existingCart.products.find(
+      const existingProductIndex = existingCart.products.findIndex(
         (p) => p.product.toString() === productId
       );
-      if (existingProduct) {
-        // Increase quantity of existing product in cart
-        existingProduct.quantity += 1;
+      if (existingProductIndex !== -1) {
+        // Increment quantity of existing product in cart
+        existingCart.products[existingProductIndex].quantity += 1;
       } else {
-        // Add new product to cart
+        // Add new product to cart with a quantity of 1
         existingCart.products.push({
           product: productId,
           quantity: 1,
@@ -32,13 +32,16 @@ const addToCart = async (req, res) => {
         });
       }
     } else {
-      // Create new cart object
+      // Create new cart object with a new product and a quantity of 1
       const cart = new Cart({
         buyer: userId,
         products: [{ product: productId, quantity: 1, price: product.price }],
       });
       existingCart = await cart.save();
     }
+
+    // Save changes to cart in database
+    existingCart = await existingCart.save();
 
     return res.status(200).json({ status: true, message: 'Product added to cart', response: existingCart });
   } catch (error) {
@@ -48,5 +51,3 @@ const addToCart = async (req, res) => {
 };
 
 module.exports = addToCart;
-
-
