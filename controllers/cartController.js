@@ -1,103 +1,52 @@
 const mongoose = require('mongoose');
-const Order = require("../model/orderModel");
+const Cart = require("../model/orderModel");
 const Product = require("../model/productModel");
 
-// add a product to cart
-// const addToCart =  async (req, res) => {
-//   try {
-//     const { userId, productId } = req.body;
-
-//     // Get the product details
-//     const product = await Product.findById(productId);
-
-//     // Create the cart item object
-//     const cartItem = {
-//       product: mongoose.Types.ObjectId(productId),
-//       price: product.price,
-//     };
-
-//     // Find the order for this user with status InCart
-//     let order = await Order.findOne({ buyer: userId, status: "InCart" });
-
-//     // If no order found, create a new one
-//     if (!order) {
-//       order = await Order.create({
-//         products: [cartItem],
-//         buyer: userId,
-//       });
-//     } else {
-//       // Check if the product already exists in the cart
-//       const existingProductIndex = order.products.findIndex(
-//         (item) => item.product.toString() === productId
-//       );
-
-//       if (existingProductIndex !== -1) {
-//         // If product already exists in cart, update the quantity
-//         order.products[existingProductIndex].quantity += 1;
-//       } else {
-//         // If product does not exist in cart, add it
-//         order.products.push(cartItem);
-//       }
-
-//       // Update the order with the new cart items
-//       order = await order.save();
-//     }
-
-//     res.status(201).json(order);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: "Server Error" });
-//   }
-// };
-
-// add a product to cart
 const addToCart = async (req, res) => {
-    try {
-      const { userId, productId } = req.body;
-  
-      // Get the product details
-      const product = await Product.findById(productId);
-  
-      // Create the cart item object
-      const cartItem = {
-        product: mongoose.Types.ObjectId(productId),
-        price: product.price,
-      };
-  
-      // Find the order for this user with status InCart
-      let order = await Order.findOne({ buyer: userId, status: "InCart" });
-  
-      if (!order) {
-        // If no order found, create a new one with a single cart item
-        order = await Order.create({
-          products: [cartItem], // Use an array with a single cart item
-          buyer: userId,
-        });
-      } else {
-        // Check if the product already exists in the cart
-        const existingProductIndex = order.products.findIndex(
-          (item) => item.product.toString() === productId
-        );
-  
-        if (existingProductIndex !== -1) {
-          // If product already exists in cart, update the quantity
-          order.products[existingProductIndex].quantity += 1;
-        } else {
-          // If product does not exist in cart, add it
-          order.products.push(cartItem);
-        }
-  
-        // Update the order with the new cart items
-        order = await order.save();
-      }
-  
-      res.status(201).json(order);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Server Error" });
+  try {
+    const userId = req.body.userId;
+    const productId = req.body.productId;
+
+    // Find product by id
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
     }
-  };
-  
-  
+
+    // Check if cart already exists for user
+    let existingCart = await Cart.findOne({ buyer: userId });
+    if (existingCart) {
+      // Check if product already exists in cart
+      const existingProduct = existingCart.products.find(
+        (p) => p.product.toString() === productId
+      );
+      if (existingProduct) {
+        // Increase quantity of existing product in cart
+        existingProduct.quantity += 1;
+      } else {
+        // Add new product to cart
+        existingCart.products.push({
+          product: productId,
+          quantity: 1,
+          price: product.price,
+        });
+      }
+    } else {
+      // Create new cart object
+      const cart = new Cart({
+        buyer: userId,
+        products: [{ product: productId, quantity: 1, price: product.price }],
+      });
+      existingCart = await cart.save();
+    }
+
+    return res.status(200).json({ status: true, message: 'Product added to cart', response: existingCart });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
 
 module.exports = addToCart;
+
+
