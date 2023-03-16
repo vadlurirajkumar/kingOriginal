@@ -1,0 +1,43 @@
+const express = require("express");
+const dealsRoute = express.Router();
+const isAdminAuth = require("../middleware/adminAuth");
+const {
+  createProduct,
+  getAllProducts,
+  getSingleProduct,
+  getAllVegProducts,
+  getAllNonVegProducts,
+  updateProduct,
+  deleteProduct,
+  toggleProductStatus
+} = require("./../controllers/dealsController");
+const uploadImage = require("../utils/multer");
+
+//routes
+
+// create category
+dealsRoute.post("/create-product", isAdminAuth, uploadImage.single("avatar"),createProduct);
+
+// get all products
+dealsRoute.get("/all-products", getAllProducts);
+
+// get single product
+dealsRoute.get("/single-product/:id", getSingleProduct)
+
+// get all veg products
+dealsRoute.get("/veg-products", getAllVegProducts)
+
+// get all non-veg products
+dealsRoute.get("/non-veg-products", getAllNonVegProducts)
+
+// update a product
+dealsRoute.patch("/update-product/:id", isAdminAuth, uploadImage.single("avatar"), updateProduct)
+
+//update status
+dealsRoute.patch("/single-product/toggleStatus/:id", isAdminAuth, toggleProductStatus)
+
+//delete a product
+dealsRoute.delete("/delete-product/:id", isAdminAuth, deleteProduct)
+
+
+module.exports = dealsRoute;

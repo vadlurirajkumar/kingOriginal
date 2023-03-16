@@ -7,9 +7,6 @@ const dealsSchema = new mongoose.Schema(
       required: true,
       unique:true
     },
-    slug: {
-      type: String,
-    },
     description: {
       type: String,
       required: true,
@@ -41,6 +38,6 @@ const dealsSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Products = mongoose.model("Products", dealsSchema);
+const Deals = mongoose.model("Deals", dealsSchema);
 
-module.exports = Products;
+module.exports = Deals;
