@@ -60,7 +60,11 @@ const cartSchema = new Schema(
       required: true,
     },
     products: [productSchema],
+    totalAmount:{
+      type:String
+    },
   },
+
   { timestamps: true }
 );
 
@@ -92,6 +96,7 @@ cartSchema.methods.removeQuantity = async function (productId) {
     }
   }
 };
+
 
 const Cart = mongoose.model('Cart', cartSchema);
 

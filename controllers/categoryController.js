@@ -266,50 +266,98 @@ const getAllCategoriesWithProducts = async (req, res) => {
 };
 
 // single category
-const getSingleCategory = async (req, res) => {
+// const getSingleCategory = async (req, res) => {
+//   try {
+//     const category = await categoryModel.findById(req.params.id);
+//     const name = category.categoryName;
+//     if (category && category.status === "active") {
+//       const response = {
+//         id: category._id,
+//         categoryName: category.categoryName,
+//         status: category.status,
+//         categoryImage: category.avatar.url,
+//         products: category.products.map((product) => {
+//           return {
+//             id: product._id,
+//             productName: product.name,
+//             price: product.price,
+//             description: product.description,
+//             productImage: product.avatar,
+//             status:product.status,
+//             foodType:product.foodType
+//         };
+//         }),
+//             };
+//       return res.status(200).send({
+//         status: true,
+//         message: "Get Single Category successfully",
+//         response: [response],
+//       });
+//     } else if (category && category.status === "inactive") {
+//       return res.status(200).send({
+//         status: false,
+//         message: `Category - ${name} is inactive, please contact admin to activate it`,
+//       });
+//     } else {
+//       return res.status(404).send({
+//         status: false,
+//         message: "Category not found",
+//       });
+//     }
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({
+//       status: false,
+//       error,
+//       message: "Error while getting Single Category",
+//     });
+//   }
+// };
+
+const getSingleCategoryWithProducts = async (req, res) => {
   try {
-    const category = await categoryModel.findById(req.params.id);
-    const name = category.categoryName;
-    if (category && category.status === "active") {
-      const response = {
-        id: category._id,
-        categoryName: category.categoryName,
-        status: category.status,
-        categoryImage: category.avatar.url,
-        products: category.products.map((product) => {
-          return {
-            id: product._id,
-            productName: product.name,
-            price: product.price,
-            description: product.description,
-            productImage: product.avatar,
-            status:product.status,
-            foodType:product.foodType
-        };
-        }),
-            };
-      return res.status(200).send({
-        status: true,
-        message: "Get Single Category successfully",
-        response: [response],
-      });
-    } else if (category && category.status === "inactive") {
-      return res.status(200).send({
-        status: false,
-        message: `Category - ${name} is inactive, please contact admin to activate it`,
-      });
-    } else {
+    const categoryId = req.params.id;
+
+    const category = await categoryModel
+      .findById(categoryId)
+      .populate("products");
+
+    if (!category) {
       return res.status(404).send({
         status: false,
         message: "Category not found",
       });
     }
+
+    const response = {
+      id: category._id,
+      categoryName: category.categoryName,
+      status: category.status,
+      categoryImage: category.avatar.url,
+      products: category.products.map((product) => {
+        return {
+          id: product._id,
+          productName: product.name,
+          price: product.price,
+          description: product.description,
+          productImage: product.avatar.url,
+          status: product.status,
+          foodType: product.foodType,
+        };
+      }),
+    };
+
+    res.status(200).send({
+      status: true,
+      message: "Category details",
+      response,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).send({
       status: false,
       error,
-      message: "Error while getting Single Category",
+      message: "Error while getting category details",
     });
   }
 };
@@ -333,12 +381,15 @@ const deleteCategory = async (req, res) => {
   }
 };
 
+
+
+
 module.exports = {
   createCategoryWithImage,
   updateCategory,
   getAllCategories,
   getAllCategoriesWithProducts,
-  getSingleCategory,
   deleteCategory,
-  toggleCategoryStatus
+  toggleCategoryStatus,
+  getSingleCategoryWithProducts
 };

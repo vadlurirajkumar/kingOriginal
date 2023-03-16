@@ -87,7 +87,7 @@ const getCart = async (req, res) => {
     const cart = await Cart.findOne({ buyer: userId })
       .populate({
         path: 'products.product',
-        select: 'productName price foodType productImage',
+        select: 'productName price foodType avatar.url',
         populate: { path: 'categoryId', select: 'categoryName' },
         options: { lean: true },
       })
@@ -117,7 +117,7 @@ const getCart = async (req, res) => {
         price: product.price,
         foodType: product.foodType,
         quantity: cartProduct.quantity,
-        productImage: product.productImage,
+        productImage: product.avatar.url,
       };
 
       totalAmount += product.price * cartProduct.quantity;
@@ -144,7 +144,7 @@ const addQuantity = async (req, res) => {
     const productId = req.body.productId;
 
     // Check if cart already exists for user
-    let existingCart = await Cart.findOne({ buyer: userId });
+    let existingCart = await Cart.findOne({ buyer: userId })
     if (!existingCart) {
       return res.status(404).json({ message: 'Cart not found' });
     }
@@ -156,9 +156,9 @@ const addQuantity = async (req, res) => {
     if (existingProductIndex === -1) {
       return res.status(404).json({ message: 'Product not found in cart' });
     }
-
     // Increment quantity of existing product in cart
     existingCart.products[existingProductIndex].quantity += 1;
+ 
     await existingCart.save();
 
     return res.status(200).json({ status: true, message: 'Product quantity updated', response: existingCart });
