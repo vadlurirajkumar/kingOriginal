@@ -24,6 +24,7 @@ const productRoute = require("./routes/productRoute")
 const cartRoute = require("./routes/cartRoute");
 const dealsRoute = require("./routes/dealsRoute");
 const policyRoute = require("./routes/privacypolicyRoute")
+const aboutUsRoute = require("./routes/aboutusRoute")
 
 // middleware
 app.use(express.json())
@@ -37,6 +38,7 @@ app.use("/product", productRoute) // products route calling
 app.use("/cart", cartRoute) //cart route calling
 app.use("/deals", dealsRoute) // deals route calling
 app.use("/privacy-policy", policyRoute) // privacy policy route calling
+app.use("/about-us", aboutUsRoute) // about us route calling
 
 // Port 
 app.listen(port, ()=>{
