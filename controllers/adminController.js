@@ -71,85 +71,49 @@ const totalUsers = async (req, res) => {
   }
 };
 
-// this is for admin will get only user status "active" only
-
-// const totalUsers = async (req, res) => {  
-//   try {
-//     const admin = await Admin.findById(req.admin.id);
-//     if (!admin) {
-//       return res.json({status:false, message:"Admin not authorised", response:[]});
-//     }
-//     const users = await User.find({status: 'active'});
-//     if (users.length <= 0) {
-//       return res.json({status:false, message:"Users not found", response:[]});
-//     }
-//     return res.json({status:true, message:"users fetch success", response:[users]});
-//   } catch (error) {
-//     return res.json({status:false, message:error.message, response:[]});
-//   }
-// };
-
-// updateUser_status
-// const updateUserStatus = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { status } = req.body;
-
-//     const user = await User.findByIdAndUpdate(id, { status });
-
-//     if (!user) {
-//       return res
-//         .status(404)
-//         .json({ status: false, message: "User not found", response: [] });
-//     }
-
-//     return res
-//       .status(200)
-//       .json({
-//         status: true,
-//         message: "User updated successfully",
-//         response: [user],
-//       });
-//   } catch (error) {
-//     return res
-//       .status(500)
-//       .json({ status: false, message: error.message, response: [] });
-//   }
-// };
-
-
+//Update user status
 const updateUserStatus = async (req, res) => {
   try {
     const userId = req.params.id;
     const user = await User.findById(userId);
 
     if (!user) {
-      return res
-        .status(404)
-        .json({ status: false, message: "User not found", response: [] });
+      return res.status(404).send({
+        status: false,
+        message: "User not found",
+      });
     }
 
     const newStatus = user.status === "active" ? "inactive" : "active";
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { status: newStatus },
+      { $set: { status: newStatus } },
       { new: true }
     );
 
-    return res
-      .status(200)
-      .json({
-        status: true,
-        message: "User status updated successfully",
-        response: [updatedUser],
-      });
+    const response = {
+      id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      status: updatedUser.status,
+      createdAt: updatedUser.createdAt,
+      updatedAt: updatedUser.updatedAt,
+    };
+
+    res.status(200).send({
+      status: true,
+      message: "User status updated successfully",
+      response: [response],
+    });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ status: false, message: error.message, response: [] });
+    console.log(error);
+    res.status(500).send({
+      status: false,
+      message: "Error in updating user status",
+      error,
+    });
   }
 };
-
 
 // delete a user
 const deleteUser = async (req, res) => {

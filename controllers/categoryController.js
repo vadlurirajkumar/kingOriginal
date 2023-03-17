@@ -190,9 +190,6 @@ const toggleCategoryStatus = async (req, res) => {
   }
 };
 
-
-
-
 // get all categories
 const getAllCategories = async (req, res) => {
   try {
