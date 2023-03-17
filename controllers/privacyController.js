@@ -5,10 +5,7 @@ const PrivacyModel = require("../model/privacyPolicyModel")
 const addPrivacy = async (req, res) => {
     try {
       const privacy = new PrivacyModel({
-        topHead: req.body.topHead,
-        topPara: req.body.topPara,
-        bottomHead: req.body.bottomHead,
-        bottomPara: req.body.bottomPara,
+        privacyData: req.body.privacyData
       });
   
       await privacy.save();
@@ -35,19 +32,9 @@ const updatePrivacy = async (req, res) => {
       const privacy = await PrivacyModel.findOne();
   
       // Update the fields that are present in the request body
-      if (req.body.topHead) {
-        privacy.topHead = req.body.topHead;
+      if (req.body.privacyData) {
+        privacy.privacyData = req.body.privacyData;
       }
-      if (req.body.topPara) {
-        privacy.topPara = req.body.topPara;
-      }
-      if (req.body.bottomHead) {
-        privacy.bottomHead = req.body.bottomHead;
-      }
-      if (req.body.bottomPara) {
-        privacy.bottomPara = req.body.bottomPara;
-      }
-  
       // Save the updated privacy document
       await privacy.save();
   

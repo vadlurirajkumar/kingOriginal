@@ -13,3 +13,4 @@ router.put('/:id/location', updateLocation)
 
 
 module.exports = router
+
