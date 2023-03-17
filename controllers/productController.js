@@ -287,7 +287,6 @@ const toggleProductStatus = async (req, res) => {
   }
 };
 
-
 // delete a product
 const deleteProduct = async (req, res) => {
   try {

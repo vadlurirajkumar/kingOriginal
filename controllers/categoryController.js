@@ -31,10 +31,10 @@ const createCategoryWithImage = async (req, res) => {
       },
     }).save();
     const response = {
-      id:category._id,
+      id: category._id,
       categoryName: category.categoryName,
       status: category.status,
-      categoryImage:category.avatar.url,
+      categoryImage: category.avatar.url,
       products: category.products,
     };
     res.status(201).send({
@@ -108,7 +108,7 @@ const updateCategory = async (req, res) => {
     const { categoryName, status } = req.body;
 
     let updatedFields = { categoryName, status };
-    
+
     if (req.file) {
       const result = await cloudinary.v2.uploader.upload(req.file.path);
       if (!result) {
@@ -223,9 +223,7 @@ const getAllCategories = async (req, res) => {
 // get all categories with products
 const getAllCategoriesWithProducts = async (req, res) => {
   try {
-    const categories = await categoryModel
-      .find()
-      .populate("products");
+    const categories = await categoryModel.find().populate("products");
 
     const response = categories.map((category) => {
       return {
@@ -240,9 +238,9 @@ const getAllCategoriesWithProducts = async (req, res) => {
             price: product.price,
             description: product.description,
             productImage: product.avatar.url,
-            status:product.status,
-            foodType:product.foodType
-        };
+            status: product.status,
+            foodType: product.foodType,
+          };
         }),
       };
     });
@@ -262,54 +260,7 @@ const getAllCategoriesWithProducts = async (req, res) => {
   }
 };
 
-// single category
-// const getSingleCategory = async (req, res) => {
-//   try {
-//     const category = await categoryModel.findById(req.params.id);
-//     const name = category.categoryName;
-//     if (category && category.status === "active") {
-//       const response = {
-//         id: category._id,
-//         categoryName: category.categoryName,
-//         status: category.status,
-//         categoryImage: category.avatar.url,
-//         products: category.products.map((product) => {
-//           return {
-//             id: product._id,
-//             productName: product.name,
-//             price: product.price,
-//             description: product.description,
-//             productImage: product.avatar,
-//             status:product.status,
-//             foodType:product.foodType
-//         };
-//         }),
-//             };
-//       return res.status(200).send({
-//         status: true,
-//         message: "Get Single Category successfully",
-//         response: [response],
-//       });
-//     } else if (category && category.status === "inactive") {
-//       return res.status(200).send({
-//         status: false,
-//         message: `Category - ${name} is inactive, please contact admin to activate it`,
-//       });
-//     } else {
-//       return res.status(404).send({
-//         status: false,
-//         message: "Category not found",
-//       });
-//     }
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).send({
-//       status: false,
-//       error,
-//       message: "Error while getting Single Category",
-//     });
-//   }
-// };
+// single category with all products
 
 const getSingleCategoryWithProducts = async (req, res) => {
   try {
@@ -359,6 +310,106 @@ const getSingleCategoryWithProducts = async (req, res) => {
   }
 };
 
+//  single category with veg products
+const getSingleCategoryWithVegProducts = async (req, res) => {
+  try {
+    const categoryId = req.params.id;
+
+    const category = await categoryModel.findById(categoryId).populate({
+      path: "products",
+      match: { foodType: "veg" },
+    });
+
+    if (!category) {
+      return res.status(404).send({
+        status: false,
+        message: "Category not found",
+      });
+    }
+
+    const response = {
+      id: category._id,
+      categoryName: category.categoryName,
+      status: category.status,
+      categoryImage: category.avatar ? category.avatar.url : "",
+      products: category.products.map((product) => {
+        return {
+          id: product._id,
+          productName: product.name,
+          price: product.price,
+          description: product.description,
+          productImage: product.avatar ? product.avatar.url : "",
+          status: product.status,
+          foodType: product.foodType,
+        };
+      }),
+    };
+
+    res.status(200).send({
+      status: true,
+      message: "Category details",
+      response,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      status: false,
+      error,
+      message: "Error while getting category details",
+    });
+  }
+};
+
+// single category with non veg products
+const getSingleCategoryWithNonVegProducts = async (req, res) => {
+  try {
+    const categoryId = req.params.id;
+
+    const category = await categoryModel.findById(categoryId).populate({
+      path: "products",
+      match: { foodType: "non-veg" },
+    });
+
+    if (!category) {
+      return res.status(404).send({
+        status: false,
+        message: "Category not found",
+      });
+    }
+
+    const response = {
+      id: category._id,
+      categoryName: category.categoryName,
+      status: category.status,
+      categoryImage: category.avatar ? category.avatar.url : "",
+      products: category.products.map((product) => {
+        return {
+          id: product._id,
+          productName: product.name,
+          price: product.price,
+          description: product.description,
+          productImage: product.avatar ? product.avatar.url : "",
+          status: product.status,
+          foodType: product.foodType,
+        };
+      }),
+    };
+
+    res.status(200).send({
+      status: true,
+      message: "Category details",
+      response,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      status: false,
+      error,
+      message: "Error while getting category details",
+    });
+  }
+};
+
 //delete category
 const deleteCategory = async (req, res) => {
   try {
@@ -378,9 +429,6 @@ const deleteCategory = async (req, res) => {
   }
 };
 
-
-
-
 module.exports = {
   createCategoryWithImage,
   updateCategory,
@@ -388,5 +436,7 @@ module.exports = {
   getAllCategoriesWithProducts,
   deleteCategory,
   toggleCategoryStatus,
-  getSingleCategoryWithProducts
+  getSingleCategoryWithProducts,
+  getSingleCategoryWithVegProducts,
+  getSingleCategoryWithNonVegProducts,
 };

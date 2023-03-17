@@ -15,7 +15,6 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
   });
 
-
 // importing router files
 const router = require("./routes/userRoute")
 const adminRoute = require("./routes/adminRoute")
