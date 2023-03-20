@@ -29,6 +29,12 @@ const userSchema = new mongoose.Schema(
     otp_expiry: {
       type: Date,
     },
+    login_otp: {
+      type: String,
+    },
+    login_otp_expiry: {
+      type: Date,
+    }
   },
   { timestamps: true }
 );
