@@ -132,9 +132,9 @@ const login = async (req, res) => {
 
 // update location of user
 
-updateLocation = async (req, res) => {
+const updateLocation = async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, {
+    const user = await User.findByIdAndUpdate(req.data._id, {
       location: req.body.location
     }, { new: true });
     if (!user) {
@@ -147,6 +147,65 @@ updateLocation = async (req, res) => {
   }
 };
 
+// full profile edit
+const editProfile = async (req, res) =>{
+  try {
+    const id = req.data._id;
+    const {fullname, email, location} = req.body;
+    const fieldsToUpdate = {}
+    if(fullname) fieldsToUpdate.fullname = fullname;
+    if(email) fieldsToUpdate.email = email;
+    if(location) fieldsToUpdate.location = location;
+    const updatedUser = await User.findByIdAndUpdate(id,fieldsToUpdate,{new:true})
+    if(!updatedUser) {
+      return res.status(404).json({
+        status:false,
+        message: "user not found",
+        response:[]
+      })
+    }
+    const {...rest} = updatedUser._doc;
+    return res.status(200).json({
+      status:true,
+      message:"user details updated sucessfully",
+      response: {
+        ...rest
+      }
+    })
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: false,
+      error,
+      message: "Error in updating user details",
+    });
+  }
+}
+
+// get user details
+const getSingleUser = async (req,res) => {
+  try {
+    const user = await User.findById(req.data._id);
+    if(!user){
+      return res.status(404).json({
+        status:false,
+        message:"user not found",
+        response:[]
+      })
+    }
+    return res.status(200).json({
+      status:true,
+      message:"user details fetched successfully",
+      response:[user]
+    })
+  } catch (error) {
+    return res.status(500).json({
+      status:false,
+      message:"internal server error",
+      response:error.message
+    })
+  }
+}
 
 
-module.exports = { signupUser, verify, resendOtp, login , updateLocation};
+module.exports = { signupUser, verify, resendOtp, login , updateLocation, editProfile , getSingleUser};
