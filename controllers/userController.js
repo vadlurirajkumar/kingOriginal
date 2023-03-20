@@ -1,6 +1,11 @@
 const User = require("../model/usermodel");
 const generateToken = require("../utils/jsonToken");
 const generateOtp = require("../utils/otpGenerator");
+const NodeGeocoder = require('node-geocoder');
+const geolib = require("geolib");
+const geocoder = NodeGeocoder({
+  provider: 'openstreetmap'
+});
 
 // user registration
 const signupUser = async (req, res) => {
@@ -19,24 +24,21 @@ const signupUser = async (req, res) => {
       mobile,
       otp,
       otp_expiry: new Date(Date.now() + process.env.OTP_EXPIRE * 60 * 1000),
-      status: 'active', // set status to 'active' by default
+      status: "active", // set status to 'active' by default
     });
     let token = generateToken(user._id);
 
-    res
-      .status(200)
-      .json({
-        status: true,
-        message: "Otp sent successfully",
-        response: [{ ...user._doc, token: token }],
-      });
+    res.status(200).json({
+      status: true,
+      message: "Otp sent successfully",
+      response: [{ ...user._doc, token: token }],
+    });
   } catch (err) {
-    res.status(400).json({ status: false, message:err.message, response: [] });
-
+    res.status(400).json({ status: false, message: err.message, response: [] });
   }
 };
 
-// user verification 
+// user verification
 const verifyForSignup = async (req, res) => {
   try {
     const { otp } = req.body;
@@ -56,7 +58,7 @@ const verifyForSignup = async (req, res) => {
     res.json({
       status: true,
       message: `Welcome ${user.fullname}, Logged in successfully`,
-      response: [user, { token: token }],
+      response: [{ ...user._doc, token: token }],
     });
   } catch (error) {
     res.json({ status: false, message: error.message, response: [] });
@@ -74,22 +76,23 @@ const resendOtp = async (req, res) => {
         .status(400)
         .json({ status: false, message: "user not exist", response: [] });
     }
- //@ Generating OTP
- let otp = generateOtp(4, true, false, false, false);
+    //@ Generating OTP
+    let otp = generateOtp(4, true, false, false, false);
 
- const token = generateToken(user._id);
- user.otp = otp;
- user.otp_expiry = new Date(Date.now() + process.env.OTP_EXPIRE * 60 * 1000);
- await user.save();
+    const token = generateToken(user._id);
+    user.otp = otp;
+    user.otp_expiry = new Date(Date.now() + process.env.OTP_EXPIRE * 60 * 1000);
+    await user.save();
 
- res.json({
-   status: true,
-   message: `OTP sent to : ${user.mobile}, please verify your mobile first`,
-   response: [{ ...user._doc, token: token }],
- });
-} catch (error) {
- res.json({ status: false, message: error.message, response: [] });
-}};
+    res.json({
+      status: true,
+      message: `OTP sent to : ${user.mobile}, please verify your mobile first`,
+      response: [{ ...user._doc, token: token }],
+    });
+  } catch (error) {
+    res.json({ status: false, message: error.message, response: [] });
+  }
+};
 
 // login user
 const login = async (req, res) => {
@@ -128,6 +131,55 @@ const login = async (req, res) => {
   }
 };
 
+const checkLocationForDelivery = async (req,res) => {
+  try {
+    const id = req.data._id;
+
+    let user = await User.findById(id);
+
+    //* Checking user has already exists or not with same mobile
+    if (!user) {
+      return res
+        .status(400)
+        .json({ status: false, message: "user not exist", response: [] });
+    }
+
+    // Convert user's location string to coordinates
+    const userLocation = await geocoder.geocode(user.location);
+    const userCoords = {
+      latitude: userLocation[0].latitude,
+      longitude: userLocation[0].longitude
+    };
+
+    // Calculate the distance between user's location and store location
+    const storeCoords = {
+      latitude: 17.4226184, // iprism data
+      longitude: 78.379134
+    }; // Replace with your store's coordinates
+    const distanceInMeters = geolib.getDistance(userCoords, storeCoords);
+    const distanceInKm = distanceInMeters / 1000;
+    console.log(distanceInKm)
+    if (distanceInKm <= 15) {
+      // User is within 15km range, save the user object and redirect to home page
+      await user.save();
+      res.status(200).json({
+        status: true,
+        message: `user location is inside of delivery area`,
+        response: [user],
+      });
+    } else {
+      // User is outside of 15km range, show error message
+      res.status(403).json({
+        status: false,
+        message: "Sorry, we cannot deliver to your location.",
+        response: [],
+      });
+    }
+  } catch (error) {
+    res.json({ status: false, message: error.message, response: [] });
+  }
+}
+
 //resend otp for login time
 const resendOtpForLogin = async (req, res) => {
   try {
@@ -139,22 +191,25 @@ const resendOtpForLogin = async (req, res) => {
         .status(400)
         .json({ status: false, message: "user not exist", response: [] });
     }
- //@ Generating OTP
- let otp = generateOtp(4, true, false, false, false);
+    //@ Generating OTP
+    let otp = generateOtp(4, true, false, false, false);
 
- const token = generateToken(user._id);
- user.login_otp = otp;
- user.login_otp_expiry = new Date(Date.now() + process.env.OTP_EXPIRE * 60 * 1000);
- await user.save();
+    const token = generateToken(user._id);
+    user.login_otp = otp;
+    user.login_otp_expiry = new Date(
+      Date.now() + process.env.OTP_EXPIRE * 60 * 1000
+    );
+    await user.save();
 
- res.json({
-   status: true,
-   message: `OTP sent to : ${user.mobile}, please verify your mobile first`,
-   response: [{ ...user._doc, token: token }],
- });
-} catch (error) {
- res.json({ status: false, message: error.message, response: [] });
-}};
+    res.json({
+      status: true,
+      message: `OTP sent to : ${user.mobile}, please verify your mobile first`,
+      response: [{ ...user._doc, token: token }],
+    });
+  } catch (error) {
+    res.json({ status: false, message: error.message, response: [] });
+  }
+};
 
 //verify for login
 const verifyForLogin = async (req, res) => {
@@ -176,7 +231,7 @@ const verifyForLogin = async (req, res) => {
     res.json({
       status: true,
       message: `Welcome ${user.fullname}, Logged in successfully`,
-      response: [{ ...user._doc, token: token}],
+      response: [{ ...user._doc, token: token }],
     });
   } catch (error) {
     res.json({ status: false, message: error.message, response: [] });
@@ -186,44 +241,59 @@ const verifyForLogin = async (req, res) => {
 // update location of user
 const updateLocation = async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.data._id, {
-      location: req.body.location
-    }, { new: true });
+    const user = await User.findByIdAndUpdate(
+      req.data._id,
+      {
+        location: req.body.location,
+      },
+      { new: true }
+    );
     if (!user) {
-      return res.status(404).send('User not found');
+      return res.status(404).json({
+        status: false,
+        message: `user not found`,
+        response: [],
+      });;
     }
-    res.send(user);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
-  }
+    res.json({
+      status: true,
+      message: `user location updated successfully`,
+      response: [user],
+    });  } catch (err) {
+    res.status(500).json({
+      status: false,
+      message: `server error`,
+      response: []})
+    }
 };
 
 // full profile edit
-const editProfile = async (req, res) =>{
+const editProfile = async (req, res) => {
   try {
     const id = req.data._id;
-    const {fullname, email, location} = req.body;
-    const fieldsToUpdate = {}
-    if(fullname) fieldsToUpdate.fullname = fullname;
-    if(email) fieldsToUpdate.email = email;
-    if(location) fieldsToUpdate.location = location;
-    const updatedUser = await User.findByIdAndUpdate(id,fieldsToUpdate,{new:true})
-    if(!updatedUser) {
+    const { fullname, email, location } = req.body;
+    const fieldsToUpdate = {};
+    if (fullname) fieldsToUpdate.fullname = fullname;
+    if (email) fieldsToUpdate.email = email;
+    if (location) fieldsToUpdate.location = location;
+    const updatedUser = await User.findByIdAndUpdate(id, fieldsToUpdate, {
+      new: true,
+    });
+    if (!updatedUser) {
       return res.status(404).json({
-        status:false,
+        status: false,
         message: "user not found",
-        response:[]
-      })
+        response: [],
+      });
     }
-    const {...rest} = updatedUser._doc;
+    const { ...rest } = updatedUser._doc;
     return res.status(200).json({
-      status:true,
-      message:"user details updated sucessfully",
+      status: true,
+      message: "user details updated sucessfully",
       response: {
-        ...rest
-      }
-    })
+        ...rest,
+      },
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -232,34 +302,42 @@ const editProfile = async (req, res) =>{
       message: "Error in updating user details",
     });
   }
-}
+};
 
 // get single user details
-const getSingleUser = async (req,res) => {
+const getSingleUser = async (req, res) => {
   try {
     const user = await User.findById(req.data._id);
-    if(!user){
+    if (!user) {
       return res.status(404).json({
-        status:false,
-        message:"user not found",
-        response:[]
-      })
+        status: false,
+        message: "user not found",
+        response: [],
+      });
     }
     return res.status(200).json({
-      status:true,
-      message:"user details fetched successfully",
-      response:[user]
-    })
+      status: true,
+      message: "user details fetched successfully",
+      response: [user],
+    });
   } catch (error) {
     return res.status(500).json({
-      status:false,
-      message:"internal server error",
-      response:error.message
-    })
+      status: false,
+      message: "internal server error",
+      response: error.message,
+    });
   }
-}
+};
 
-
-
-
-module.exports = { signupUser, verifyForSignup, resendOtp, login , updateLocation, editProfile , getSingleUser, verifyForLogin, resendOtpForLogin};
+module.exports = {
+  signupUser,
+  verifyForSignup,
+  resendOtp,
+  login,
+  updateLocation,
+  editProfile,
+  getSingleUser,
+  verifyForLogin,
+  resendOtpForLogin,
+  checkLocationForDelivery
+};

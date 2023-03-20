@@ -1,6 +1,6 @@
 const express = require("express")
 const router = express.Router()
-const {signupUser, verifyForSignup,login,resendOtp , updateLocation, editProfile, getSingleUser, verifyForLogin} = require("../controllers/userController")
+const {signupUser, verifyForSignup,login,resendOtp , updateLocation, editProfile, getSingleUser, verifyForLogin, checkLocationForDelivery} = require("../controllers/userController")
 const isOtpAuth = require("../middleware/otpAuth")
 
 // routes
@@ -10,6 +10,7 @@ router.post("/login",login)
 router.post("/login-verify", isOtpAuth, verifyForLogin)
 router.post("/resendotp",resendOtp)
 router.patch('/location', isOtpAuth, updateLocation)
+router.post("/check-location", isOtpAuth, checkLocationForDelivery)
 router.patch("/update", isOtpAuth, editProfile)
 router.get("/getuser", isOtpAuth, getSingleUser)
 
