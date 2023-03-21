@@ -7,12 +7,10 @@ const deliveryPersonSchema = new mongoose.Schema(
     },
     mobile: {
       type: Number,
-      required: true,
       unique: true,
     },
     password: {
       type: String,
-      required: true,
     },
     status: {
       type: String,
