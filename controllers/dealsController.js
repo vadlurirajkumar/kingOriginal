@@ -6,7 +6,6 @@ const cloudinary = require("cloudinary");
 const createProduct = async (req, res) => {
   try {
     const { productName, description, price, categoryId, foodType } = req.body;
-    console.log(productName, description, price, categoryId, foodType);
     if (!productName || !description || !price || !categoryId || !foodType) {
       const response = {
         status: false,
@@ -62,7 +61,7 @@ const createProduct = async (req, res) => {
     };
     res.status(201).send(response);
   } catch (error) {
-    console.log(error);
+    console.log(console.error)
     const response = {
       status: false,
       error,

@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
-
+const Product = require("../model/productModel")
+const Category = require("../model/categoryModel")
 const dealsSchema = new mongoose.Schema(
   {
     productName: {
@@ -37,6 +38,23 @@ const dealsSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+dealsSchema.pre('save', async function(next) {
+  const product = new Product({
+    productName: this.productName,
+    categoryId: this.categoryId,
+    description: this.description,
+    price: this.price,
+    foodType:this.foodType,
+    avatar: this.avatar
+  });
+
+  // Save the product first, and then add the new product ID to the category
+  await product.save();
+  await Category.findByIdAndUpdate(this.categoryId, { $push: { products: product._id } });
+
+  next();
+});
 
 const Deals = mongoose.model("Deals", dealsSchema);
 
