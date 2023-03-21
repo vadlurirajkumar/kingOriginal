@@ -131,6 +131,7 @@ const login = async (req, res) => {
   }
 };
 
+// checking user location for delivery
 const checkLocationForDelivery = async (req,res) => {
   try {
     const id = req.data._id;
@@ -155,12 +156,12 @@ const checkLocationForDelivery = async (req,res) => {
     const storeCoords = {
       latitude: 17.4226184, // iprism data
       longitude: 78.379134
-    }; // Replace with your store's coordinates
+    };
     const distanceInMeters = geolib.getDistance(userCoords, storeCoords);
     const distanceInKm = distanceInMeters / 1000;
     console.log(distanceInKm)
     if (distanceInKm <= 15) {
-      // User is within 15km range, save the user object and redirect to home page
+      // User is within 15km range, save the user object
       await user.save();
       res.status(200).json({
         status: true,
