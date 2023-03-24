@@ -44,7 +44,7 @@ const verifyForSignup = async (req, res) => {
     const { otp } = req.body;
     const user = await User.findById(req.data._id);
     if (user.otp !== otp || user.otp_expiry < Date.now()) {
-      return res.json({
+      return res.status(400).json({
         status: false,
         message: "Invalid OTP or has been Expired",
         response: [],
@@ -55,13 +55,13 @@ const verifyForSignup = async (req, res) => {
     await user.save();
 
     const token = generateToken(user._id);
-    res.json({
+    res.status(200).json({
       status: true,
       message: `Welcome ${user.fullname}, Logged in successfully`,
       response: [{ ...user._doc, token: token }],
     });
   } catch (error) {
-    res.json({ status: false, message: error.message, response: [] });
+    res.status(500).json({ status: false, message: error.message, response: [] });
   }
 };
 

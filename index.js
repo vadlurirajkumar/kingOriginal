@@ -25,6 +25,7 @@ const dealsRoute = require("./routes/dealsRoute");
 const policyRoute = require("./routes/privacypolicyRoute")
 const aboutUsRoute = require("./routes/aboutusRoute")
 const deliveryBoy = require("./routes/deliveryPersonRoute")
+const contactUs = require("./routes/contactUsRoute")
 // middleware
 app.use(express.json())
 app.use(cors());
@@ -39,6 +40,7 @@ app.use("/deals", dealsRoute) // deals route calling
 app.use("/privacy-policy", policyRoute) // privacy policy route calling
 app.use("/about-us", aboutUsRoute) // about us route calling
 app.use("/delivery", deliveryBoy) //delivery person route calling
+app.use("/feedback", contactUs) // contactUs route calling
 
 // Port 
 app.listen(port, ()=>{
