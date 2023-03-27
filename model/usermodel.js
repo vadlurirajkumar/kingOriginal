@@ -34,7 +34,43 @@ const userSchema = new mongoose.Schema(
     },
     login_otp_expiry: {
       type: Date,
-    }
+    },
+    pendingCart: [
+      {
+        buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        totalAmount: { type: Number, required: true },
+        status: String,
+        products: [
+          {
+            productId: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: "Product",
+            },
+            productName: String,
+            quantity: Number,
+            price: Number,
+          },
+        ],
+      },
+    ],
+    completedCart: [
+      {
+        buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        totalAmount: String,
+        status: String,
+        products: [
+          {
+            productId: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: "Product",
+            },
+            productName: String,
+            quantity: Number,
+            price: Number,
+          },
+        ],
+      },
+    ],
   },
   { timestamps: true }
 );

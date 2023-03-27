@@ -54,8 +54,22 @@ const totalUsers = async (req, res) => {
         response: [],
       });
     }
-    const user = await User.find({});
-    if (user.length <= 0) {
+    const users = await User.find({})
+      .populate({
+        path: "pendingCart",
+        populate: {
+          path: "products",
+          select: "-_id name price quantity",
+        },
+      })
+      .populate({
+        path: "completedCart",
+        populate: {
+          path: "products",
+          select: "-_id name price quantity",
+        },
+      });
+    if (users.length <= 0) {
       return res.json({
         status: false,
         message: "Users not found",
@@ -65,7 +79,7 @@ const totalUsers = async (req, res) => {
     return res.json({
       status: true,
       message: "users fetch success",
-      response: [user],
+      response: users,
     });
   } catch (error) {
     return res.json({ status: false, message: error.message, response: [] });
