@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Cart = require("../model/orderModel");
 const Product = require("../model/productModel");
 
+// add cart
 const addToCart = async (req, res) => {
   try {
     // Retrieve userId from JWT token
@@ -37,6 +38,7 @@ const addToCart = async (req, res) => {
       // Create new cart object with a new product and a quantity of 1
       const cart = new Cart({
         buyer: userId,
+        status:"inCart",
         products: [{ product: productId, quantity: 1, price: product.price }],
       });
       existingCart = await cart.save();
@@ -54,25 +56,53 @@ const addToCart = async (req, res) => {
 //     // Extract user ID from decoded JWT token
 //     const userId = req.data.id;
 
-//     const cart = await Cart.findOne({ buyer: userId }).populate({
-//       path: 'products.product',
-//       select: 'productName price foodType avatar.url',
-//       populate: { path: 'categoryId', select: 'categoryName' },
-//       options: { lean: true },
-//     }).lean();
+//     const cart = await Cart.findOne({ buyer: userId })
+//       .populate({
+//         path: 'products.product',
+//         select: 'productName price foodType avatar.url',
+//         populate: { path: 'categoryId', select: 'categoryName' },
+//         options: { lean: true },
+//       })
+//       .lean();
+
 //     if (!cart) {
 //       return res.status(404).json({ message: 'Cart not found' });
 //     }
 
-//     // Calculate total amount of products in cart
+//     // Transform cart data to desired response format
+//     const response = {
+//       _id: cart._id,
+//       buyer: cart.buyer,
+//       createdAt: cart.createdAt,
+//       updatedAt: cart.updatedAt,
+//       __v: cart.__v,
+//       products: [],
+//     };
+
 //     let totalAmount = 0;
-//     cart.products.forEach((product) => {
-//       totalAmount += product.product.price * product.quantity;
-//       product.productImage = product.product.avatar.url;
-//       delete product.product.avatar;
+
+//     cart.products.forEach((cartProduct) => {
+//       const { product } = cartProduct;
+//       const formattedProduct = {
+//         _id: product._id,
+//         productName: product.productName,
+//         price: product.price,
+//         foodType: product.foodType,
+//         quantity: cartProduct.quantity,
+//         productImage: product.avatar.url,
+//       };
+
+//       totalAmount += product.price * cartProduct.quantity;
+//       response.products.push(formattedProduct);
 //     });
 
-//     return res.status(200).json({ status: true, message: 'Cart details', response: { cart, totalAmount } });
+//     response.totalAmount = totalAmount;
+
+//     return res.status(200).json({
+//       status: true,
+//       message: 'Cart details',
+//       response,
+//     });
 //   } catch (error) {
 //     console.error(error);
 //     return res.status(500).json({ message: 'Internal Server Error' });
@@ -99,8 +129,9 @@ const getCart = async (req, res) => {
 
     // Transform cart data to desired response format
     const response = {
-      _id: cart._id,
+      cartId: cart._id,
       buyer: cart.buyer,
+      status: cart.status,
       createdAt: cart.createdAt,
       updatedAt: cart.updatedAt,
       __v: cart.__v,
@@ -126,6 +157,12 @@ const getCart = async (req, res) => {
 
     response.totalAmount = totalAmount;
 
+    // Check if transactionId and amount fields exist in cart
+    if (cart.transactionId && cart.amount) {
+      response.transactionId = cart.transactionId;
+      response.amount = cart.amount;
+    }
+
     return res.status(200).json({
       status: true,
       message: 'Cart details',
@@ -136,6 +173,7 @@ const getCart = async (req, res) => {
     return res.status(500).json({ message: 'Internal Server Error' });
   }
 };
+
 
 const addQuantity = async (req, res) => {
   try {
@@ -209,6 +247,37 @@ const removeQuantity = async (req, res) => {
   }
 };
 
+const updateCartWithTransaction = async (req, res) => {
+  try {
+    // Retrieve cartId from JWT token
+    const user = req.data.id;
+    if(user){
+console.log(user)
+    }
+    const cartId = user.cartId
+    console.log(cartId)
+    const { transactionId, amount } = req.body;
 
-module.exports = {addToCart , getCart, addQuantity, removeQuantity};
+    // Check if cart exists
+    const cart = await Cart.findById(cartId);
+    if (!cart) {
+      return res.status(404).json({ message: 'Cart not found' });
+    }
+
+    // Update cart with transaction details and change status to ordered
+    cart.transactionId = transactionId;
+    cart.amount = amount;
+    cart.status = 'ordered';
+    await cart.save();
+
+    return res.status(200).json({ status: true, message: 'Cart updated with transaction details', response: cart });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+
+
+module.exports = {addToCart , getCart, addQuantity, removeQuantity, updateCartWithTransaction};
 

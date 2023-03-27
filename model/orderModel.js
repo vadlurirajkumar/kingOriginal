@@ -29,6 +29,11 @@ const cartSchema = new Schema(
     totalAmount:{
       type:String
     },
+    status: {
+      type: String,
+      enum: ["inCart", "ordered", "failed"],
+      default: "inCart", // Set the default value for the status field to "active"
+    },
   },
 
   { timestamps: true }

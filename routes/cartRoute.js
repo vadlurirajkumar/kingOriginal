@@ -1,7 +1,7 @@
 const express = require("express");
 const cartRoute = express.Router();
 const isOtpAuth = require("../middleware/otpAuth")
-const {addToCart,getCart, addQuantity,removeQuantity} = require("../controllers/cartController")
+const {addToCart,getCart, addQuantity,removeQuantity, updateCartWithTransaction} = require("../controllers/cartController")
 
 
 // Route to add a product to cart
@@ -15,5 +15,8 @@ cartRoute.patch("/addQuantity", isOtpAuth, addQuantity)
 
 //removeQuantity for product
 cartRoute.patch("/removeQuantity", isOtpAuth, removeQuantity)
+
+//update cart
+cartRoute.patch("/update", isOtpAuth, updateCartWithTransaction)
 
 module.exports = cartRoute
