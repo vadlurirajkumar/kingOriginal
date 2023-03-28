@@ -3,169 +3,6 @@ const Cart = require("../model/orderModel");
 const Product = require("../model/productModel");
 const User = require("../model/usermodel");
 
-// const addToCart = async (req, res) => {
-//   try {
-//     const userId = req.data.id;
-//     const productId = req.body.productId;
-
-//     // Find product by id
-//     const product = await Product.findById(productId);
-//     if (!product) {
-//       return res.status(404).json({ message: "Product not found" });
-//     }
-
-//     // Find the user
-//     const user = await User.findById(userId);
-//     if (!user) {
-//       return res.status(404).json({ message: "User not found" });
-//     }
-
-//     // Check if user has an existing pending cart
-//     let cart = user.pendingCart.find((cart) => cart.status === "inCart");
-//     if (cart) {
-//       // Check if the product is already in the cart
-//       const existingProduct = cart.products.find(
-//         (p) => p.productName === product.productName
-//       );
-//       console.log(existingProduct + "qwertty");
-//       if (existingProduct) {
-//         // If product is already in the cart, increase its quantity
-//         existingProduct.quantity++;
-
-//         // Recalculate the total amount for the cart
-//         cart.totalAmount = cart.products.reduce(
-//           (total, p) => total + p.price * p.quantity,
-//           0
-//         );
-//       } else {
-//         // Add the new product to the cart
-//         cart.products.push({
-//           product: product._id,
-//           productname: product.productName,
-//           quantity: 1,
-//           price: parseFloat(product.price),
-//         });
-//       }
-//     } else {
-//       // If the user doesn't have an existing pending cart, create one
-//       cart = {
-//         buyer: userId,
-//         totalAmount: parseFloat(product.price),
-//         status: "inCart",
-//         products: [
-//           {
-//             product: product._id,
-//             productname: product.productName,
-//             quantity: 1,
-//             price: parseFloat(product.price),
-//           },
-//         ],
-//       };
-//       user.pendingCart.push(cart);
-//     }
-
-//     // Recalculate the total amount for the cart
-//     cart.totalAmount = cart.products.reduce(
-//       (total, p) => total + p.price * p.quantity,
-//       0
-//     );
-
-//     // Save the changes to the user document
-//     await user.save();
-
-//     // Send the updated cart back to the client
-//     res.json({
-//       status: true,
-//       message: "Product added to cart",
-//       response: cart,
-//     });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// };
-
-const addToCart = async (req, res) => {
-  try {
-    const userId = req.data.id;
-    const productId = req.body.productId;
-
-    // Find product by id
-    const product = await Product.findById(productId);
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
-    // Find the user
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Check if user has an existing pending cart
-    let cart = user.pendingCart.find((cart) => cart.status === "inCart");
-    if (cart) {
-      // Check if the product is already in the cart
-      const existingProduct = cart.products.find(
-        (p) => p.product === productId
-      );
-      if (existingProduct) {
-        // If product is already in the cart, increase its quantity
-        existingProduct.quantity++;
-
-        // Recalculate the total amount for the cart
-        cart.totalAmount = cart.products.reduce(
-          (total, p) => total + p.price * p.quantity,
-          0
-        );
-      } else {
-        // Add the new product to the cart
-        cart.products.push({
-          product: productId,
-          productName: product.productName,
-          quantity: 1,
-          price: parseFloat(product.price),
-        });
-      }
-    } else {
-      // If the user doesn't have an existing pending cart, create one
-      cart = {
-        buyer: userId,
-        totalAmount: parseFloat(product.price),
-        status: "inCart",
-        products: [
-          {
-            product: productId,
-            productName: product.productName,
-            quantity: 1,
-            price: parseFloat(product.price),
-          },
-        ],
-      };
-      user.pendingCart.push(cart);
-    }
-
-    // Recalculate the total amount for the cart
-    cart.totalAmount = cart.products.reduce(
-      (total, p) => total + p.price * p.quantity,
-      0
-    );
-
-    // Save the changes to the user document
-    await user.save();
-
-    // Send the updated cart back to the client
-    res.json({
-      status: true,
-      message: "Product added to cart",
-      response: cart,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
 
 const getCart = async (req, res) => {
   try {
@@ -351,6 +188,100 @@ const updateCartStatus = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+const addToCart = async (req, res) => {
+  try {
+    const userId = req.data.id;
+    const productId = req.body.productId;
+
+    // Find product by id
+    const product = await Product.findById(productId);
+    const respo = {
+      product_Id:product._id,
+      productName:product.productName,
+      productImage:product.productImage,
+      foodType:product.foodType
+    }
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Find the user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if user has an existing pending cart
+    let cart = user.pendingCart.find((cart) => cart.status === "inCart");
+    if (cart) {
+      // Check if the product is already in the cart
+      const existingProduct = cart.products.find(
+        (p) => p && p.productName === product.productName
+
+      );
+      if  (existingProduct) {
+        // If product is already in the cart, increase its quantity
+        existingProduct.quantity++;
+
+        // Recalculate the total amount for the cart
+        cart.totalAmount = cart.products.reduce(
+          (total, p) => total + p.price * p.quantity,
+          0
+        );
+      } else {
+        // Add the new product to the cart
+        cart.products.push({
+          product: respo.product_Id,
+          productName: respo.productName,
+          quantity: 1,
+          productImage:respo.productImage || product.avatar.url,
+          price: parseFloat(product.price),
+        });
+      }
+    } else {
+      // If the user doesn't have an existing pending cart, create one
+      cart = {
+        buyer: userId,
+        totalAmount: parseFloat(product.price),
+        status: "inCart",
+        products: [
+          {
+            product: respo.product_Id,
+          productName: respo.productName,
+          quantity: 1,
+          productImage:respo.productImage || product.avatar.url,
+          price: parseFloat(product.price),
+        },
+        ],
+      };
+      user.pendingCart.push(cart);
+    }
+
+    // Recalculate the total amount for the cart
+    cart.totalAmount = cart.products.reduce(
+      (total, p) => total + p.price * p.quantity,
+      0
+    );
+
+    // Save the changes to the user document
+    await user.save();
+
+    // Send the updated cart back to the client
+    res.json({
+      status: true,
+      message: "Product added to cart",
+      response: cart,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+
+
 
 module.exports = {
   addToCart,
