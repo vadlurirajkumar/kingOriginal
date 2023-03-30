@@ -3,6 +3,83 @@ const Cart = require("../model/orderModel");
 const Product = require("../model/productModel");
 const User = require("../model/usermodel");
 
+const addToCart = async (req, res) => {
+  try {
+    const userId = req.data._id;
+    const productId = req.body.productId;
+
+    // find product
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        status: false,
+        message: "Product not found",
+        respone: [],
+      });
+    }
+    // find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({
+        status: false,
+        message: "User not found",
+      });
+    }
+
+    // check if there is an existing cart with status inCart
+    let existingCart = user.pendingCart.find((c) => c.status === "inCart");
+
+    if (existingCart) {
+      // if the cart already exists, add the product to the cart
+      const existingProductIndex = existingCart.products.findIndex(
+        (p) => p.productId.toString() === productId
+      );
+      if (existingProductIndex !== -1) {
+        // if the product already exists in the cart, increase its quantity
+        existingCart.products[existingProductIndex].quantity += 1;
+      } else {
+        // if the product doesn't exist in the cart, add it
+        existingCart.products.push({
+          productId: productId,
+          productName: product.name,
+          quantity: 1,
+          price: product.price,
+          productImage:product.productImage
+        });
+      }
+      await user.save();
+    } else {
+      // if there is no existing cart with status inCart, create a new one
+      const newCart = {
+        buyer: userId,
+        status: "inCart",
+        totalAmount: product.price,
+        products: [
+          {
+            productId: productId,
+            productName: product.name,
+            quantity: 1,
+            price: product.price,
+            productImage:product.productImage
+          },
+        ],
+      };
+      user.pendingCart.push(newCart);
+      await user.save();
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Product added to cart",
+      respone:existingCart
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+
 
 const getCart = async (req, res) => {
   try {
@@ -333,71 +410,71 @@ const updateCartStatus = async (req, res) => {
 // }
 // }
 
-const addToCart = async(req,res)=> {
-  try {
-    const userId = req.data._id;
-    const productId = req.body.productId;
+// const addToCart = async(req,res)=> {
+//   try {
+//     const userId = req.data._id;
+//     const productId = req.body.productId;
 
-    // find product
-    const product = await Product.findById(productId);
-    if(!product){
-      return res.status(404).json({
-        status:false,
-        message:"Product not found",
-        respone:[]
-      })
-    }
-    //find user
-    const user = await User.findById(userId)
-    if(!user){
-      return res.status(400).json({
-        status:false,
-        message:"user not found"
-      })
-    }
-    // checking cart
-    let cart = await user.pendingCart.find((c)=>c.status === "inCart")
-    if(cart){
-      const existingProductIndex = cart.products.findIndex(
-        (p) => p.product.toString() === productId
-      )
-      if(existingProductIndex !== -1){
-        await cart.addQuantity(productId)
-      }
-      else{
-        cart.products.push({
-          product:productId,
-          quantity:1,
-          price:product.price,
-          productImage:product.productImage
-        })
-        await cart.save();
-      }
-    } else {
-      // create new cart
-      const pendingCart = new Cart({
-        buyer: userId,
-        products: [
-          {
-            product: productId,
-            quantity: 1,
-            productImage: product.productImage,
-            price: product.price,
-          },
-        ],
-      });
-      await pendingCart.save();
-    }
-    return res.status(200).json({
-      status:true,
-      message:"product added to cart",
-      response:cart
-    })
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Internal Server Error' });
-  }
-}
+//     // find product
+//     const product = await Product.findById(productId);
+//     if(!product){
+//       return res.status(404).json({
+//         status:false,
+//         message:"Product not found",
+//         respone:[]
+//       })
+//     }
+//     //find user
+//     const user = await User.findById(userId)
+//     if(!user){
+//       return res.status(400).json({
+//         status:false,
+//         message:"user not found"
+//       })
+//     }
+//     // checking cart
+//     let cart = await user.pendingCart.find((c)=>c.status === "inCart")
+//     if(cart){
+//       const existingProductIndex = cart.products.findIndex(
+//         (p) => p.product.toString() === productId
+//       )
+//       if(existingProductIndex !== -1){
+//         await cart.addQuantity(productId)
+//       }
+//       else{
+//         cart.products.push({
+//           product:productId,
+//           quantity:1,
+//           price:product.price,
+//           productImage:product.productImage
+//         })
+//         await cart.save();
+//       }
+//     } else {
+//       // create new cart
+//       const pendingCart = new Cart({
+//         buyer: userId,
+//         products: [
+//           {
+//             product: productId,
+//             quantity: 1,
+//             productImage: product.productImage,
+//             price: product.price,
+//           },
+//         ],
+//       });
+//       await pendingCart.save();
+//     }
+//     return res.status(200).json({
+//       status:true,
+//       message:"product added to cart",
+//       response:cart
+//     })
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ message: 'Internal Server Error' });
+//   }
+// }
 
 
 module.exports = {
