@@ -43,12 +43,28 @@ const userSchema = new mongoose.Schema(
         products: [
           {
             productId: {
-              type: mongoose.Schema.Types.ObjectId,
-              ref: "Product",
+              type: mongoose.ObjectId,
+              ref: "Products",
             },
-            productName: String,
-            quantity: Number,
-            price: Number,
+            productName: {
+              type: String,
+              required: true,
+            },
+            quantity: {
+              type: Number,
+              required: true,
+            },
+            price: {
+              type: Number,
+              required: true,
+            },
+            productImage: {
+              type: String,
+            },
+            foodType: {
+              type: String,
+              enum: ["veg", "non-veg"],
+            },
           },
         ],
       },
@@ -57,16 +73,68 @@ const userSchema = new mongoose.Schema(
       {
         buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         totalAmount: String,
+        transactionId:String,
         status: String,
         products: [
           {
             productId: {
-              type: mongoose.Schema.Types.ObjectId,
-              ref: "Product",
+              type: mongoose.ObjectId,
+              ref: "Products",
             },
-            productName: String,
-            quantity: Number,
-            price: Number,
+            productName: {
+              type: String,
+              required: true,
+            },
+            quantity: {
+              type: Number,
+              required: true,
+            },
+            price: {
+              type: Number,
+              required: true,
+            },
+            productImage: {
+              type: String,
+            },
+            foodType: {
+              type: String,
+              enum: ["veg", "non-veg"],
+            },
+          },
+        ],
+      },
+    ],
+    canceledCart: [
+      {
+        buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        totalAmount: String,
+        transactionId:String,
+        status: String,
+        products: [
+          {
+            productId: {
+              type: mongoose.ObjectId,
+              ref: "Products",
+            },
+            productName: {
+              type: String,
+              required: true,
+            },
+            quantity: {
+              type: Number,
+              required: true,
+            },
+            price: {
+              type: Number,
+              required: true,
+            },
+            productImage: {
+              type: String,
+            },
+            foodType: {
+              type: String,
+              enum: ["veg", "non-veg"],
+            },
           },
         ],
       },
