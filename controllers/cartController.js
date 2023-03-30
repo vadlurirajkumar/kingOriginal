@@ -152,7 +152,7 @@ const removeFromCart = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({status:false, message: "Internal Server Error" , response:error.message});
   }
 };
 // get cart for single user
@@ -194,7 +194,7 @@ const getCartForUser = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({status:false, message: "Internal Server Error" , response:error.message});
   }
 };
 // update cart
@@ -209,7 +209,7 @@ const updateCartStatus = async (req, res) => {
       (p) => p.status === "inCart"
     );
     if (pendingCartIndex === -1) {
-      return res.status(404).json({ message: "Pending cart not found" });
+      return res.status(404).json({ status:false, message: "Pending cart not found" });
     }
 
     const { transactionId, status } = req.body;
@@ -231,16 +231,17 @@ const updateCartStatus = async (req, res) => {
       // Save the user object to the database
       await user.save();
 
-      res.json({
+      res.status(200).json({
+        status:true,
         message: "Cart updated successfully",
         response: completedCart,
       });
     } else {
-      res.status(400).json({ message: "Invalid status" });
+      res.status(400).json({status:false, message: "Invalid status" });
     }
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({status:false, message: "Internal server error", response:err.message });
   }
 };
 // recent order of user
@@ -272,12 +273,12 @@ const getRecentOrder = async (req, res) => {
 
     return res.status(200).json({
       status: true,
-      message: "Most recent order retrieved",
+      message: "Recent order retrieved",
       response: recentOrder
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({status:false, message: "Internal Server Error" , response:error.message});
   }
 };
 // cancel last order for user
@@ -323,10 +324,9 @@ const cancelLastOrder = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({status:false, message: "Internal Server Error", response:error.message });
   }
 };
-
 
 module.exports = {
   addToCart,
