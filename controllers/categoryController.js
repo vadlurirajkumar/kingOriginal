@@ -626,6 +626,7 @@ const getSingleCategoryWithNonVegProductsForUser = async (req, res) => {
   }
 };
 
+
 //delete category
 const deleteCategory = async (req, res) => {
   try {
@@ -659,5 +660,5 @@ module.exports = {
   getAllCategoriesWithProductsForUser,
   getSingleCategoryWithProductsForUser,
   getSingleCategoryWithVegProductsForUser,
-  getSingleCategoryWithNonVegProductsForUser
+  getSingleCategoryWithNonVegProductsForUser,
 };

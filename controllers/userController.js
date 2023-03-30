@@ -1,10 +1,12 @@
 const User = require("../model/usermodel");
+const categoryModel = require("../model/categoryModel");
+const productModel = require("../model/productModel");
 const generateToken = require("../utils/jsonToken");
 const generateOtp = require("../utils/otpGenerator");
-const NodeGeocoder = require('node-geocoder');
+const NodeGeocoder = require("node-geocoder");
 const geolib = require("geolib");
 const geocoder = NodeGeocoder({
-  provider: 'openstreetmap'
+  provider: "openstreetmap",
 });
 
 // user registration
@@ -61,7 +63,9 @@ const verifyForSignup = async (req, res) => {
       response: [{ ...user._doc, token: token }],
     });
   } catch (error) {
-    res.status(500).json({ status: false, message: error.message, response: [] });
+    res
+      .status(500)
+      .json({ status: false, message: error.message, response: [] });
   }
 };
 
@@ -109,8 +113,14 @@ const login = async (req, res) => {
     }
 
     // Check if user is active
-    if (user.status === 'inactive') {
-      return res.status(400).json({ status: false, message: "Your account is inactive. Please contact the admin.", response: [] });
+    if (user.status === "inactive") {
+      return res
+        .status(400)
+        .json({
+          status: false,
+          message: "Your account is inactive. Please contact the admin.",
+          response: [],
+        });
     }
 
     //@ Generating OTP
@@ -118,7 +128,9 @@ const login = async (req, res) => {
 
     const token = generateToken(user._id);
     user.login_otp = otp;
-    user.login_otp_expiry = new Date(Date.now() + process.env.OTP_EXPIRE * 60 * 1000);
+    user.login_otp_expiry = new Date(
+      Date.now() + process.env.OTP_EXPIRE * 60 * 1000
+    );
     await user.save();
 
     res.json({
@@ -132,7 +144,7 @@ const login = async (req, res) => {
 };
 
 // checking user location for delivery
-const checkLocationForDelivery = async (req,res) => {
+const checkLocationForDelivery = async (req, res) => {
   try {
     const id = req.data._id;
 
@@ -149,17 +161,17 @@ const checkLocationForDelivery = async (req,res) => {
     const userLocation = await geocoder.geocode(user.location);
     const userCoords = {
       latitude: userLocation[0].latitude,
-      longitude: userLocation[0].longitude
+      longitude: userLocation[0].longitude,
     };
 
     // Calculate the distance between user's location and store location
     const storeCoords = {
       latitude: 17.4226184, // iprism data
-      longitude: 78.379134
+      longitude: 78.379134,
     };
     const distanceInMeters = geolib.getDistance(userCoords, storeCoords);
     const distanceInKm = distanceInMeters / 1000;
-    console.log(distanceInKm)
+    console.log(distanceInKm);
     if (distanceInKm <= 15) {
       // User is within 15km range, save the user object
       await user.save();
@@ -179,7 +191,7 @@ const checkLocationForDelivery = async (req,res) => {
   } catch (error) {
     res.json({ status: false, message: error.message, response: [] });
   }
-}
+};
 
 //resend otp for login time
 const resendOtpForLogin = async (req, res) => {
@@ -254,18 +266,20 @@ const updateLocation = async (req, res) => {
         status: false,
         message: `user not found`,
         response: [],
-      });;
+      });
     }
     res.json({
       status: true,
       message: `user location updated successfully`,
       response: [user],
-    });  } catch (err) {
+    });
+  } catch (err) {
     res.status(500).json({
       status: false,
       message: `server error`,
-      response: []})
-    }
+      response: [],
+    });
+  }
 };
 
 // full profile edit
@@ -330,6 +344,49 @@ const getSingleUser = async (req, res) => {
   }
 };
 
+//search products
+
+// const searchProducts = async (req, res) => {
+//   try {
+//     const { keyword } = req.params;
+//     const results = await productModel.findOne({
+//       $or: [
+//         { name: { $regex: new RegExp(keyword, "i") } },
+//         { description: { $regex: new RegExp(keyword, "i") } },
+//       ],
+//     });
+//     res.json(results);
+//   } catch (error) {
+//     console.log(error);
+//     res.status(400).send({
+//       success: false,
+//       message: "Error In Search Product API",
+//       error,
+//     });
+//   }
+// };
+
+const searchProducts = async (req, res) => {
+  try {
+    const { keyword } = req.params;
+    const results = await productModel
+      .findOne({
+        productName: { $regex: keyword, $options: "i" },
+        status: "active",
+      });
+    res.json(results);
+  } catch (error) {
+    console.log(error);
+    res.status(400).send({
+      success: false,
+      message: "Error In Search Product API",
+      error,
+    });
+  }
+};
+
+
+
 module.exports = {
   signupUser,
   verifyForSignup,
@@ -340,5 +397,6 @@ module.exports = {
   getSingleUser,
   verifyForLogin,
   resendOtpForLogin,
-  checkLocationForDelivery
+  checkLocationForDelivery,
+  searchProducts,
 };
