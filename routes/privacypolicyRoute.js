@@ -7,6 +7,6 @@ const isAdminAuth = require("../middleware/adminAuth")
 privacyPolicyRoute.get("/get-policy" , getPrivacy) // get privacy-policy
 privacyPolicyRoute.post("/add", isAdminAuth, addPrivacy)  // adding privacy policy
 privacyPolicyRoute.patch("/update", isAdminAuth, updatePrivacy)  // updating privacy policy
-privacyPolicyRoute.post("/delete", isAdminAuth, deletePrivacy)  // deleting privacy policy
+privacyPolicyRoute.delete("/delete/:id", isAdminAuth, deletePrivacy)  // deleting privacy policy
 
 module.exports = privacyPolicyRoute

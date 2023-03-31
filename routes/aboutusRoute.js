@@ -7,6 +7,6 @@ const isAdminAuth = require("../middleware/adminAuth")
 aboutUsRoute.get("/get-aboutUs" , getAboutUs) // get about us data
 aboutUsRoute.post("/add", isAdminAuth, addAboutUs)  // adding about us data
 aboutUsRoute.patch("/update", isAdminAuth, updateAboutUs)  // updating about us data
-aboutUsRoute.post("/delete", isAdminAuth, deleteAboutUs)  // deleting about us data
+aboutUsRoute.delete("/delete/:id", isAdminAuth, deleteAboutUs)  // deleting about us data
 
 module.exports = aboutUsRoute
