@@ -306,6 +306,163 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+//add to exclusive dishes status
+const addToExclusiveDish = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // check if product exists
+    const product = await productModel.findByIdAndUpdate(id);
+    if (!product) {
+      const response = {
+        status: false,
+        message: "Product not found",
+      };
+      return res.status(404).send(response);
+    }
+
+    // update product exclusive status
+    product.exclusiveStatus = "active";
+    await product.save();
+
+    const { avatar, ...rest } = product._doc;
+
+    const response = {
+      status: true,
+      message: "Product added to exclusive dish",
+      product: {
+        ...rest,
+        productImage: avatar?.url || null,
+      },
+    };
+    res.status(200).send(response);
+  } catch (error) {
+    console.log(error);
+    const response = {
+      status: false,
+      error,
+      message: "Error while adding product to exclusive dish",
+    };
+    res.status(500).send(response);
+  }
+};
+
+//remove from exclusive dishes 
+const removeFromExclusiveDish = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // check if product exists
+    const product = await productModel.findByIdAndUpdate(id);
+    if (!product) {
+      const response = {
+        status: false,
+        message: "Product not found",
+      };
+      return res.status(404).send(response);
+    }
+
+    // update product exclusive status
+    product.exclusiveStatus = "inactive";
+    await product.save();
+
+    const { avatar, ...rest } = product._doc;
+
+    const response = {
+      status: true,
+      message: "Product removed from exclusive dish",
+      product: {
+        ...rest,
+        productImage: avatar?.url || null,
+      },
+    };
+    res.status(200).send(response);
+  } catch (error) {
+    console.log(error);
+    const response = {
+      status: false,
+      error,
+      message: "Error while removing product to exclusive dish",
+    };
+    res.status(500).send(response);
+  }
+};
+
+// get exclusive dishes 
+const getExclusiveDishes = async (req,res) => {
+  try {
+    const products = await productModel.find({status:"active",exclusiveStatus:"active"});
+    res.status(200).send({
+      status: true,
+      message: "All Products List",
+      products: products.map((product) => {
+        const { avatar, ...rest } = product._doc;
+        return {
+          ...rest,
+          productImage: avatar?.url || null
+        }
+      }),
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      status: false,
+      error,
+      message: "Error while getting all products",
+    });
+  }
+}
+
+// get exclusive dishes only veg
+const getExclusiveVegDishes = async (req,res) => {
+  try {
+    const products = await productModel.find({status:"active",exclusiveStatus:"active",foodType:"veg"});
+    res.status(200).send({
+      status: true,
+      message: "All Products List",
+      products: products.map((product) => {
+        const { avatar, ...rest } = product._doc;
+        return {
+          ...rest,
+          productImage: avatar?.url || null
+        }
+      }),
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      status: false,
+      error,
+      message: "Error while getting all products",
+    });
+  }
+}
+
+// get exclusive dishes only non-veg
+const getExclusiveNonVegDishes = async (req,res) => {
+  try {
+    const products = await productModel.find({status:"active",exclusiveStatus:"active",foodType:"non-veg"});
+    res.status(200).send({
+      status: true,
+      message: "All Products List",
+      products: products.map((product) => {
+        const { avatar, ...rest } = product._doc;
+        return {
+          ...rest,
+          productImage: avatar?.url || null
+        }
+      }),
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      status: false,
+      error,
+      message: "Error while getting all products",
+    });
+  }
+}
 
 
-module.exports = {createProduct, getAllProducts, getSingleProduct, getAllVegProducts, getAllNonVegProducts, updateProduct, deleteProduct, toggleProductStatus}
+
+module.exports = {createProduct, getAllProducts, getSingleProduct, getAllVegProducts, getAllNonVegProducts, updateProduct, deleteProduct, toggleProductStatus, addToExclusiveDish, removeFromExclusiveDish,getExclusiveDishes,getExclusiveVegDishes,getExclusiveNonVegDishes}

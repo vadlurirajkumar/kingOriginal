@@ -13,7 +13,7 @@ router.patch('/location', isOtpAuth, updateLocation)
 router.post("/check-location", isOtpAuth, checkLocationForDelivery)
 router.patch("/update", isOtpAuth, editProfile)
 router.get("/getuser", isOtpAuth, getSingleUser)
-router.get("/search", searchProducts)
+router.post("/search", searchProducts)
 
 
 module.exports = router

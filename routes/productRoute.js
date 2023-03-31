@@ -9,7 +9,8 @@ const {
   getAllNonVegProducts,
   updateProduct,
   deleteProduct,
-  toggleProductStatus
+  toggleProductStatus,
+  addToExclusiveDish, removeFromExclusiveDish,getExclusiveDishes,getExclusiveVegDishes,getExclusiveNonVegDishes
 } = require("./../controllers/productController");
 const uploadImage = require("../utils/multer");
 
@@ -39,5 +40,19 @@ productRoute.patch("/single-product/toggleStatus/:id", isAdminAuth, toggleProduc
 //delete a product
 productRoute.delete("/delete-product/:id", isAdminAuth, deleteProduct)
 
+// add exclusive status to product
+productRoute.patch("/add-to-exclusive/:id", isAdminAuth, addToExclusiveDish)
+
+// remove exclusive status
+productRoute.patch("/remove-from-exclusive/:id", isAdminAuth, removeFromExclusiveDish)
+
+// get exclusive dishes
+productRoute.get("/get-exclusiveDishes", getExclusiveDishes)
+
+// get exclusive dishes only veg
+productRoute.get("/get-exclusiveDishes/veg", getExclusiveVegDishes)
+
+// get exclusive dishes only non-veg
+productRoute.get("/get-exclusiveDishes/non-veg", getExclusiveNonVegDishes)
 
 module.exports = productRoute;

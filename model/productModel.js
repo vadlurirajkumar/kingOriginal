@@ -28,6 +28,11 @@ const productSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active", // Set the default value for the status field to "active"
     },
+    exclusiveStatus: {
+      type: String,
+      enum: ['active', 'inactive'],
+      default: 'inactive'
+    },
     avatar: {
       public_id: String,
       url: String,
