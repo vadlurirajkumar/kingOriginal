@@ -10,49 +10,71 @@ const {
   updateProduct,
   deleteProduct,
   toggleProductStatus,
-  addToExclusiveDish, removeFromExclusiveDish,getExclusiveDishes,getExclusiveVegDishes,getExclusiveNonVegDishes
+  addToExclusiveDish,
+  removeFromExclusiveDish,
+  getExclusiveDishes,
+  getExclusiveVegDishes,
+  getExclusiveNonVegDishes,
 } = require("./../controllers/productController");
 const uploadImage = require("../utils/multer");
 
 //routes
 
 // create category
-productRoute.post("/create-product", isAdminAuth, uploadImage.single("avatar"),createProduct);
+productRoute.post(
+  "/create-product",
+  isAdminAuth,
+  uploadImage.single("avatar"),
+  createProduct
+);
 
 // get all products
 productRoute.get("/all-products", getAllProducts);
 
 // get single product
-productRoute.get("/single-product/:id", getSingleProduct)
+productRoute.get("/single-product/:id", getSingleProduct);
 
 // get all veg products
-productRoute.get("/veg-products", getAllVegProducts)
+productRoute.get("/veg-products", getAllVegProducts);
 
 // get all non-veg products
-productRoute.get("/non-veg-products", getAllNonVegProducts)
+productRoute.get("/non-veg-products", getAllNonVegProducts);
 
 // update a product
-productRoute.patch("/update-product/:id", isAdminAuth, uploadImage.single("avatar"), updateProduct)
+productRoute.patch(
+  "/update-product/:id",
+  isAdminAuth,
+  uploadImage.single("avatar"),
+  updateProduct
+);
 
 //update status
-productRoute.patch("/single-product/toggleStatus/:id", isAdminAuth, toggleProductStatus)
+productRoute.patch(
+  "/single-product/toggleStatus/:id",
+  isAdminAuth,
+  toggleProductStatus
+);
 
 //delete a product
-productRoute.delete("/delete-product/:id", isAdminAuth, deleteProduct)
+productRoute.delete("/delete-product/:id", isAdminAuth, deleteProduct);
 
 // add exclusive status to product
-productRoute.patch("/add-to-exclusive/:id", isAdminAuth, addToExclusiveDish)
+productRoute.patch("/add-to-exclusive/:id", isAdminAuth, addToExclusiveDish);
 
 // remove exclusive status
-productRoute.patch("/remove-from-exclusive/:id", isAdminAuth, removeFromExclusiveDish)
+productRoute.patch(
+  "/remove-from-exclusive/:id",
+  isAdminAuth,
+  removeFromExclusiveDish
+);
 
 // get exclusive dishes
-productRoute.get("/get-exclusiveDishes", getExclusiveDishes)
+productRoute.get("/get-exclusiveDishes", getExclusiveDishes);
 
 // get exclusive dishes only veg
-productRoute.get("/get-exclusiveDishes/veg", getExclusiveVegDishes)
+productRoute.get("/get-exclusiveDishes/veg", getExclusiveVegDishes);
 
 // get exclusive dishes only non-veg
-productRoute.get("/get-exclusiveDishes/non-veg", getExclusiveNonVegDishes)
+productRoute.get("/get-exclusiveDishes/non-veg", getExclusiveNonVegDishes);
 
 module.exports = productRoute;

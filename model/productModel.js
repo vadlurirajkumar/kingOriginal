@@ -5,7 +5,7 @@ const productSchema = new mongoose.Schema(
     productName: {
       type: String,
       required: true,
-      unique:true
+      unique: true,
     },
     slug: {
       type: String,
@@ -30,18 +30,18 @@ const productSchema = new mongoose.Schema(
     },
     exclusiveStatus: {
       type: String,
-      enum: ['active', 'inactive'],
-      default: 'inactive'
+      enum: ["active", "inactive"],
+      default: "inactive",
     },
     avatar: {
       public_id: String,
       url: String,
     },
-    foodType:{
-        type: String,
-        enum: ["veg", "non-veg"],
-        required:true
-    }
+    foodType: {
+      type: String,
+      enum: ["veg", "non-veg"],
+      required: true,
+    },
   },
   { timestamps: true }
 );

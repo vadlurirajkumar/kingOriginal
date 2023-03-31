@@ -5,7 +5,6 @@ const generateToken = require("../utils/jsonToken");
 const generateOtp = require("../utils/otpGenerator");
 const NodeGeocoder = require("node-geocoder");
 const geolib = require("geolib");
-const Products = require("../model/productModel");
 const geocoder = NodeGeocoder({
   provider: "openstreetmap",
 });

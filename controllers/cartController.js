@@ -281,6 +281,83 @@ const getRecentOrder = async (req, res) => {
     return res.status(500).json({status:false, message: "Internal Server Error" , response:error.message});
   }
 };
+
+// recent order products only veg
+const getRecentOrderVegProducts = async (req, res) => {
+  try {
+    const userId = req.data._id;
+
+    // find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({
+        status: false,
+        message: "User not found",
+      });
+    }
+
+    // get the most recent order from completedCart
+    const completedCart = user.completedCart;
+    if (completedCart.length === 0) {
+      return res.status(404).json({
+        status: false,
+        message: "No completed orders found",
+        response: [],
+      });
+    }
+
+    const recentOrder = completedCart[completedCart.length - 1];
+    const vegProducts = recentOrder.products.filter(product => product.foodType==="veg");
+
+    return res.status(200).json({
+      status: true,
+      message: "Recent vegetarian products retrieved",
+      response: vegProducts
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({status:false, message: "Internal Server Error" , response:error.message});
+  }
+};
+
+// recent order products only veg
+const getRecentOrderNonVegProducts = async (req, res) => {
+  try {
+    const userId = req.data._id;
+
+    // find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({
+        status: false,
+        message: "User not found",
+      });
+    }
+
+    // get the most recent order from completedCart
+    const completedCart = user.completedCart;
+    if (completedCart.length === 0) {
+      return res.status(404).json({
+        status: false,
+        message: "No completed orders found",
+        response: [],
+      });
+    }
+
+    const recentOrder = completedCart[completedCart.length - 1];
+    const vegProducts = recentOrder.products.filter(product => product.foodType==="non-veg");
+
+    return res.status(200).json({
+      status: true,
+      message: "Recent vegetarian products retrieved",
+      response: vegProducts
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({status:false, message: "Internal Server Error" , response:error.message});
+  }
+};
+
 // cancel last order for user
 const cancelLastOrder = async (req, res) => {
   try {
@@ -334,5 +411,7 @@ module.exports = {
   updateCartStatus,
   removeFromCart,
   getRecentOrder,
+  getRecentOrderVegProducts,
+  getRecentOrderNonVegProducts,
   cancelLastOrder
 };
