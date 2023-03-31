@@ -1,9 +1,9 @@
 const dealsModel = require("../model/todayDealsModel");
-const categoryModel = require("../model/categoryModel")
+const categoryModel = require("../model/categoryModel");
 const cloudinary = require("cloudinary");
 
 // create a product
-const createProduct = async (req, res) => {
+const createDealProduct = async (req, res) => {
   try {
     const { productName, description, price, categoryId, foodType } = req.body;
     if (!productName || !description || !price || !categoryId || !foodType) {
@@ -55,13 +55,13 @@ const createProduct = async (req, res) => {
       message: "Product created successfully",
       product: {
         categoryId,
-        productImage:product.avatar.url,
+        productImage: product.avatar.url,
         ...rest,
       },
     };
     res.status(201).send(response);
   } catch (error) {
-    console.log(console.error)
+    console.log(console.error);
     const response = {
       status: false,
       error,
@@ -72,7 +72,7 @@ const createProduct = async (req, res) => {
 };
 
 // get all products
-const getAllProducts = async (req, res) => {
+const getAllDealProducts = async (req, res) => {
   try {
     const products = await dealsModel.find();
     res.status(200).send({
@@ -82,8 +82,8 @@ const getAllProducts = async (req, res) => {
         const { avatar, ...rest } = product._doc;
         return {
           ...rest,
-          productImage: avatar?.url || null
-        }
+          productImage: avatar?.url || null,
+        };
       }),
     });
   } catch (error) {
@@ -97,7 +97,7 @@ const getAllProducts = async (req, res) => {
 };
 
 //get single product
-const getSingleProduct = async (req, res) => {
+const getSingleDealProduct = async (req, res) => {
   try {
     const product = await dealsModel.findById(req.params.id);
     const name = product.productName;
@@ -139,9 +139,9 @@ const getSingleProduct = async (req, res) => {
 };
 
 //get all veg products
-const getAllVegProducts = async (req, res) => {
+const getAllVegDealProducts = async (req, res) => {
   try {
-    const products = await dealsModel.find({foodType: "veg" });
+    const products = await dealsModel.find({ foodType: "veg" });
     res.status(200).send({
       status: true,
       message: "All Veg Products List",
@@ -149,8 +149,8 @@ const getAllVegProducts = async (req, res) => {
         const { avatar, ...rest } = product._doc;
         return {
           ...rest,
-          productImage: avatar?.url || null
-        }
+          productImage: avatar?.url || null,
+        };
       }),
     });
   } catch (error) {
@@ -164,9 +164,9 @@ const getAllVegProducts = async (req, res) => {
 };
 
 //get all non-veg products
-const getAllNonVegProducts = async (req, res) => {
+const getAllNonVegDealProducts = async (req, res) => {
   try {
-    const products = await dealsModel.find({foodType: "non-veg" });
+    const products = await dealsModel.find({ foodType: "non-veg" });
     res.status(200).send({
       status: true,
       message: "All Veg Products List",
@@ -174,8 +174,8 @@ const getAllNonVegProducts = async (req, res) => {
         const { avatar, ...rest } = product._doc;
         return {
           ...rest,
-          productImage: avatar?.url || null
-        }
+          productImage: avatar?.url || null,
+        };
       }),
     });
   } catch (error) {
@@ -189,10 +189,11 @@ const getAllNonVegProducts = async (req, res) => {
 };
 
 // update a product
-const updateProduct = async (req, res) => {
+const updateDealProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { productName, description, price, categoryId, foodType, status } = req.body;
+    const { productName, description, price, categoryId, foodType, status } =
+      req.body;
     const fieldsToUpdate = {};
     if (productName) fieldsToUpdate.productName = productName;
     if (description) fieldsToUpdate.description = description;
@@ -230,7 +231,7 @@ const updateProduct = async (req, res) => {
       message: "Product updated successfully",
       product: {
         ...rest,
-        productImage: avatar?.url || null
+        productImage: avatar?.url || null,
       },
     });
   } catch (error) {
@@ -244,7 +245,7 @@ const updateProduct = async (req, res) => {
 };
 
 //update status
-const toggleProductStatus = async (req, res) => {
+const toggleDealProductStatus = async (req, res) => {
   try {
     const productId = req.params.id;
     const product = await dealsModel.findById(productId);
@@ -287,7 +288,7 @@ const toggleProductStatus = async (req, res) => {
 };
 
 // delete a product
-const deleteProduct = async (req, res) => {
+const deleteDealProduct = async (req, res) => {
   try {
     const { id } = req.params;
     await dealsModel.findByIdAndDelete(id);
@@ -305,6 +306,13 @@ const deleteProduct = async (req, res) => {
   }
 };
 
-
-
-module.exports = {createProduct, getAllProducts, getSingleProduct, getAllVegProducts, getAllNonVegProducts, updateProduct, deleteProduct, toggleProductStatus}
+module.exports = {
+  createDealProduct,
+  getAllDealProducts,
+  getSingleDealProduct,
+  getAllVegDealProducts,
+  getAllNonVegDealProducts,
+  updateDealProduct,
+  deleteDealProduct,
+  toggleDealProductStatus,
+};
