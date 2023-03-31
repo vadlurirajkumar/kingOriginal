@@ -5,6 +5,7 @@ const generateToken = require("../utils/jsonToken");
 const generateOtp = require("../utils/otpGenerator");
 const NodeGeocoder = require("node-geocoder");
 const geolib = require("geolib");
+const Products = require("../model/productModel");
 const geocoder = NodeGeocoder({
   provider: "openstreetmap",
 });
@@ -345,47 +346,21 @@ const getSingleUser = async (req, res) => {
 };
 
 //search products
-
-// const searchProducts = async (req, res) => {
-//   try {
-//     const { keyword } = req.params;
-//     const results = await productModel.findOne({
-//       $or: [
-//         { name: { $regex: new RegExp(keyword, "i") } },
-//         { description: { $regex: new RegExp(keyword, "i") } },
-//       ],
-//     });
-//     res.json(results);
-//   } catch (error) {
-//     console.log(error);
-//     res.status(400).send({
-//       success: false,
-//       message: "Error In Search Product API",
-//       error,
-//     });
-//   }
-// };
-
 const searchProducts = async (req, res) => {
+  const { searchQuery } = req.body;
   try {
-    const { keyword } = req.params;
-    const results = await productModel
-      .findOne({
-        productName: { $regex: keyword, $options: "i" },
-        status: "active",
-      });
-    res.json(results);
-  } catch (error) {
-    console.log(error);
-    res.status(400).send({
-      success: false,
-      message: "Error In Search Product API",
-      error,
+    const formattedQuery = searchQuery.toLowerCase().replace(/\s+/g, '');
+    const products = await productModel.find({});
+    const matchingProducts = products.filter((product) => {
+      const productName = product.productName.toLowerCase().replace(/\s+/g, '');
+      return productName.includes(formattedQuery);
     });
+    res.json(matchingProducts);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error searching for products');
   }
 };
-
-
 
 module.exports = {
   signupUser,
