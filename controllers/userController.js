@@ -349,18 +349,46 @@ const getSingleUser = async (req, res) => {
 const searchProducts = async (req, res) => {
   const { searchQuery } = req.body;
   try {
+    if (!searchQuery) {
+      return res.status(404).json({
+        status: false,
+        message: "No products found"
+      });
+    }
     const formattedQuery = searchQuery.toLowerCase().replace(/\s+/g, '');
     const products = await productModel.find({});
     const matchingProducts = products.filter((product) => {
       const productName = product.productName.toLowerCase().replace(/\s+/g, '');
       return productName.includes(formattedQuery);
     });
-    res.json(matchingProducts);
+    if (matchingProducts.length === 0) {
+      return res.status(404).json({
+        status: false,
+        message: "No matching products found"
+      });
+    }
+    const formattedProducts = matchingProducts.map((product) => ({
+      id: product._id,
+      price: product.price,
+      description: product.description,
+      productImage: product.avatar.url,
+      status: product.status,
+      foodType: product.foodType,
+    }));
+    res.status(200).json({
+      status: true,
+      message: "Matching products found",
+      response: formattedProducts,
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).send('Error searching for products');
+    res.status(500).send({
+      status:false,
+      message:"Error searching for products"
+    });
   }
 };
+
 
 module.exports = {
   signupUser,
