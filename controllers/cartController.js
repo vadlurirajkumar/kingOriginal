@@ -4,6 +4,98 @@ const Product = require("../model/productModel");
 const User = require("../model/usermodel");
 
 // add to cart
+// const addToCart = async (req, res) => {
+//   try {
+//     const userId = req.data._id;
+//     const productId = req.body.productId;
+
+//     // find product
+//     const product = await Product.findById(productId);
+//     if (!product) {
+//       return res.status(404).json({
+//         status: false,
+//         message: "Product not found",
+//         response: [],
+//       });
+//     }
+
+//     // find user
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "User not found",
+//       });
+//     }
+
+//     // check if there is an existing cart with status inCart
+//     let existingCart = user.pendingCart.find((c) => c.status === "inCart");
+
+//     if (existingCart) {
+//       // if the cart already exists, add the product to the cart
+//       const existingProductIndex = existingCart.products.findIndex(
+//         (p) => p.productId.toString() === productId
+//       );
+//       if (existingProductIndex !== -1) {
+//         // if the product already exists in the cart, increase its quantity
+//         existingCart.products[existingProductIndex].quantity += 1;
+//       } else {
+//         // if the product doesn't exist in the cart, add it
+//         existingCart.products.push({
+//           productId: productId,
+//           productName: product.productName,
+//           quantity: 1,
+//           price: product.price,
+//           productImage: product.avatar.url,
+//           foodType: product.foodType,
+//         });
+//       }
+//       // Recalculate the total amount for the cart
+//       existingCart.totalAmount = existingCart.products.reduce(
+//         (total, p) => total + p.price * p.quantity,
+//         0
+//       );
+//       await user.save();
+//     } else {
+//       // if there is no existing cart with status inCart, create a new one
+//       const newCart = {
+//         buyer: userId,
+//         status: "inCart",
+//         totalAmount: product.price,
+//         // cartID:_id,
+//         createdAt:new Date,
+//         products: [
+//           {
+//             productId: productId,
+//             productName: product.productName,
+//             quantity: 1,
+//             price: product.price,
+//             productImage: product.avatar.url,
+//             foodType: product.foodType,
+//           },
+//         ],
+//       };
+
+//       user.pendingCart.push(newCart);
+//       await user.save();
+
+//       return res.status(200).json({
+//         status: true,
+//         message: "Product added to cart",
+//         response: newCart,
+//       });
+//     }
+
+//     return res.status(200).json({
+//       status: true,
+//       message: "Product added to cart",
+//       response: existingCart,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ message: "Internal Server Error" });
+//   }
+// };
 const addToCart = async (req, res) => {
   try {
     const userId = req.data._id;
@@ -56,12 +148,39 @@ const addToCart = async (req, res) => {
         0
       );
       await user.save();
+
+      const options = {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        second: "numeric",
+        hour12: true,
+      };
+      const formattedDate = existingCart.createdAt.toLocaleDateString(
+        "en-US",
+        options
+      );
+
+      return res.status(200).json({
+        status: true,
+        message: "Product added to cart",
+        response: {
+          ...existingCart.toObject(),
+          createdAt: formattedDate,
+          cartId: existingCart.cartId, // add cartId to the response
+        },
+      });
     } else {
       // if there is no existing cart with status inCart, create a new one
       const newCart = {
         buyer: userId,
         status: "inCart",
         totalAmount: product.price,
+        createdAt: new Date(),
+        cartId: mongoose.Types.ObjectId(),
         products: [
           {
             productId: productId,
@@ -77,23 +196,60 @@ const addToCart = async (req, res) => {
       user.pendingCart.push(newCart);
       await user.save();
 
+      const options = {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        second: "numeric",
+        hour12: true,
+      };
+      const formattedDate = newCart.createdAt.toLocaleDateString(
+        "en-US",
+        options
+      );
+
       return res.status(200).json({
         status: true,
         message: "Product added to cart",
-        response: newCart,
+        response: {
+          ...newCart,
+          createdAt: formattedDate,
+        },
       });
     }
+
+    const options = {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+      hour12: true,
+    };
+    const formattedDate = existingCart.createdAt.toLocaleDateString(
+      "en-US",
+      options
+    );
 
     return res.status(200).json({
       status: true,
       message: "Product added to cart",
-      response: existingCart,
+      response: {
+        ...existingCart.toObject(),
+        createdAt: formattedDate,
+      },
     });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 // remove from cart
 const removeFromCart = async (req, res) => {
   try {
@@ -152,7 +308,11 @@ const removeFromCart = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    return res.status(500).json({status:false, message: "Internal Server Error" , response:error.message});
+    return res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      response: error.message,
+    });
   }
 };
 // get cart for single user
@@ -194,7 +354,11 @@ const getCartForUser = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    return res.status(500).json({status:false, message: "Internal Server Error" , response:error.message});
+    return res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      response: error.message,
+    });
   }
 };
 // update cart
@@ -209,7 +373,9 @@ const updateCartStatus = async (req, res) => {
       (p) => p.status === "inCart"
     );
     if (pendingCartIndex === -1) {
-      return res.status(404).json({ status:false, message: "Pending cart not found" });
+      return res
+        .status(404)
+        .json({ status: false, message: "Pending cart not found" });
     }
 
     const { transactionId, status } = req.body;
@@ -232,16 +398,20 @@ const updateCartStatus = async (req, res) => {
       await user.save();
 
       res.status(200).json({
-        status:true,
+        status: true,
         message: "Cart updated successfully",
         response: completedCart,
       });
     } else {
-      res.status(400).json({status:false, message: "Invalid status" });
+      res.status(400).json({ status: false, message: "Invalid status" });
     }
   } catch (err) {
     console.error(err);
-    res.status(500).json({status:false, message: "Internal server error", response:err.message });
+    res.status(500).json({
+      status: false,
+      message: "Internal server error",
+      response: err.message,
+    });
   }
 };
 // recent order of user
@@ -274,11 +444,15 @@ const getRecentOrder = async (req, res) => {
     return res.status(200).json({
       status: true,
       message: "Recent order retrieved",
-      response: recentOrder
+      response: recentOrder,
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({status:false, message: "Internal Server Error" , response:error.message});
+    return res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      response: error.message,
+    });
   }
 };
 
@@ -307,16 +481,22 @@ const getRecentOrderVegProducts = async (req, res) => {
     }
 
     const recentOrder = completedCart[completedCart.length - 1];
-    const vegProducts = recentOrder.products.filter(product => product.foodType==="veg");
+    const vegProducts = recentOrder.products.filter(
+      (product) => product.foodType === "veg"
+    );
 
     return res.status(200).json({
       status: true,
       message: "Recent vegetarian products retrieved",
-      response: vegProducts
+      response: vegProducts,
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({status:false, message: "Internal Server Error" , response:error.message});
+    return res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      response: error.message,
+    });
   }
 };
 
@@ -345,16 +525,22 @@ const getRecentOrderNonVegProducts = async (req, res) => {
     }
 
     const recentOrder = completedCart[completedCart.length - 1];
-    const vegProducts = recentOrder.products.filter(product => product.foodType==="non-veg");
+    const vegProducts = recentOrder.products.filter(
+      (product) => product.foodType === "non-veg"
+    );
 
     return res.status(200).json({
       status: true,
       message: "Recent vegetarian products retrieved",
-      response: vegProducts
+      response: vegProducts,
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({status:false, message: "Internal Server Error" , response:error.message});
+    return res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      response: error.message,
+    });
   }
 };
 
@@ -383,10 +569,10 @@ const cancelLastOrder = async (req, res) => {
     }
 
     const recentOrder = completedCart[completedCart.length - 1];
-    
+
     // update the status of the most recent completed order to "canceled"
     recentOrder.status = "canceled";
-    
+
     // move the most recent completed order from completedCart to canceledCart
     const canceledCart = user.canceledCart || [];
     canceledCart.push(recentOrder);
@@ -401,7 +587,11 @@ const cancelLastOrder = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({status:false, message: "Internal Server Error", response:error.message });
+    return res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      response: error.message,
+    });
   }
 };
 
@@ -441,5 +631,5 @@ module.exports = {
   getRecentOrderVegProducts,
   getRecentOrderNonVegProducts,
   cancelLastOrder,
-  orderHistory
+  orderHistory,
 };

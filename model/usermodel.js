@@ -40,6 +40,8 @@ const userSchema = new mongoose.Schema(
         buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         totalAmount: { type: Number, required: true },
         status: String,
+        cartId:String,
+        createdAt:Date,
         products: [
           {
             productId: {
