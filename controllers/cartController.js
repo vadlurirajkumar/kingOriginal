@@ -419,7 +419,7 @@ const orderHistory = async (req, res) => {
       res.status(200).json({
         status: true,
         message: "user history fetched successfully",
-        response: user,
+        response: [user],
       });
     }
   } catch (error) {
