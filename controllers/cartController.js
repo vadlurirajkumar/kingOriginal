@@ -405,6 +405,33 @@ const cancelLastOrder = async (req, res) => {
   }
 };
 
+// get orderHistory
+const orderHistory = async (req, res) => {
+  try {
+    const userId = req.data._id;
+    let user = await User.findById(userId);
+    if (!user) {
+      res.status(400).json({
+        status: false,
+        message: "user not found",
+      });
+    } else {
+      res.status(200).json({
+        status: true,
+        message: "user history fetched successfully",
+        response: user,
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      response: error.message,
+    });
+  }
+};
+
 module.exports = {
   addToCart,
   getCartForUser,
@@ -413,5 +440,6 @@ module.exports = {
   getRecentOrder,
   getRecentOrderVegProducts,
   getRecentOrderNonVegProducts,
-  cancelLastOrder
+  cancelLastOrder,
+  orderHistory
 };
