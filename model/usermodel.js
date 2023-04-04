@@ -42,6 +42,9 @@ const userSchema = new mongoose.Schema(
         totalAmount: { type: Number, required: true },
         status: String,
         cartId:String,
+        DeliveryCharge:String,
+        GovtTaxes:String,
+        GrandTotal:String,
         createdAt: {
           type: Date,
           get: function(createdAt) {
@@ -85,6 +88,9 @@ const userSchema = new mongoose.Schema(
         cartId:String,
         cookingInstructions:String,
         ReceivedAmount:String,
+        DeliveryCharge:String,
+        GovtTaxes:String,
+        GrandTotal:String,
         createdAt: {
           type: Date,
           get: function(createdAt) {
@@ -128,6 +134,9 @@ const userSchema = new mongoose.Schema(
         cookingInstructions:String,
         ReceivedAmount:String,
         cartId:String,
+        DeliveryCharge:String,
+        GovtTaxes:String,
+        GrandTotal:String,
         createdAt: {
           type: Date,
           get: function(createdAt) {

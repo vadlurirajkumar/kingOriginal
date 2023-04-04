@@ -231,6 +231,9 @@ const getCartForUser = async (req, res) => {
         (total, p) => total + p.price * p.quantity,
         0
       );
+      existingCart.DeliveryCharge = 50
+      existingCart.GovtTaxes = 20
+      existingCart.GrandTotal = Number(existingCart.totalAmount) + Number(existingCart.DeliveryCharge) + Number(existingCart.GovtTaxes);
       await user.save();
 
       return res.status(200).json({
@@ -255,6 +258,76 @@ const getCartForUser = async (req, res) => {
   }
 };
 // update cart
+// const updateCartStatus = async (req, res) => {
+//   try {
+//     // Retrieve userId from JWT token
+//     const userId = req.data.id;
+
+//     // Find pending cart for user
+//     const user = await User.findById(userId);
+//     const pendingCartIndex = user.pendingCart.findIndex(
+//       (p) => p.status === "inCart"
+//     );
+//     if (pendingCartIndex === -1) {
+//       pendingCartIndex.createdAt = new Date()
+//       return res
+//         .status(404)
+//         .json({ status: false, message: "Pending cart not found" });
+//     }
+
+//     const { transactionId, status, cookingInstructions, ReceivedAmount } = req.body;
+
+//     if (status === "ordered") {
+//       // Move pending cart data to completed cart and empty pending cart
+//       const completedCart = user.completedCart || [];
+//       const cartToMove = user.pendingCart[pendingCartIndex];
+//       cartToMove.status = status;
+//       cartToMove.transactionId = transactionId;
+//       cartToMove.cookingInstructions = cookingInstructions;
+//       cartToMove.ReceivedAmount = ReceivedAmount;
+//       // const formattedDate = new Date().toLocaleString("en-US", {
+//       //   weekday: "long",
+//       //   year: "numeric",
+//       //   month: "long",
+//       //   day: "numeric",
+//       //   hour: "numeric",
+//       //   minute: "numeric",
+//       //   second: "numeric",
+//       //   hour12: true,
+//       // });
+//       // cartToMove.createdAt=formattedDate;
+//       completedCart.push({
+//         ...cartToMove.toObject(),
+//         transactionId,
+//         status,
+//         cookingInstructions,
+//         ReceivedAmount,
+//         // createdAt: formattedDate,
+//       });
+//       user.completedCart = completedCart;
+//       // completedCart.createdAt= formattedDate
+//       user.pendingCart.splice(pendingCartIndex, 1);
+
+//       // Save the user object to the database
+//       await user.save();
+
+//       res.status(200).json({
+//         status: true,
+//         message: "Cart updated successfully",
+//         response: completedCart,
+//       });
+//     } else {
+//       res.status(400).json({ status: false, message: "Invalid status" });
+//     }
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({
+//       status: false,
+//       message: "Internal server error",
+//       response: err.message,
+//     });
+//   }
+// };
 const updateCartStatus = async (req, res) => {
   try {
     // Retrieve userId from JWT token
@@ -278,31 +351,30 @@ const updateCartStatus = async (req, res) => {
       // Move pending cart data to completed cart and empty pending cart
       const completedCart = user.completedCart || [];
       const cartToMove = user.pendingCart[pendingCartIndex];
+
+      // Recalculate the total amount for the cart
+      cartToMove.totalAmount = cartToMove.products.reduce(
+        (total, p) => total + p.price * p.quantity,
+        0
+      );
+      cartToMove.DeliveryCharge = 50;
+      cartToMove.GovtTaxes = 20;
+      cartToMove.GrandTotal = Number(cartToMove.totalAmount) + Number(cartToMove.DeliveryCharge) + Number(cartToMove.GovtTaxes);
+
       cartToMove.status = status;
       cartToMove.transactionId = transactionId;
       cartToMove.cookingInstructions = cookingInstructions;
       cartToMove.ReceivedAmount = ReceivedAmount;
-      // const formattedDate = new Date().toLocaleString("en-US", {
-      //   weekday: "long",
-      //   year: "numeric",
-      //   month: "long",
-      //   day: "numeric",
-      //   hour: "numeric",
-      //   minute: "numeric",
-      //   second: "numeric",
-      //   hour12: true,
-      // });
-      // cartToMove.createdAt=formattedDate;
+      
       completedCart.push({
         ...cartToMove.toObject(),
         transactionId,
         status,
         cookingInstructions,
         ReceivedAmount,
-        // createdAt: formattedDate,
       });
+      
       user.completedCart = completedCart;
-      // completedCart.createdAt= formattedDate
       user.pendingCart.splice(pendingCartIndex, 1);
 
       // Save the user object to the database
@@ -311,7 +383,7 @@ const updateCartStatus = async (req, res) => {
       res.status(200).json({
         status: true,
         message: "Cart updated successfully",
-        response: completedCart,
+        response: completedCart
       });
     } else {
       res.status(400).json({ status: false, message: "Invalid status" });
@@ -325,6 +397,7 @@ const updateCartStatus = async (req, res) => {
     });
   }
 };
+
 // recent order of user
 const getRecentOrder = async (req, res) => {
   try {
@@ -577,7 +650,10 @@ const getOrderDetails = async (req, res) => {
           cookingInstructions:cart.cookingInstructions,
           ReceivedAmount: cart.ReceivedAmount,
           createdAt:cart.createdAt,
-          products: cart.products
+          products: cart.products,
+          DeliveryCharge:cart.DeliveryCharge,
+          GovtTaxes:cart.GovtTaxes,
+          GrandTotal:cart.GrandTotal
         }
         res.status(200).json({
           status: true,
