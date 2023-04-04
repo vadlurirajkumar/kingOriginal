@@ -224,6 +224,64 @@ const getCartForUser = async (req, res) => {
     });
   }
 };
+// order self-pickup
+const ChangeToSelfPickup = async (req, res) => {
+  try {
+    const userId = req.data._id;
+
+    // find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({
+        status: false,
+        message: "User not found",
+      });
+    }
+
+    // check if there is an existing cart with status inCart
+    let existingCart = user.pendingCart.find((c) => c.status === "inCart");
+
+    if (existingCart) {
+      // update the existing cart status to "Self-pickup"
+      existingCart.status = "Self-pickup";
+
+      // move the existing cart to the selfPickupCart array
+      user.selfPickupCart.push(existingCart);
+
+      // Recalculate the total amount for the cart
+      existingCart.totalAmount = existingCart.products.reduce(
+        (total, p) => total + p.price * p.quantity,
+        0
+      );
+      existingCart.DeliveryCharge = 0;
+      existingCart.GovtTaxes = 20;
+      existingCart.GrandTotal =
+        Number(existingCart.totalAmount) +
+        Number(existingCart.DeliveryCharge) +
+        Number(existingCart.GovtTaxes);
+      await user.save();
+
+      return res.status(200).json({
+        status: true,
+        message: "Cart fetched successfully for selfPickup",
+        response: existingCart,
+      });
+    } else {
+      return res.status(404).json({
+        status: false,
+        message: "Cart not found",
+        response: [],
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      response: error.message,
+    });
+  }
+};
 // update cart
 const updateCartStatus = async (req, res) => {
   try {
@@ -298,7 +356,6 @@ const updateCartStatus = async (req, res) => {
     });
   }
 };
-
 // recent order of user
 const getRecentOrder = async (req, res) => {
   try {
@@ -440,28 +497,41 @@ const cancelLastOrder = async (req, res) => {
       });
     }
 
-    // get the most recent completed order from completedCart
-    const completedCart = user.completedCart;
-    if (completedCart.length === 0) {
+    // combine completedCart and selfPickupCart arrays
+    const allOrders = user.completedCart.concat(user.selfPickupCart);
+
+    // sort the combined array by createdAt field in descending order
+    allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    // get the most recent order from the combined array
+    const recentOrder = allOrders[0];
+
+    if (!recentOrder) {
       return res.status(404).json({
         status: false,
-        message: "No completed orders found",
+        message: "No completed or self-pickup orders found",
         response: [],
       });
     }
 
-    const recentOrder = completedCart[completedCart.length - 1];
-
-    // update the status of the most recent completed order to "canceled"
+    // update the status of the most recent order to "canceled"
     recentOrder.status = "canceled";
 
-    // move the most recent completed order from completedCart to canceledCart
+    // move the most recent order from its original array to canceledCart
     const canceledCart = user.canceledCart || [];
+    if (recentOrder.deliveryMethod === "Delivery") {
+      user.completedCart = user.completedCart.filter(
+        (cart) => cart._id.toString() !== recentOrder._id.toString()
+      );
+    } else {
+      user.selfPickupCart = user.selfPickupCart.filter(
+        (cart) => cart._id.toString() !== recentOrder._id.toString()
+      );
+    }
     canceledCart.push(recentOrder);
     user.canceledCart = canceledCart;
-    user.completedCart = completedCart.slice(0, completedCart.length - 1);
 
-    // save the user object with the updated canceledCart and completedCart arrays
+    // save the user object with the updated canceledCart and original arrays
     await user.save();
 
     return res.status(200).json({
@@ -489,7 +559,7 @@ const orderHistory = async (req, res) => {
         message: "user not found",
       });
     } else {
-      const history = user.completedCart.concat(user.canceledCart);
+      const history = user.completedCart.concat(user.canceledCart).concat(user.selfPickupCart);
       history.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       res.status(200).json({
         status: true,
@@ -528,6 +598,7 @@ const getOrderDetails = async (req, res) => {
         });
       } else {
         const response = {
+          cartId:cartId,
           buyer: cart.buyer,
           transactionId: cart.transactionId,
           status: cart.status,
@@ -568,4 +639,5 @@ module.exports = {
   cancelLastOrder,
   orderHistory,
   getOrderDetails,
+  ChangeToSelfPickup
 };

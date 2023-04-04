@@ -174,6 +174,50 @@ const userSchema = new mongoose.Schema(
         ],
       },
     ],
+    selfPickupCart: [
+      {
+        buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        totalAmount: { type: Number, required: true },
+        status: String,
+        cartId:String,
+        DeliveryCharge:String,
+        GovtTaxes:String,
+        GrandTotal:String,
+        createdAt: {
+          type: Date,
+          get: function(createdAt) {
+            return moment(createdAt).format('D MMMM YYYY h:mm:ss a');
+          }
+        },
+        products: [
+          {
+            productId: {
+              type: mongoose.ObjectId,
+              ref: "Products",
+            },
+            productName: {
+              type: String,
+              required: true,
+            },
+            quantity: {
+              type: Number,
+              required: true,
+            },
+            price: {
+              type: Number,
+              required: true,
+            },
+            productImage: {
+              type: String,
+            },
+            foodType: {
+              type: String,
+              enum: ["veg", "non-veg"],
+            },
+          },
+        ],
+      },
+    ],
   },
   { timestamps: true }
 );
