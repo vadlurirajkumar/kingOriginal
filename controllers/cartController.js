@@ -650,10 +650,10 @@ const getOrderDetails = async (req, res) => {
           cookingInstructions:cart.cookingInstructions,
           ReceivedAmount: cart.ReceivedAmount,
           createdAt:cart.createdAt,
-          products: cart.products,
           DeliveryCharge:cart.DeliveryCharge,
           GovtTaxes:cart.GovtTaxes,
-          GrandTotal:cart.GrandTotal
+          GrandTotal:cart.GrandTotal,
+          products: cart.products
         }
         res.status(200).json({
           status: true,
