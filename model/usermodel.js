@@ -1,3 +1,4 @@
+const moment = require('moment');
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
@@ -41,7 +42,12 @@ const userSchema = new mongoose.Schema(
         totalAmount: { type: Number, required: true },
         status: String,
         cartId:String,
-        createdAt:Date,
+        createdAt: {
+          type: Date,
+          get: function(createdAt) {
+            return moment(createdAt).format('D MMMM YYYY h:mm:ss a');
+          }
+        },
         products: [
           {
             productId: {
@@ -76,6 +82,13 @@ const userSchema = new mongoose.Schema(
         buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         totalAmount: String,
         transactionId:String,
+        cartId:String,
+        createdAt: {
+          type: Date,
+          get: function(createdAt) {
+            return moment(createdAt).format('D MMMM YYYY h:mm:ss a');
+          }
+        },
         status: String,
         products: [
           {
@@ -110,6 +123,13 @@ const userSchema = new mongoose.Schema(
       {
         buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         totalAmount: String,
+        cartId:String,
+        createdAt: {
+          type: Date,
+          get: function(createdAt) {
+            return moment(createdAt).format('D MMMM YYYY h:mm:ss a');
+          }
+        },
         transactionId:String,
         status: String,
         products: [
@@ -146,6 +166,7 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.index({ otp_expiry: 1 }, { expireAfterSeconds: 0 });
+userSchema.set('toJSON', { getters: true });
 
 const User = new mongoose.model("User", userSchema);
 

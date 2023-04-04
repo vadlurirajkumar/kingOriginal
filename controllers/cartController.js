@@ -4,98 +4,6 @@ const Product = require("../model/productModel");
 const User = require("../model/usermodel");
 
 // add to cart
-// const addToCart = async (req, res) => {
-//   try {
-//     const userId = req.data._id;
-//     const productId = req.body.productId;
-
-//     // find product
-//     const product = await Product.findById(productId);
-//     if (!product) {
-//       return res.status(404).json({
-//         status: false,
-//         message: "Product not found",
-//         response: [],
-//       });
-//     }
-
-//     // find user
-//     const user = await User.findById(userId);
-//     if (!user) {
-//       return res.status(400).json({
-//         status: false,
-//         message: "User not found",
-//       });
-//     }
-
-//     // check if there is an existing cart with status inCart
-//     let existingCart = user.pendingCart.find((c) => c.status === "inCart");
-
-//     if (existingCart) {
-//       // if the cart already exists, add the product to the cart
-//       const existingProductIndex = existingCart.products.findIndex(
-//         (p) => p.productId.toString() === productId
-//       );
-//       if (existingProductIndex !== -1) {
-//         // if the product already exists in the cart, increase its quantity
-//         existingCart.products[existingProductIndex].quantity += 1;
-//       } else {
-//         // if the product doesn't exist in the cart, add it
-//         existingCart.products.push({
-//           productId: productId,
-//           productName: product.productName,
-//           quantity: 1,
-//           price: product.price,
-//           productImage: product.avatar.url,
-//           foodType: product.foodType,
-//         });
-//       }
-//       // Recalculate the total amount for the cart
-//       existingCart.totalAmount = existingCart.products.reduce(
-//         (total, p) => total + p.price * p.quantity,
-//         0
-//       );
-//       await user.save();
-//     } else {
-//       // if there is no existing cart with status inCart, create a new one
-//       const newCart = {
-//         buyer: userId,
-//         status: "inCart",
-//         totalAmount: product.price,
-//         // cartID:_id,
-//         createdAt:new Date,
-//         products: [
-//           {
-//             productId: productId,
-//             productName: product.productName,
-//             quantity: 1,
-//             price: product.price,
-//             productImage: product.avatar.url,
-//             foodType: product.foodType,
-//           },
-//         ],
-//       };
-
-//       user.pendingCart.push(newCart);
-//       await user.save();
-
-//       return res.status(200).json({
-//         status: true,
-//         message: "Product added to cart",
-//         response: newCart,
-//       });
-//     }
-
-//     return res.status(200).json({
-//       status: true,
-//       message: "Product added to cart",
-//       response: existingCart,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json({ message: "Internal Server Error" });
-//   }
-// };
 const addToCart = async (req, res) => {
   try {
     const userId = req.data._id;
@@ -249,7 +157,6 @@ const addToCart = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 // remove from cart
 const removeFromCart = async (req, res) => {
   try {
@@ -386,10 +293,21 @@ const updateCartStatus = async (req, res) => {
       const cartToMove = user.pendingCart[pendingCartIndex];
       cartToMove.status = status;
       cartToMove.transactionId = transactionId;
+      const formattedDate = new Date().toLocaleString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        second: "numeric",
+        hour12: true,
+      });
       completedCart.push({
         ...cartToMove.toObject(),
         transactionId,
         status,
+        createdAt: formattedDate,
       });
       user.completedCart = completedCart;
       user.pendingCart.splice(pendingCartIndex, 1);
@@ -455,7 +373,6 @@ const getRecentOrder = async (req, res) => {
     });
   }
 };
-
 // recent order products only veg
 const getRecentOrderVegProducts = async (req, res) => {
   try {
@@ -499,7 +416,6 @@ const getRecentOrderVegProducts = async (req, res) => {
     });
   }
 };
-
 // recent order products only veg
 const getRecentOrderNonVegProducts = async (req, res) => {
   try {
@@ -543,7 +459,6 @@ const getRecentOrderNonVegProducts = async (req, res) => {
     });
   }
 };
-
 // cancel last order for user
 const cancelLastOrder = async (req, res) => {
   try {
@@ -570,6 +485,24 @@ const cancelLastOrder = async (req, res) => {
 
     const recentOrder = completedCart[completedCart.length - 1];
 
+    // convert the ISO date string to a Date object
+    const createdAtDate = new Date();
+
+    // format the date using toLocaleString()
+    const createdAt = createdAtDate.toLocaleString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+      hour12: true,
+    });
+
+    // add createdAt field to recentOrder
+    recentOrder.createdAt = createdAt;
+
     // update the status of the most recent completed order to "canceled"
     recentOrder.status = "canceled";
 
@@ -578,6 +511,8 @@ const cancelLastOrder = async (req, res) => {
     canceledCart.push(recentOrder);
     user.canceledCart = canceledCart;
     user.completedCart = completedCart.slice(0, completedCart.length - 1);
+
+    // save the user object with the updated canceledCart and completedCart arrays
     await user.save();
 
     return res.status(200).json({
@@ -594,7 +529,6 @@ const cancelLastOrder = async (req, res) => {
     });
   }
 };
-
 // get orderHistory
 const orderHistory = async (req, res) => {
   try {
@@ -606,10 +540,12 @@ const orderHistory = async (req, res) => {
         message: "user not found",
       });
     } else {
+      const history = user.completedCart.concat(user.canceledCart);
+      history.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       res.status(200).json({
         status: true,
         message: "user history fetched successfully",
-        response: user.completedCart,
+        response: history,
       });
     }
   } catch (error) {
@@ -621,6 +557,50 @@ const orderHistory = async (req, res) => {
     });
   }
 };
+// get particular order
+const getOrderDetails = async (req, res) => {
+  try {
+    const userId = req.data._id;
+    const cartId = req.params.id;
+    let user = await User.findById(userId);
+    if (!user) {
+      res.status(400).json({
+        status: false,
+        message: "user not found",
+      });
+    } else {
+      const cart = user.completedCart.find(cart => cart.cartId === cartId) || user.canceledCart.find(cart => cart.cartId === cartId);
+      if (!cart) {
+        res.status(400).json({
+          status: false,
+          message: "cart not found",
+        });
+      } else {
+        const response = {
+          buyer: cart.buyer,
+          transactionId: cart.transactionId,
+          status: cart.status,
+          totalAmount: cart.totalAmount,
+          createdAt:cart.createdAt,
+          products: cart.products
+        }
+        res.status(200).json({
+          status: true,
+          message: "cart details fetched successfully",
+          response: response,
+        });
+      }
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      response: error.message,
+    });
+  }
+};
+
 
 module.exports = {
   addToCart,
@@ -632,4 +612,5 @@ module.exports = {
   getRecentOrderNonVegProducts,
   cancelLastOrder,
   orderHistory,
+  getOrderDetails
 };
