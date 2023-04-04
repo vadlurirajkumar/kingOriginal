@@ -83,6 +83,8 @@ const userSchema = new mongoose.Schema(
         totalAmount: String,
         transactionId:String,
         cartId:String,
+        cookingInstructions:String,
+        ReceivedAmount:String,
         createdAt: {
           type: Date,
           get: function(createdAt) {
@@ -123,6 +125,8 @@ const userSchema = new mongoose.Schema(
       {
         buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         totalAmount: String,
+        cookingInstructions:String,
+        ReceivedAmount:String,
         cartId:String,
         createdAt: {
           type: Date,

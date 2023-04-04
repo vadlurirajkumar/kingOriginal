@@ -56,28 +56,22 @@ const addToCart = async (req, res) => {
         0
       );
       await user.save();
-
-      const options = {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        second: "numeric",
-        hour12: true,
-      };
-      const formattedDate = existingCart.createdAt.toLocaleDateString(
-        "en-US",
-        options
-      );
-
+      // const formattedDate = new Date().toLocaleString("en-US", {
+      //   weekday: "long",
+      //   year: "numeric",
+      //   month: "long",
+      //   day: "numeric",
+      //   hour: "numeric",
+      //   minute: "numeric",
+      //   second: "numeric",
+      //   hour12: true,
+      // });
       return res.status(200).json({
         status: true,
         message: "Product added to cart",
         response: {
           ...existingCart.toObject(),
-          createdAt: formattedDate,
+          // createdAt:formattedDate,
           cartId: existingCart.cartId, // add cartId to the response
         },
       });
@@ -104,52 +98,44 @@ const addToCart = async (req, res) => {
       user.pendingCart.push(newCart);
       await user.save();
 
-      const options = {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        second: "numeric",
-        hour12: true,
-      };
-      const formattedDate = newCart.createdAt.toLocaleDateString(
-        "en-US",
-        options
-      );
+      // const formattedDate = new Date().toLocaleString("en-US", {
+      //   weekday: "long",
+      //   year: "numeric",
+      //   month: "long",
+      //   day: "numeric",
+      //   hour: "numeric",
+      //   minute: "numeric",
+      //   second: "numeric",
+      //   hour12: true,
+      // });
 
       return res.status(200).json({
         status: true,
         message: "Product added to cart",
         response: {
           ...newCart,
-          createdAt: formattedDate,
+          // createdAt: formattedDate,
         },
       });
     }
 
-    const options = {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      second: "numeric",
-      hour12: true,
-    };
-    const formattedDate = existingCart.createdAt.toLocaleDateString(
-      "en-US",
-      options
-    );
+    // const formattedDate = new Date().toLocaleString("en-US", {
+    //   weekday: "long",
+    //   year: "numeric",
+    //   month: "long",
+    //   day: "numeric",
+    //   hour: "numeric",
+    //   minute: "numeric",
+    //   second: "numeric",
+    //   hour12: true,
+    // });
 
     return res.status(200).json({
       status: true,
       message: "Product added to cart",
       response: {
         ...existingCart.toObject(),
-        createdAt: formattedDate,
+        // createdAt: formattedDate,
       },
     });
   } catch (error) {
@@ -280,12 +266,13 @@ const updateCartStatus = async (req, res) => {
       (p) => p.status === "inCart"
     );
     if (pendingCartIndex === -1) {
+      pendingCartIndex.createdAt = new Date()
       return res
         .status(404)
         .json({ status: false, message: "Pending cart not found" });
     }
 
-    const { transactionId, status } = req.body;
+    const { transactionId, status, cookingInstructions, ReceivedAmount } = req.body;
 
     if (status === "ordered") {
       // Move pending cart data to completed cart and empty pending cart
@@ -293,23 +280,29 @@ const updateCartStatus = async (req, res) => {
       const cartToMove = user.pendingCart[pendingCartIndex];
       cartToMove.status = status;
       cartToMove.transactionId = transactionId;
-      const formattedDate = new Date().toLocaleString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        second: "numeric",
-        hour12: true,
-      });
+      cartToMove.cookingInstructions = cookingInstructions;
+      cartToMove.ReceivedAmount = ReceivedAmount;
+      // const formattedDate = new Date().toLocaleString("en-US", {
+      //   weekday: "long",
+      //   year: "numeric",
+      //   month: "long",
+      //   day: "numeric",
+      //   hour: "numeric",
+      //   minute: "numeric",
+      //   second: "numeric",
+      //   hour12: true,
+      // });
+      // cartToMove.createdAt=formattedDate;
       completedCart.push({
         ...cartToMove.toObject(),
         transactionId,
         status,
-        createdAt: formattedDate,
+        cookingInstructions,
+        ReceivedAmount,
+        // createdAt: formattedDate,
       });
       user.completedCart = completedCart;
+      // completedCart.createdAt= formattedDate
       user.pendingCart.splice(pendingCartIndex, 1);
 
       // Save the user object to the database
@@ -486,22 +479,22 @@ const cancelLastOrder = async (req, res) => {
     const recentOrder = completedCart[completedCart.length - 1];
 
     // convert the ISO date string to a Date object
-    const createdAtDate = new Date();
+    // const createdAtDate = new Date();
 
     // format the date using toLocaleString()
-    const createdAt = createdAtDate.toLocaleString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      second: "numeric",
-      hour12: true,
-    });
+    // const createdAt = createdAtDate.toLocaleString("en-US", {
+    //   weekday: "long",
+    //   year: "numeric",
+    //   month: "long",
+    //   day: "numeric",
+    //   hour: "numeric",
+    //   minute: "numeric",
+    //   second: "numeric",
+    //   hour12: true,
+    // });
 
     // add createdAt field to recentOrder
-    recentOrder.createdAt = createdAt;
+    // recentOrder.createdAt = createdAt;
 
     // update the status of the most recent completed order to "canceled"
     recentOrder.status = "canceled";
@@ -580,13 +573,15 @@ const getOrderDetails = async (req, res) => {
           buyer: cart.buyer,
           transactionId: cart.transactionId,
           status: cart.status,
-          totalAmount: cart.totalAmount,
+          totalAmount:cart.totalAmount,
+          cookingInstructions:cart.cookingInstructions,
+          ReceivedAmount: cart.ReceivedAmount,
           createdAt:cart.createdAt,
           products: cart.products
         }
         res.status(200).json({
           status: true,
-          message: "cart details fetched successfully",
+          message: "order details fetched successfully",
           response: response,
         });
       }
