@@ -56,22 +56,12 @@ const addToCart = async (req, res) => {
         0
       );
       await user.save();
-      // const formattedDate = new Date().toLocaleString("en-US", {
-      //   weekday: "long",
-      //   year: "numeric",
-      //   month: "long",
-      //   day: "numeric",
-      //   hour: "numeric",
-      //   minute: "numeric",
-      //   second: "numeric",
-      //   hour12: true,
-      // });
+
       return res.status(200).json({
         status: true,
         message: "Product added to cart",
         response: {
           ...existingCart.toObject(),
-          // createdAt:formattedDate,
           cartId: existingCart.cartId, // add cartId to the response
         },
       });
@@ -97,45 +87,19 @@ const addToCart = async (req, res) => {
 
       user.pendingCart.push(newCart);
       await user.save();
-
-      // const formattedDate = new Date().toLocaleString("en-US", {
-      //   weekday: "long",
-      //   year: "numeric",
-      //   month: "long",
-      //   day: "numeric",
-      //   hour: "numeric",
-      //   minute: "numeric",
-      //   second: "numeric",
-      //   hour12: true,
-      // });
-
       return res.status(200).json({
         status: true,
         message: "Product added to cart",
         response: {
           ...newCart,
-          // createdAt: formattedDate,
         },
       });
     }
-
-    // const formattedDate = new Date().toLocaleString("en-US", {
-    //   weekday: "long",
-    //   year: "numeric",
-    //   month: "long",
-    //   day: "numeric",
-    //   hour: "numeric",
-    //   minute: "numeric",
-    //   second: "numeric",
-    //   hour12: true,
-    // });
-
     return res.status(200).json({
       status: true,
       message: "Product added to cart",
       response: {
         ...existingCart.toObject(),
-        // createdAt: formattedDate,
       },
     });
   } catch (error) {
@@ -231,9 +195,12 @@ const getCartForUser = async (req, res) => {
         (total, p) => total + p.price * p.quantity,
         0
       );
-      existingCart.DeliveryCharge = 50
-      existingCart.GovtTaxes = 20
-      existingCart.GrandTotal = Number(existingCart.totalAmount) + Number(existingCart.DeliveryCharge) + Number(existingCart.GovtTaxes);
+      existingCart.DeliveryCharge = 50;
+      existingCart.GovtTaxes = 20;
+      existingCart.GrandTotal =
+        Number(existingCart.totalAmount) +
+        Number(existingCart.DeliveryCharge) +
+        Number(existingCart.GovtTaxes);
       await user.save();
 
       return res.status(200).json({
@@ -258,76 +225,6 @@ const getCartForUser = async (req, res) => {
   }
 };
 // update cart
-// const updateCartStatus = async (req, res) => {
-//   try {
-//     // Retrieve userId from JWT token
-//     const userId = req.data.id;
-
-//     // Find pending cart for user
-//     const user = await User.findById(userId);
-//     const pendingCartIndex = user.pendingCart.findIndex(
-//       (p) => p.status === "inCart"
-//     );
-//     if (pendingCartIndex === -1) {
-//       pendingCartIndex.createdAt = new Date()
-//       return res
-//         .status(404)
-//         .json({ status: false, message: "Pending cart not found" });
-//     }
-
-//     const { transactionId, status, cookingInstructions, ReceivedAmount } = req.body;
-
-//     if (status === "ordered") {
-//       // Move pending cart data to completed cart and empty pending cart
-//       const completedCart = user.completedCart || [];
-//       const cartToMove = user.pendingCart[pendingCartIndex];
-//       cartToMove.status = status;
-//       cartToMove.transactionId = transactionId;
-//       cartToMove.cookingInstructions = cookingInstructions;
-//       cartToMove.ReceivedAmount = ReceivedAmount;
-//       // const formattedDate = new Date().toLocaleString("en-US", {
-//       //   weekday: "long",
-//       //   year: "numeric",
-//       //   month: "long",
-//       //   day: "numeric",
-//       //   hour: "numeric",
-//       //   minute: "numeric",
-//       //   second: "numeric",
-//       //   hour12: true,
-//       // });
-//       // cartToMove.createdAt=formattedDate;
-//       completedCart.push({
-//         ...cartToMove.toObject(),
-//         transactionId,
-//         status,
-//         cookingInstructions,
-//         ReceivedAmount,
-//         // createdAt: formattedDate,
-//       });
-//       user.completedCart = completedCart;
-//       // completedCart.createdAt= formattedDate
-//       user.pendingCart.splice(pendingCartIndex, 1);
-
-//       // Save the user object to the database
-//       await user.save();
-
-//       res.status(200).json({
-//         status: true,
-//         message: "Cart updated successfully",
-//         response: completedCart,
-//       });
-//     } else {
-//       res.status(400).json({ status: false, message: "Invalid status" });
-//     }
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({
-//       status: false,
-//       message: "Internal server error",
-//       response: err.message,
-//     });
-//   }
-// };
 const updateCartStatus = async (req, res) => {
   try {
     // Retrieve userId from JWT token
@@ -339,13 +236,14 @@ const updateCartStatus = async (req, res) => {
       (p) => p.status === "inCart"
     );
     if (pendingCartIndex === -1) {
-      pendingCartIndex.createdAt = new Date()
+      pendingCartIndex.createdAt = new Date();
       return res
         .status(404)
         .json({ status: false, message: "Pending cart not found" });
     }
 
-    const { transactionId, status, cookingInstructions, ReceivedAmount } = req.body;
+    const { transactionId, status, cookingInstructions, ReceivedAmount } =
+      req.body;
 
     if (status === "ordered") {
       // Move pending cart data to completed cart and empty pending cart
@@ -359,13 +257,16 @@ const updateCartStatus = async (req, res) => {
       );
       cartToMove.DeliveryCharge = 50;
       cartToMove.GovtTaxes = 20;
-      cartToMove.GrandTotal = Number(cartToMove.totalAmount) + Number(cartToMove.DeliveryCharge) + Number(cartToMove.GovtTaxes);
+      cartToMove.GrandTotal =
+        Number(cartToMove.totalAmount) +
+        Number(cartToMove.DeliveryCharge) +
+        Number(cartToMove.GovtTaxes);
 
       cartToMove.status = status;
       cartToMove.transactionId = transactionId;
       cartToMove.cookingInstructions = cookingInstructions;
       cartToMove.ReceivedAmount = ReceivedAmount;
-      
+
       completedCart.push({
         ...cartToMove.toObject(),
         transactionId,
@@ -373,7 +274,7 @@ const updateCartStatus = async (req, res) => {
         cookingInstructions,
         ReceivedAmount,
       });
-      
+
       user.completedCart = completedCart;
       user.pendingCart.splice(pendingCartIndex, 1);
 
@@ -383,7 +284,7 @@ const updateCartStatus = async (req, res) => {
       res.status(200).json({
         status: true,
         message: "Cart updated successfully",
-        response: completedCart
+        response: completedCart,
       });
     } else {
       res.status(400).json({ status: false, message: "Invalid status" });
@@ -551,24 +452,6 @@ const cancelLastOrder = async (req, res) => {
 
     const recentOrder = completedCart[completedCart.length - 1];
 
-    // convert the ISO date string to a Date object
-    // const createdAtDate = new Date();
-
-    // format the date using toLocaleString()
-    // const createdAt = createdAtDate.toLocaleString("en-US", {
-    //   weekday: "long",
-    //   year: "numeric",
-    //   month: "long",
-    //   day: "numeric",
-    //   hour: "numeric",
-    //   minute: "numeric",
-    //   second: "numeric",
-    //   hour12: true,
-    // });
-
-    // add createdAt field to recentOrder
-    // recentOrder.createdAt = createdAt;
-
     // update the status of the most recent completed order to "canceled"
     recentOrder.status = "canceled";
 
@@ -635,7 +518,9 @@ const getOrderDetails = async (req, res) => {
         message: "user not found",
       });
     } else {
-      const cart = user.completedCart.find(cart => cart.cartId === cartId) || user.canceledCart.find(cart => cart.cartId === cartId);
+      const cart =
+        user.completedCart.find((cart) => cart.cartId === cartId) ||
+        user.canceledCart.find((cart) => cart.cartId === cartId);
       if (!cart) {
         res.status(400).json({
           status: false,
@@ -646,15 +531,15 @@ const getOrderDetails = async (req, res) => {
           buyer: cart.buyer,
           transactionId: cart.transactionId,
           status: cart.status,
-          totalAmount:cart.totalAmount,
-          cookingInstructions:cart.cookingInstructions,
+          totalAmount: cart.totalAmount,
+          cookingInstructions: cart.cookingInstructions,
           ReceivedAmount: cart.ReceivedAmount,
-          createdAt:cart.createdAt,
-          DeliveryCharge:cart.DeliveryCharge,
-          GovtTaxes:cart.GovtTaxes,
-          GrandTotal:cart.GrandTotal,
-          products: cart.products
-        }
+          createdAt: cart.createdAt,
+          DeliveryCharge: cart.DeliveryCharge,
+          GovtTaxes: cart.GovtTaxes,
+          GrandTotal: cart.GrandTotal,
+          products: cart.products,
+        };
         res.status(200).json({
           status: true,
           message: "order details fetched successfully",
@@ -672,7 +557,6 @@ const getOrderDetails = async (req, res) => {
   }
 };
 
-
 module.exports = {
   addToCart,
   getCartForUser,
@@ -683,5 +567,5 @@ module.exports = {
   getRecentOrderNonVegProducts,
   cancelLastOrder,
   orderHistory,
-  getOrderDetails
+  getOrderDetails,
 };
