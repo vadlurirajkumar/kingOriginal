@@ -8,7 +8,7 @@ const {addToCart,getCartForUser, updateCartStatus, removeFromCart, getRecentOrde
 cartRoute.post("/add", isOtpAuth, addToCart);
 
 // get cart details for user
-cartRoute.get("/get", isOtpAuth, getCartForUser)
+cartRoute.post("/get", isOtpAuth, getCartForUser)
 
 // get recent order for user
 cartRoute.get("/getRecentOrder", isOtpAuth, getRecentOrder)
