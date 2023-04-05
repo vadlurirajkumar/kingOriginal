@@ -22,7 +22,12 @@ const userSchema = new mongoose.Schema(
     },
     location: {
       type: String,
-      required: false,
+    },
+    latitude:{
+      type:String
+    },
+    longitude:{
+      type:String
     },
     otp: {
       type: String,
@@ -39,8 +44,11 @@ const userSchema = new mongoose.Schema(
     pendingCart: [
       {
         buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        totalAmount: { type: Number, required: true },
+        totalAmount: String,
+        transactionId:String,
         status: String,
+        cookingInstructions:String,
+        ReceivedAmount:String,
         cartId:String,
         DeliveryCharge:String,
         GovtTaxes:String,
@@ -131,6 +139,8 @@ const userSchema = new mongoose.Schema(
       {
         buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         totalAmount: String,
+        transactionId:String,
+        status: String,
         cookingInstructions:String,
         ReceivedAmount:String,
         cartId:String,
@@ -143,8 +153,7 @@ const userSchema = new mongoose.Schema(
             return moment(createdAt).format('D MMMM YYYY h:mm:ss a');
           }
         },
-        transactionId:String,
-        status: String,
+        
         products: [
           {
             productId: {
@@ -177,9 +186,11 @@ const userSchema = new mongoose.Schema(
     selfPickupCart: [
       {
         buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        totalAmount: { type: Number, required: true },
-        status: String,
+        totalAmount: String,
+        transactionId:String,
         cartId:String,
+        cookingInstructions:String,
+        ReceivedAmount:String,
         DeliveryCharge:String,
         GovtTaxes:String,
         GrandTotal:String,

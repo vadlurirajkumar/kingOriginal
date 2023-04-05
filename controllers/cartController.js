@@ -240,13 +240,17 @@ const ChangeToSelfPickup = async (req, res) => {
 
     // check if there is an existing cart with status inCart
     let existingCart = user.pendingCart.find((c) => c.status === "inCart");
-
+    const { transactionId, status, cookingInstructions, ReceivedAmount } =
+      req.body;
     if (existingCart) {
       // update the existing cart status to "Self-pickup"
       existingCart.status = "Self-pickup";
 
       // move the existing cart to the selfPickupCart array
       user.selfPickupCart.push(existingCart);
+
+      // remove the existing cart from the pendingCart array
+      user.pendingCart.splice(user.pendingCart.indexOf(existingCart), 1);
 
       // Recalculate the total amount for the cart
       existingCart.totalAmount = existingCart.products.reduce(
@@ -259,12 +263,21 @@ const ChangeToSelfPickup = async (req, res) => {
         Number(existingCart.totalAmount) +
         Number(existingCart.DeliveryCharge) +
         Number(existingCart.GovtTaxes);
-      await user.save();
+      existingCart.status = status;
+      existingCart.transactionId = transactionId;
+      existingCart.cookingInstructions = cookingInstructions;
+      existingCart.ReceivedAmount = ReceivedAmount;
+
+      // save the changes to the database
+      await Promise.all([
+        user.save(),
+        Cart.findByIdAndUpdate(existingCart._id, existingCart),
+      ]);
 
       return res.status(200).json({
         status: true,
-        message: "Cart fetched successfully for selfPickup",
-        response: existingCart,
+        message: "Cart updated successfully",
+        response: [existingCart],
       });
     } else {
       return res.status(404).json({

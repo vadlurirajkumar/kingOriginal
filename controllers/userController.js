@@ -158,10 +158,10 @@ const checkLocationForDelivery = async (req, res) => {
     }
 
     // Convert user's location string to coordinates
-    const userLocation = await geocoder.geocode(user.location);
+    // const userLocation = await geocoder.geocode(user.location);
     const userCoords = {
-      latitude: userLocation[0].latitude,
-      longitude: userLocation[0].longitude,
+      latitude: user.latitude,
+      longitude: user.longitude,
     };
 
     // Calculate the distance between user's location and store location
@@ -258,6 +258,8 @@ const updateLocation = async (req, res) => {
       req.data._id,
       {
         location: req.body.location,
+        latitude:req.body.latitude,
+        longitude:req.body.longitude
       },
       { new: true }
     );
@@ -286,11 +288,13 @@ const updateLocation = async (req, res) => {
 const editProfile = async (req, res) => {
   try {
     const id = req.data._id;
-    const { fullname, email, location } = req.body;
+    const { fullname, email, location, latitude, longitude } = req.body;
     const fieldsToUpdate = {};
     if (fullname) fieldsToUpdate.fullname = fullname;
     if (email) fieldsToUpdate.email = email;
     if (location) fieldsToUpdate.location = location;
+    if (latitude) fieldsToUpdate.latitude = latitude;
+    if (longitude) fieldsToUpdate.longitude = longitude;
     const updatedUser = await User.findByIdAndUpdate(id, fieldsToUpdate, {
       new: true,
     });
