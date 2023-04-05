@@ -41,6 +41,7 @@ const userSchema = new mongoose.Schema(
     login_otp_expiry: {
       type: Date,
     },
+    
     pendingCart: [
       {
         buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

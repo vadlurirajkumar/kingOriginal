@@ -4,7 +4,8 @@ const {
   signupUser,
   verifyForSignup,
   login,
-  resendOtp,
+  resendOtpForSignup,
+  resendOtpForLogin,
   updateLocation,
   editProfile,
   getSingleUser,
@@ -19,7 +20,8 @@ router.post("/signup", signupUser);
 router.post("/signup-verify", isOtpAuth, verifyForSignup);
 router.post("/login", login);
 router.post("/login-verify", isOtpAuth, verifyForLogin);
-router.post("/resendotp", resendOtp);
+router.post("/signup-resendotp", resendOtpForSignup);
+router.post("/login-resendotp", resendOtpForLogin);
 router.patch("/location", isOtpAuth, updateLocation);
 router.post("/check-location", isOtpAuth, checkLocationForDelivery);
 router.patch("/update", isOtpAuth, editProfile);

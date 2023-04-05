@@ -70,7 +70,7 @@ const verifyForSignup = async (req, res) => {
 };
 
 // Resend OTP
-const resendOtp = async (req, res) => {
+const resendOtpForSignup = async (req, res) => {
   try {
     const { mobile } = req.body;
 
@@ -396,7 +396,7 @@ const searchProducts = async (req, res) => {
 module.exports = {
   signupUser,
   verifyForSignup,
-  resendOtp,
+  resendOtpForSignup,
   login,
   updateLocation,
   editProfile,
