@@ -603,7 +603,8 @@ const getOrderDetails = async (req, res) => {
     } else {
       const cart =
         user.completedCart.find((cart) => cart.cartId === cartId) ||
-        user.canceledCart.find((cart) => cart.cartId === cartId);
+        user.canceledCart.find((cart) => cart.cartId === cartId) ||
+        user.selfPickupCart.find((cart)=> cart.cartId === cartId)
       if (!cart) {
         res.status(400).json({
           status: false,

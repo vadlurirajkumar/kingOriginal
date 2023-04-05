@@ -185,13 +185,14 @@ const checkLocationForDelivery = async (req, res) => {
       res.status(403).json({
         status: false,
         message: "Sorry, we cannot deliver to your location.",
-        response: [],
+        response:[]
       });
     }
   } catch (error) {
     res.json({ status: false, message: error.message, response: [] });
   }
 };
+
 
 //resend otp for login time
 const resendOtpForLogin = async (req, res) => {
