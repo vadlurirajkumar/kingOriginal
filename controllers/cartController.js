@@ -653,6 +653,47 @@ const cancelLastOrder = async (req, res) => {
   }
 };
 // get orderHistory
+// const orderHistory = async (req, res) => {
+//   try {
+//     const userId = req.data._id;
+//     let user = await User.findById(userId);
+//     if (!user) {
+//       res.status(400).json({
+//         status: false,
+//         message: "user not found",
+//       });
+//     } else {
+//       const history = user.completedCart.concat(user.canceledCart).concat(user.selfPickupCart);
+//       history.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+//       // const response = {
+//       //     cartId:history.cartId,
+//       //     buyer: history.buyer,
+//       //     transactionId: history.transactionId,
+//       //     status: history.status,
+//       //     totalAmount: history.totalAmount,
+//       //     cookingInstructions: history.cookingInstructions,
+//       //     ReceivedAmount: history.ReceivedAmount,
+//       //     createdAt: history.createdAt,
+//       //     DeliveryCharge: history.DeliveryCharge,
+//       //     GovtTaxes: history.GovtTaxes,
+//       //     GrandTotal: history.GrandTotal,
+//       //     products: history.products,
+//       // }
+//       res.status(200).json({
+//         status: true,
+//         message: "user history fetched successfully",
+//         response: history,
+//       });
+//     }
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({
+//       status: false,
+//       message: "Internal Server Error",
+//       response: error.message,
+//     });
+//   }
+// };
 const orderHistory = async (req, res) => {
   try {
     const userId = req.data._id;
@@ -664,25 +705,19 @@ const orderHistory = async (req, res) => {
       });
     } else {
       const history = user.completedCart.concat(user.canceledCart).concat(user.selfPickupCart);
-      history.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      // const response = {
-      //     cartId:history.cartId,
-      //     buyer: history.buyer,
-      //     transactionId: history.transactionId,
-      //     status: history.status,
-      //     totalAmount: history.totalAmount,
-      //     cookingInstructions: history.cookingInstructions,
-      //     ReceivedAmount: history.ReceivedAmount,
-      //     createdAt: history.createdAt,
-      //     DeliveryCharge: history.DeliveryCharge,
-      //     GovtTaxes: history.GovtTaxes,
-      //     GrandTotal: history.GrandTotal,
-      //     products: history.products,
-      // }
+      const seenIds = new Set();
+      const filteredHistory = history.filter(item => {
+        if (seenIds.has(item.cartId)) {
+          return false;
+        }
+        seenIds.add(item.cartId);
+        return true;
+      });
+      filteredHistory.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       res.status(200).json({
         status: true,
         message: "user history fetched successfully",
-        response: history,
+        response: filteredHistory,
       });
     }
   } catch (error) {
