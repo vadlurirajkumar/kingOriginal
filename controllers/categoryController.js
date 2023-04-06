@@ -302,6 +302,7 @@ const getAllCategoriesWithProductsForUser = async (req, res) => {
         products: category.products.map((product) => {
           return {
             id: product._id,
+            cartStatus:product.cartStatus,
             productName: product.name,
             price: product.price,
             description: product.description,
@@ -327,6 +328,58 @@ const getAllCategoriesWithProductsForUser = async (req, res) => {
     });
   }
 };
+// const getAllCategoriesWithProductsForUser = async (req, res) => {
+//   try {
+//     // Get the user ID from the request object
+//     const userId = req.user.id;
+
+//     // Find all categories that are active and have at least one product
+//     const categories = await categoryModel
+//       .find({ status: "active", products: { $exists: true, $not: { $size: 0 } } })
+//       .populate({
+//         path: "products",
+//         // Filter the products to show only those that the user has added to their cart
+//         match: { cart: { $elemMatch: { user: userId } } },
+//       });
+
+//     const response = categories.map((category) => {
+//       return {
+//         id: category._id,
+//         categoryName: category.categoryName,
+//         status: category.status,
+//         categoryImage: category.avatar.url,
+//         products: category.products.map((product) => {
+//           // Find the cart item for the user and product
+//           const cartItem = product.cart.find((item) => item.user === userId);
+
+//           return {
+//             id: product._id,
+//             cartStatus: cartItem ? cartItem.status : null,
+//             productName: product.name,
+//             price: product.price,
+//             description: product.description,
+//             productImage: product.avatar.url,
+//             status: product.status,
+//             foodType: product.foodType,
+//           };
+//         }),
+//       };
+//     });
+
+//     res.status(200).send({
+//       status: true,
+//       message: "All Categories List",
+//       response,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({
+//       status: false,
+//       error,
+//       message: "Error while getting all categories",
+//     });
+//   }
+// };
 
 // single category with all products
 const getSingleCategoryWithProducts = async (req, res) => {

@@ -1,6 +1,7 @@
 const productModel = require("../model/productModel");
 const categoryModel = require("../model/categoryModel")
 const cloudinary = require("cloudinary");
+const User = require("../model/usermodel");
 
 // create a product
 const createProduct = async (req, res) => {
@@ -75,18 +76,38 @@ const createProduct = async (req, res) => {
 // get all products
 const getAllProducts = async (req, res) => {
   try {
-    const products = await productModel.find();
-    res.status(200).send({
-      status: true,
-      message: "All Products List",
-      products: products.map((product) => {
-        const { avatar, ...rest } = product._doc;
-        return {
-          ...rest,
-          productImage: avatar?.url || null
-        }
-      }),
-    });
+    const userId = req.data._id;
+    let user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({
+        status: false,
+        message: "User not found",
+        response: [],
+      });
+    } else {
+      const products = await productModel.find();
+      res.status(200).send({
+        status: true,
+        message: "All Products List",
+        products: products.map((product) => {
+          const { avatar, ...rest } = product._doc;
+          let cartProductStatus = 0;
+          if (user.pendingCart.length > 0) {
+            user.pendingCart[0].products.forEach((p) => {
+              if (p.productId.toString() === product._id.toString()) {
+                cartProductStatus = 1;
+              }
+            });
+          }
+
+          return {
+            ...rest,
+            productImage: avatar?.url || null,
+            cartStatus: cartProductStatus,
+          };
+        }),
+      });
+    }
   } catch (error) {
     console.log(error);
     res.status(500).send({
@@ -98,36 +119,106 @@ const getAllProducts = async (req, res) => {
 };
 
 //get single product
+// const getSingleProduct = async (req, res) => {
+//   try {
+//     const userId = req.data._id;
+//     let user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "User not found",
+//         response: [],
+//       });
+//     } else {
+//     const product = await productModel.findById(req.params.id);
+//     const name = product.productName;
+//     if (product && product.status === "active") {
+//       const response = {
+//         id: product._id,
+//         cartStatus:product.cartStatus,
+//         productName: product.productName,
+//         description: product.description,
+//         price: product.price,
+//         categoryId: product.categoryId,
+//         status: product.status,
+//         foodType: product.foodType,
+//         productImage: product.avatar?.url || null,
+//       };
+//       return res.status(200).send({
+//         status: true,
+//         message: "Get Single product successfully",
+//         product: response,
+//       });
+//     } else if (product && product.status === "inactive") {
+//       return res.status(200).send({
+//         status: false,
+//         message: `product - ${name} is inactive, please contact admin to activate it`,
+//       });
+//     } else {
+//       return res.status(404).send({
+//         status: false,
+//         message: "product not found",
+//       });
+//     }
+//   }
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({
+//       status: false,
+//       error,
+//       message: "Error while getting Single product",
+//     });
+//   }
+// };
 const getSingleProduct = async (req, res) => {
   try {
-    const product = await productModel.findById(req.params.id);
-    const name = product.productName;
-    if (product && product.status === "active") {
-      const response = {
-        id: product._id,
-        productName: product.productName,
-        description: product.description,
-        price: product.price,
-        categoryId: product.categoryId,
-        status: product.status,
-        foodType: product.foodType,
-        productImage: product.avatar?.url || null,
-      };
-      return res.status(200).send({
-        status: true,
-        message: "Get Single product successfully",
-        product: response,
-      });
-    } else if (product && product.status === "inactive") {
-      return res.status(200).send({
+    const userId = req.data._id;
+    let user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({
         status: false,
-        message: `product - ${name} is inactive, please contact admin to activate it`,
+        message: "User not found",
+        response: [],
       });
     } else {
-      return res.status(404).send({
-        status: false,
-        message: "product not found",
-      });
+      const product = await productModel.findById(req.params.id);
+      const name = product.productName;
+      let cartProductStatus = 0;
+      if (user.pendingCart.length > 0) {
+        user.pendingCart[0].products.forEach((p) => {
+          if (p.productId.toString() === product._id.toString()) {
+            cartProductStatus = 1;
+          }
+        });
+      }
+      if (product && product.status === "active") {
+        const response = {
+          id: product._id,
+          cartStatus: cartProductStatus,
+          productName: product.productName,
+          description: product.description,
+          price: product.price,
+          categoryId: product.categoryId,
+          status: product.status,
+          foodType: product.foodType,
+          productImage: product.avatar?.url || null,
+        };
+        return res.status(200).send({
+          status: true,
+          message: "Get Single product successfully",
+          product: response,
+        });
+      } else if (product && product.status === "inactive") {
+        return res.status(200).send({
+          status: false,
+          message: `product - ${name} is inactive, please contact admin to activate it`,
+        });
+      } else {
+        return res.status(404).send({
+          status: false,
+          message: "product not found",
+        });
+      }
     }
   } catch (error) {
     console.log(error);

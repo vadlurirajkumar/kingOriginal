@@ -1,6 +1,7 @@
 const express = require("express");
 const productRoute = express.Router();
 const isAdminAuth = require("../middleware/adminAuth");
+const isOtpAuth = require("../middleware/otpAuth")
 const {
   createProduct,
   getAllProducts,
@@ -29,10 +30,10 @@ productRoute.post(
 );
 
 // get all products
-productRoute.get("/all-products", getAllProducts);
+productRoute.get("/all-products",isOtpAuth, getAllProducts);
 
 // get single product
-productRoute.get("/single-product/:id", getSingleProduct);
+productRoute.get("/single-product/:id",isOtpAuth, getSingleProduct);
 
 // get all veg products
 productRoute.get("/veg-products", getAllVegProducts);

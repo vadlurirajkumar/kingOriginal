@@ -39,6 +39,7 @@ const addToCart = async (req, res) => {
       if (existingProductIndex !== -1) {
         // if the product already exists in the cart, increase its quantity
         existingCart.products[existingProductIndex].quantity += 1;
+        existingCart.products[existingProductIndex].cartStatus = 1; // set cartStatus of product to 1
       } else {
         // if the product doesn't exist in the cart, add it
         existingCart.products.push({
@@ -48,6 +49,7 @@ const addToCart = async (req, res) => {
           price: product.price,
           productImage: product.avatar.url,
           foodType: product.foodType,
+          cartStatus: 1, // set cartStatus of product to 1
         });
       }
       // Recalculate the total amount for the cart
@@ -62,17 +64,14 @@ const addToCart = async (req, res) => {
         message: "Product added to cart",
         response: {
           ...existingCart.toObject(),
-          cartId: existingCart.cartId, // add cartId to the response
+          cartId: existingCart._id,
         },
       });
     } else {
-      // if there is no existing cart with status inCart, create a new one
+      // if there is no existing cart with status inCart, create a new cart
       const newCart = {
-        buyer: userId,
         status: "inCart",
         totalAmount: product.price,
-        createdAt: new Date(),
-        cartId: mongoose.Types.ObjectId(),
         products: [
           {
             productId: productId,
@@ -81,33 +80,163 @@ const addToCart = async (req, res) => {
             price: product.price,
             productImage: product.avatar.url,
             foodType: product.foodType,
+            cartStatus: 1, // set cartStatus of product to 1
           },
         ],
       };
-
       user.pendingCart.push(newCart);
       await user.save();
+
       return res.status(200).json({
         status: true,
         message: "Product added to cart",
         response: {
           ...newCart,
+          cartId: newCart._id,
         },
       });
     }
-    return res.status(200).json({
-      status: true,
-      message: "Product added to cart",
-      response: {
-        ...existingCart.toObject(),
-      },
-    });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    console.log(error);
+    return res.status(500).json({
+      status: false,
+      message: "Internal server error",
+      response: [],
+    });
   }
 };
+
 // remove from cart
+// const removeFromCart = async (req, res) => {
+//   try {
+//     const userId = req.data._id;
+//     const productId = req.body.productId;
+
+//     // find user
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "User not found",
+//       });
+//     }
+
+//     // check if there is an existing cart with status inCart
+//     let existingCart = user.pendingCart.find((c) => c.status === "inCart");
+
+//     if (existingCart) {
+//       // if the cart already exists, remove the product from the cart
+//       const existingProductIndex = existingCart.products.findIndex(
+//         (p) => p.productId.toString() === productId
+//       );
+//       if (existingProductIndex !== -1) {
+//         // if the product exists in the cart, decrease its quantity by 1
+//         if (existingCart.products[existingProductIndex].quantity > 1) {
+//           existingCart.products[existingProductIndex].quantity -= 1;
+//         } else {
+//           existingCart.products.splice(existingProductIndex, 1);
+//         }
+//         // Recalculate the total amount for the cart
+//         existingCart.totalAmount = existingCart.products.reduce(
+//           (total, p) => total + p.price * p.quantity,
+//           0
+//         );
+//         await user.save();
+
+//         return res.status(200).json({
+//           status: true,
+//           message: "Product removed from cart",
+//           response: existingCart,
+//         });
+//       } else {
+//         return res.status(404).json({
+//           status: false,
+//           message: "Product not found in cart",
+//           response: [],
+//         });
+//       }
+//     } else {
+//       return res.status(404).json({
+//         status: false,
+//         message: "Cart not found",
+//         response: [],
+//       });
+//     }
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({
+//       status: false,
+//       message: "Internal Server Error",
+//       response: error.message,
+//     });
+//   }
+// };
+// const removeFromCart = async (req, res) => {
+//   try {
+//     const userId = req.data._id;
+//     const productId = req.body.productId;
+
+//     // find user
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "User not found",
+//       });
+//     }
+
+//     // check if there is an existing cart with status inCart
+//     let existingCart = user.pendingCart.find((c) => c.status === "inCart");
+
+//     if (existingCart) {
+//       // if the cart already exists, remove the product from the cart
+//       const existingProductIndex = existingCart.products.findIndex(
+//         (p) => p.productId.toString() === productId
+//       );
+//       if (existingProductIndex !== -1) {
+//         // if the product exists in the cart, decrease its quantity by 1
+//         if (existingCart.products[existingProductIndex].quantity > 1) {
+//           existingCart.products[existingProductIndex].quantity -= 1;
+//         } else {
+//           existingCart.products.splice(existingProductIndex, 1);
+//         }
+//         // Recalculate the total amount for the cart
+//         existingCart.totalAmount = existingCart.products.reduce(
+//           (total, p) => total + p.price * p.quantity,
+//           0
+//         );
+//         // Update cart status based on product availability
+//         existingCart.cartStatus = existingCart.products.length ? 1 : 0;
+//         await user.save();
+
+//         return res.status(200).json({
+//           status: true,
+//           message: "Product removed from cart",
+//           response: existingCart,
+//         });
+//       } else {
+//         return res.status(404).json({
+//           status: false,
+//           message: "Product not found in cart",
+//           response: [],
+//         });
+//       }
+//     } else {
+//       return res.status(404).json({
+//         status: false,
+//         message: "Cart not found",
+//         response: [],
+//       });
+//     }
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({
+//       status: false,
+//       message: "Internal Server Error",
+//       response: error.message,
+//     });
+//   }
+// };
 const removeFromCart = async (req, res) => {
   try {
     const userId = req.data._id;
@@ -135,6 +264,7 @@ const removeFromCart = async (req, res) => {
         if (existingCart.products[existingProductIndex].quantity > 1) {
           existingCart.products[existingProductIndex].quantity -= 1;
         } else {
+          // If the product quantity is 1, remove it from the cart
           existingCart.products.splice(existingProductIndex, 1);
         }
         // Recalculate the total amount for the cart
@@ -142,13 +272,26 @@ const removeFromCart = async (req, res) => {
           (total, p) => total + p.price * p.quantity,
           0
         );
+        // Update cart status based on product availability
+        existingCart.cartStatus = existingCart.products.length ? 1 : 0;
         await user.save();
 
-        return res.status(200).json({
-          status: true,
-          message: "Product removed from cart",
-          response: existingCart,
-        });
+        if (existingCart.products.length) {
+          return res.status(200).json({
+            status: true,
+            message: "Product removed from cart",
+            response: existingCart,
+          });
+        } else {
+          // If there are no more products in the cart, remove the cart from pendingCart
+          user.pendingCart.pull(existingCart._id);
+          await user.save();
+          return res.status(200).json({
+            status: true,
+            message: "Product removed from cart",
+            response: [],
+          });
+        }
       } else {
         return res.status(404).json({
           status: false,
@@ -172,6 +315,8 @@ const removeFromCart = async (req, res) => {
     });
   }
 };
+
+
 // get cart for single user
 const getCartForUser = async (req, res) => {
   try {
