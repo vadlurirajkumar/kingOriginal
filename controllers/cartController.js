@@ -225,80 +225,6 @@ const getCartForUser = async (req, res) => {
   }
 };
 // order self-pickup
-// const ChangeToSelfPickup = async (req, res) => {
-//   try {
-//     const userId = req.data._id;
-
-//     // find user
-//     const user = await User.findById(userId);
-//     if (!user) {
-//       return res.status(400).json({
-//         status: false,
-//         message: "User not found",
-//       });
-//     }
-
-//     // check if there is an existing cart with status inCart
-//     let existingCart = user.pendingCart.find((c) => c.status === "inCart");
-//     const { transactionId, status, cookingInstructions, ReceivedAmount } =
-//       req.body;
-//     if (existingCart) {
-//       // update the existing cart status to "Self-pickup"
-//       existingCart.status = "Self-pickup";
-
-//       // move the existing cart to the selfPickupCart array
-//       user.selfPickupCart.push(existingCart);
-
-//       // remove the existing cart from the pendingCart array
-//       user.pendingCart.splice(user.pendingCart.indexOf(existingCart), 1);
-
-//       // Recalculate the total amount for the cart
-//       existingCart.totalAmount = existingCart.products.reduce(
-//         (total, p) => total + p.price * p.quantity,
-//         0
-//       );
-//       existingCart.DeliveryCharge = 0;
-//       existingCart.GovtTaxes = 20;
-//       existingCart.GrandTotal =
-//         Number(existingCart.totalAmount) +
-//         Number(existingCart.DeliveryCharge) +
-//         Number(existingCart.GovtTaxes);
-//       existingCart.status = status;
-//       existingCart.transactionId = transactionId;
-//       existingCart.cookingInstructions = cookingInstructions;
-//       existingCart.ReceivedAmount = ReceivedAmount;
-
-//       // save the changes to the database
-//       await Promise.all([
-//         user.save(),
-//         Cart.findOneAndUpdate(
-//           { _id: existingCart._id },
-//           existingCart,
-//           { upsert: true }
-//         ),
-//       ]);
-
-//       return res.status(200).json({
-//         status: true,
-//         message: "Cart updated successfully",
-//         response: [existingCart],
-//       });
-//     } else {
-//       return res.status(404).json({
-//         status: false,
-//         message: "Cart not found",
-//         response: [],
-//       });
-//     }
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json({
-//       status: false,
-//       message: "Internal Server Error",
-//       response: error.message,
-//     });
-//   }
-// };
 const ChangeToSelfPickup = async (req, res) => {
   try {
     const userId = req.data._id;
@@ -340,28 +266,23 @@ const ChangeToSelfPickup = async (req, res) => {
       existingCart.transactionId = transactionId;
       existingCart.cookingInstructions = cookingInstructions;
       existingCart.ReceivedAmount = ReceivedAmount;
-      
+
       // Convert cart object to plain object to avoid issues with Mongoose
-      const cartToSave = existingCart.toObject();
+      const cartToSave = { ...existingCart.toObject(), ...req.body };
       delete cartToSave._id;
 
-      // Add cart to completed cart array
-      user.completedCart.push({
+      // Add cart to selfPickupCart array
+      user.selfPickupCart.push({
         ...cartToSave,
-        transactionId,
-        cookingInstructions,
-        ReceivedAmount,
         createdAt: new Date(),
       });
 
       // Save the changes to the database
       await Promise.all([
         user.save(),
-        Cart.findOneAndUpdate(
-          { _id: existingCart._id },
-          existingCart,
-          { upsert: true }
-        ),
+        Cart.findOneAndUpdate({ _id: existingCart._id }, existingCart, {
+          upsert: true,
+        }),
       ]);
 
       return res.status(200).json({
@@ -385,7 +306,6 @@ const ChangeToSelfPickup = async (req, res) => {
     });
   }
 };
-
 // update cart
 const updateCartStatus = async (req, res) => {
   try {
@@ -653,47 +573,6 @@ const cancelLastOrder = async (req, res) => {
   }
 };
 // get orderHistory
-// const orderHistory = async (req, res) => {
-//   try {
-//     const userId = req.data._id;
-//     let user = await User.findById(userId);
-//     if (!user) {
-//       res.status(400).json({
-//         status: false,
-//         message: "user not found",
-//       });
-//     } else {
-//       const history = user.completedCart.concat(user.canceledCart).concat(user.selfPickupCart);
-//       history.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-//       // const response = {
-//       //     cartId:history.cartId,
-//       //     buyer: history.buyer,
-//       //     transactionId: history.transactionId,
-//       //     status: history.status,
-//       //     totalAmount: history.totalAmount,
-//       //     cookingInstructions: history.cookingInstructions,
-//       //     ReceivedAmount: history.ReceivedAmount,
-//       //     createdAt: history.createdAt,
-//       //     DeliveryCharge: history.DeliveryCharge,
-//       //     GovtTaxes: history.GovtTaxes,
-//       //     GrandTotal: history.GrandTotal,
-//       //     products: history.products,
-//       // }
-//       res.status(200).json({
-//         status: true,
-//         message: "user history fetched successfully",
-//         response: history,
-//       });
-//     }
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({
-//       status: false,
-//       message: "Internal Server Error",
-//       response: error.message,
-//     });
-//   }
-// };
 const orderHistory = async (req, res) => {
   try {
     const userId = req.data._id;
@@ -704,16 +583,20 @@ const orderHistory = async (req, res) => {
         message: "user not found",
       });
     } else {
-      const history = user.completedCart.concat(user.canceledCart).concat(user.selfPickupCart);
+      const history = user.completedCart
+        .concat(user.canceledCart)
+        .concat(user.selfPickupCart);
       const seenIds = new Set();
-      const filteredHistory = history.filter(item => {
+      const filteredHistory = history.filter((item) => {
         if (seenIds.has(item.cartId)) {
           return false;
         }
         seenIds.add(item.cartId);
         return true;
       });
-      filteredHistory.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      filteredHistory.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
       res.status(200).json({
         status: true,
         message: "user history fetched successfully",
@@ -744,7 +627,7 @@ const getOrderDetails = async (req, res) => {
       const cart =
         user.completedCart.find((cart) => cart.cartId === cartId) ||
         user.canceledCart.find((cart) => cart.cartId === cartId) ||
-        user.selfPickupCart.find((cart)=> cart.cartId === cartId)
+        user.selfPickupCart.find((cart) => cart.cartId === cartId);
       if (!cart) {
         res.status(400).json({
           status: false,
@@ -752,7 +635,7 @@ const getOrderDetails = async (req, res) => {
         });
       } else {
         const response = {
-          cartId:cartId,
+          cartId: cartId,
           buyer: cart.buyer,
           transactionId: cart.transactionId,
           status: cart.status,
@@ -793,5 +676,5 @@ module.exports = {
   cancelLastOrder,
   orderHistory,
   getOrderDetails,
-  ChangeToSelfPickup
+  ChangeToSelfPickup,
 };

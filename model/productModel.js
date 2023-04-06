@@ -33,6 +33,11 @@ const productSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "inactive",
     },
+    cartStatus: {
+      type: String,
+      enum: ["1", "0"],
+      default: "0",
+    },
     avatar: {
       public_id: String,
       url: String,
