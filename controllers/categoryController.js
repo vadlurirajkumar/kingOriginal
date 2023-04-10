@@ -1,6 +1,6 @@
 const categoryModel = require("../model/categoryModel");
 const cloudinary = require("cloudinary");
-
+const User = require("../model/usermodel");
 // create category
 const createCategoryWithImage = async (req, res) => {
   try {
@@ -222,23 +222,33 @@ const getAllCategories = async (req, res) => {
 
 const getAllCategoriesForUser = async (req, res) => {
   try {
-    const categories = await categoryModel.find({status:"active"});
+    const userId = req.data._id;
+    let user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({
+        status: false,
+        message: "User not found",
+        response: [],
+      });
+    } else {
+      const categories = await categoryModel.find({ status: "active" });
 
-    const response = categories.map((category) => {
-      return {
-        id: category._id,
-        categoryName: category.categoryName,
-        status: category.status,
-        categoryImage: category.avatar.url,
-        products: category.products,
-      };
-    });
+      const response = categories.map((category) => {
+        return {
+          id: category._id,
+          categoryName: category.categoryName,
+          status: category.status,
+          categoryImage: category.avatar.url,
+          products: category.products,
+        };
+      });
 
-    res.status(200).send({
-      status: true,
-      message: "All Categories List",
-      response,
-    });
+      res.status(200).send({
+        status: true,
+        message: "All Categories List",
+        response,
+      });
+    }
   } catch (error) {
     console.log(error);
     res.status(500).send({
@@ -291,34 +301,57 @@ const getAllCategoriesWithProducts = async (req, res) => {
 
 const getAllCategoriesWithProductsForUser = async (req, res) => {
   try {
-    const categories = await categoryModel.find({status:"active"}).populate("products");
+    const userId = req.data._id;
+    let user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({
+        status: false,
+        message: "User not found",
+        response: [],
+      });
+    } else {
+      const categories = await categoryModel
+        .find({ status: "active" })
+        .populate("products");
 
-    const response = categories.map((category) => {
-      return {
-        id: category._id,
-        categoryName: category.categoryName,
-        status: category.status,
-        categoryImage: category.avatar.url,
-        products: category.products.map((product) => {
-          return {
-            id: product._id,
-            cartStatus:product.cartStatus,
-            productName: product.name,
-            price: product.price,
-            description: product.description,
-            productImage: product.avatar.url,
-            status: product.status,
-            foodType: product.foodType,
-          };
-        }),
-      };
-    });
+      const response = categories.map((category) => {
+        return {
+          id: category._id,
+          categoryName: category.categoryName,
+          status: category.status,
+          categoryImage: category.avatar.url,
+          products: category.products.map((product) => {
+            const { avatar, ...rest } = product._doc;
+            let cartProductStatus = 0;
+            if (user.pendingCart.length > 0) {
+              user.pendingCart[0].products.forEach((p) => {
+                if (p.productId.toString() === product._id.toString()) {
+                  cartProductStatus = 1;
+                }
+              });
+            }
 
-    res.status(200).send({
-      status: true,
-      message: "All Categories List",
-      response,
-    });
+            return {
+              ...rest,
+              id: product._id,
+              cartStatus: cartProductStatus,
+              productName: product.name,
+              price: product.price,
+              description: product.description,
+              productImage: avatar?.url || null,
+              status: product.status,
+              foodType: product.foodType,
+            };
+          }),
+        };
+      });
+
+      res.status(200).send({
+        status: true,
+        message: "All Categories List",
+        response,
+      });
+    }
   } catch (error) {
     console.log(error);
     res.status(500).send({
@@ -328,6 +361,46 @@ const getAllCategoriesWithProductsForUser = async (req, res) => {
     });
   }
 };
+
+// const getAllCategoriesWithProductsForUser = async (req, res) => {
+//   try {
+//     const categories = await categoryModel.find({status:"active"}).populate("products");
+
+//     const response = categories.map((category) => {
+//       return {
+//         id: category._id,
+//         categoryName: category.categoryName,
+//         status: category.status,
+//         categoryImage: category.avatar.url,
+//         products: category.products.map((product) => {
+//           return {
+//             id: product._id,
+//             cartStatus:product.cartStatus,
+//             productName: product.name,
+//             price: product.price,
+//             description: product.description,
+//             productImage: product.avatar.url,
+//             status: product.status,
+//             foodType: product.foodType,
+//           };
+//         }),
+//       };
+//     });
+
+//     res.status(200).send({
+//       status: true,
+//       message: "All Categories List",
+//       response,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({
+//       status: false,
+//       error,
+//       message: "Error while getting all categories",
+//     });
+//   }
+// };
 // const getAllCategoriesWithProductsForUser = async (req, res) => {
 //   try {
 //     // Get the user ID from the request object
@@ -435,10 +508,10 @@ const getSingleCategoryWithProductsForUser = async (req, res) => {
     const categoryId = req.params.id;
 
     const category = await categoryModel
-      .findById(categoryId,{status:"active"})
+      .findById(categoryId, { status: "active" })
       .populate({
         path: "products",
-        match: {status:"active"}
+        match: { status: "active" },
       });
 
     if (!category) {
@@ -535,10 +608,12 @@ const getSingleCategoryWithVegProductsForUser = async (req, res) => {
   try {
     const categoryId = req.params.id;
 
-    const category = await categoryModel.findById(categoryId,{status:"active"}).populate({
-      path: "products",
-      match: {status:"active", foodType: "veg" },
-    });
+    const category = await categoryModel
+      .findById(categoryId, { status: "active" })
+      .populate({
+        path: "products",
+        match: { status: "active", foodType: "veg" },
+      });
 
     if (!category) {
       return res.status(404).send({
@@ -634,10 +709,12 @@ const getSingleCategoryWithNonVegProductsForUser = async (req, res) => {
   try {
     const categoryId = req.params.id;
 
-    const category = await categoryModel.findById(categoryId,{status:"active"}).populate({
-      path: "products",
-      match: {status:"active", foodType: "non-veg" },
-    });
+    const category = await categoryModel
+      .findById(categoryId, { status: "active" })
+      .populate({
+        path: "products",
+        match: { status: "active", foodType: "non-veg" },
+      });
 
     if (!category) {
       return res.status(404).send({
@@ -678,7 +755,6 @@ const getSingleCategoryWithNonVegProductsForUser = async (req, res) => {
     });
   }
 };
-
 
 //delete category
 const deleteCategory = async (req, res) => {
