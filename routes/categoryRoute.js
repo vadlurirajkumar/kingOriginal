@@ -48,7 +48,7 @@ categoryRoute.patch("/single-category/toggleStatus/:id", isAdminAuth, toggleCate
 categoryRoute.get("/single-category/:id", getSingleCategoryWithProducts); // admin
 
 //single category active only
-categoryRoute.get("/single-category-active/:id",isOtpAuth, getSingleCategoryWithProductsForUser); // user
+categoryRoute.post("/single-category-active/:id",isOtpAuth, getSingleCategoryWithProductsForUser); // user
 
 // single category with veg products
 categoryRoute.get("/single-category/veg/:id", getSingleCategoryWithVegProducts); // admin
