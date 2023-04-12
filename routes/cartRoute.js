@@ -11,13 +11,13 @@ cartRoute.post("/add", isOtpAuth, addToCart);
 cartRoute.post("/get", isOtpAuth, getCartForUser)
 
 // get recent order for user
-cartRoute.get("/getRecentOrder", isOtpAuth, getRecentOrder)
+cartRoute.post("/getRecentOrder", isOtpAuth, getRecentOrder)
 
 // get only veg products from recent order 
-cartRoute.get("/getRecentOrder/veg", isOtpAuth, getRecentOrderVegProducts)
+cartRoute.post("/getRecentOrder/veg", isOtpAuth, getRecentOrderVegProducts)
 
 // get only non veg products from recent order
-cartRoute.get("/getRecentOrder/non-veg", isOtpAuth, getRecentOrderNonVegProducts)
+cartRoute.post("/getRecentOrder/non-veg", isOtpAuth, getRecentOrderNonVegProducts)
 
 // cancel lastOrder for user
 cartRoute.post("/cancelLastOrder", isOtpAuth, cancelLastOrder)

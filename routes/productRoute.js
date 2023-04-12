@@ -30,16 +30,16 @@ productRoute.post(
 );
 
 // get all products
-productRoute.get("/all-products",isOtpAuth, getAllProducts);
+productRoute.post("/all-products",isOtpAuth, getAllProducts);
 
 // get single product
-productRoute.get("/single-product/:id",isOtpAuth, getSingleProduct);
+productRoute.post("/single-product/:id",isOtpAuth, getSingleProduct);
 
 // get all veg products
-productRoute.get("/veg-products",isOtpAuth, getAllVegProducts);
+productRoute.post("/veg-products",isOtpAuth, getAllVegProducts);
 
 // get all non-veg products
-productRoute.get("/non-veg-products",isOtpAuth, getAllNonVegProducts);
+productRoute.post("/non-veg-products",isOtpAuth, getAllNonVegProducts);
 
 // update a product
 productRoute.patch(
@@ -70,12 +70,12 @@ productRoute.patch(
 );
 
 // get exclusive dishes
-productRoute.get("/get-exclusiveDishes",isOtpAuth, getExclusiveDishes);
+productRoute.post("/get-exclusiveDishes",isOtpAuth, getExclusiveDishes);
 
 // get exclusive dishes only veg
-productRoute.get("/get-exclusiveDishes/veg",isOtpAuth, getExclusiveVegDishes);
+productRoute.post("/get-exclusiveDishes/veg",isOtpAuth, getExclusiveVegDishes);
 
 // get exclusive dishes only non-veg
-productRoute.get("/get-exclusiveDishes/non-veg",isOtpAuth, getExclusiveNonVegDishes);
+productRoute.post("/get-exclusiveDishes/non-veg",isOtpAuth, getExclusiveNonVegDishes);
 
 module.exports = productRoute;

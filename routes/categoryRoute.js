@@ -54,13 +54,13 @@ categoryRoute.post("/single-category-active/:id",isOtpAuth, getSingleCategoryWit
 categoryRoute.get("/single-category/veg/:id", getSingleCategoryWithVegProducts); // admin
 
 // single category with veg products active only
-categoryRoute.get("/single-category-active/veg/:id",isOtpAuth, getSingleCategoryWithVegProductsForUser); // user
+categoryRoute.post("/single-category-active/veg/:id",isOtpAuth, getSingleCategoryWithVegProductsForUser); // user
 
 // single category with non-veg products
 categoryRoute.get("/single-category/non-veg/:id", getSingleCategoryWithNonVegProducts); // admin
 
 // single category with non-veg products active only
-categoryRoute.get("/single-category-active/non-veg/:id",isOtpAuth, getSingleCategoryWithNonVegProductsForUser); // user
+categoryRoute.post("/single-category-active/non-veg/:id",isOtpAuth, getSingleCategoryWithNonVegProductsForUser); // user
 
 //delete category
 categoryRoute.delete("/delete-category/:id", isAdminAuth, deleteCategory); //admin
