@@ -316,7 +316,6 @@ const removeFromCart = async (req, res) => {
   }
 };
 
-
 // get cart for single user
 const getCartForUser = async (req, res) => {
   try {
@@ -452,6 +451,80 @@ const ChangeToSelfPickup = async (req, res) => {
   }
 };
 // update cart
+// const updateCartStatus = async (req, res) => {
+//   try {
+//     // Retrieve userId from JWT token
+//     const userId = req.data.id;
+
+//     // Find pending cart for user
+//     const user = await User.findById(userId);
+//     const pendingCartIndex = user.pendingCart.findIndex(
+//       (p) => p.status === "inCart"
+//     );
+//     if (pendingCartIndex === -1) {
+//       pendingCartIndex.createdAt = new Date();
+//       return res
+//         .status(404)
+//         .json({ status: false, message: "Pending cart not found" });
+//     }
+
+//     const { transactionId, status, cookingInstructions, ReceivedAmount } =
+//       req.body;
+
+//     if (status === "ordered") {
+//       // Move pending cart data to completed cart and empty pending cart
+//       const completedCart = user.completedCart || [];
+//       const cartToMove = user.pendingCart[pendingCartIndex];
+
+//       // Recalculate the total amount for the cart
+//       cartToMove.totalAmount = cartToMove.products.reduce(
+//         (total, p) => total + p.price * p.quantity,
+//         0
+//       );
+//       cartToMove.DeliveryCharge = 50;
+//       cartToMove.GovtTaxes = 20;
+//       cartToMove.GrandTotal =
+//         Number(cartToMove.totalAmount) +
+//         Number(cartToMove.DeliveryCharge) +
+//         Number(cartToMove.GovtTaxes);
+
+//       cartToMove.status = status;
+//       cartToMove.transactionId = transactionId;
+//       cartToMove.cookingInstructions = cookingInstructions;
+//       cartToMove.ReceivedAmount = ReceivedAmount;
+
+//       completedCart.push({
+//         ...cartToMove.toObject(),
+//         transactionId,
+//         status,
+//         cookingInstructions,
+//         ReceivedAmount,
+//       });
+
+//       user.completedCart = completedCart;
+//       user.pendingCart.splice(pendingCartIndex, 1);
+
+//       // Save the user object to the database
+//       await user.save();
+
+//       res.status(200).json({
+//         status: true,
+//         message: "Cart updated successfully",
+//         response: completedCart,
+//       });
+//     } else {
+//       res.status(400).json({ status: false, message: "Invalid status" });
+//     }
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({
+//       status: false,
+//       message: "Internal server error",
+//       response: err.message,
+//     });
+//   }
+// };
+// update cart
 const updateCartStatus = async (req, res) => {
   try {
     // Retrieve userId from JWT token
@@ -526,6 +599,46 @@ const updateCartStatus = async (req, res) => {
   }
 };
 // recent order of user
+// const getRecentOrder = async (req, res) => {
+//   try {
+//     const userId = req.data._id;
+
+//     // find user
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "User not found",
+//       });
+//     }
+
+//     // get the most recent order from completedCart
+//     const completedCart = user.completedCart;
+//     if (completedCart.length === 0) {
+//       return res.status(404).json({
+//         status: false,
+//         message: "No completed orders found",
+//         response: [],
+//       });
+//     }
+
+//     const recentOrder = completedCart[completedCart.length - 1];
+//     const recentProduct = recentOrder.products[recentOrder.products.length - 1];
+
+//     return res.status(200).json({
+//       status: true,
+//       message: "Recent order retrieved",
+//       response: recentOrder,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({
+//       status: false,
+//       message: "Internal Server Error",
+//       response: error.message,
+//     });
+//   }
+// };
 const getRecentOrder = async (req, res) => {
   try {
     const userId = req.data._id;
@@ -539,9 +652,14 @@ const getRecentOrder = async (req, res) => {
       });
     }
 
-    // get the most recent order from completedCart
+    // get the most recent order from completedCart, selfPickupCart, canceledCart
+    let recentOrder;
     const completedCart = user.completedCart;
-    if (completedCart.length === 0) {
+    const selfPickupCart = user.selfPickupCart;
+    const canceledCart = user.canceledCart;
+    const allCarts = [...completedCart, ...selfPickupCart, ...canceledCart];
+
+    if (allCarts.length === 0) {
       return res.status(404).json({
         status: false,
         message: "No completed orders found",
@@ -549,8 +667,29 @@ const getRecentOrder = async (req, res) => {
       });
     }
 
-    const recentOrder = completedCart[completedCart.length - 1];
-    const recentProduct = recentOrder.products[recentOrder.products.length - 1];
+    // get the most recent order from all carts
+    recentOrder = allCarts.reduce((prev, current) => {
+      if (new Date(prev.orderDate) < new Date(current.orderDate)) {
+        return current;
+      } else {
+        return prev;
+      }
+    });
+
+    // check if any products in recentOrder are also in pendingCart and mark them with cartStatus 1
+    const pendingCart = user.pendingCart;
+    if (pendingCart.length > 0) {
+      for (let i = 0; i < recentOrder.products.length; i++) {
+        const product = recentOrder.products[i];
+        const productInPendingCart = pendingCart.find((item) => item.productId === product.productId.toString());
+        if (productInPendingCart) {
+          const productDetails = await Product.findById(product.productId);
+          if (productDetails) {
+            product.cartStatus = productDetails.cartStatus;
+          }
+        }
+      }
+    }
 
     return res.status(200).json({
       status: true,
@@ -566,6 +705,8 @@ const getRecentOrder = async (req, res) => {
     });
   }
 };
+
+
 // recent order products only veg
 const getRecentOrderVegProducts = async (req, res) => {
   try {

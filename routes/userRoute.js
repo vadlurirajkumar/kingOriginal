@@ -26,6 +26,6 @@ router.patch("/location", isOtpAuth, updateLocation);
 router.post("/check-location", isOtpAuth, checkLocationForDelivery);
 router.patch("/update", isOtpAuth, editProfile);
 router.get("/getuser", isOtpAuth, getSingleUser);
-router.post("/search", searchProducts);
+router.post("/search",isOtpAuth, searchProducts);
 
 module.exports = router;

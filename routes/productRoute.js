@@ -36,10 +36,10 @@ productRoute.get("/all-products",isOtpAuth, getAllProducts);
 productRoute.get("/single-product/:id",isOtpAuth, getSingleProduct);
 
 // get all veg products
-productRoute.get("/veg-products", getAllVegProducts);
+productRoute.get("/veg-products",isOtpAuth, getAllVegProducts);
 
 // get all non-veg products
-productRoute.get("/non-veg-products", getAllNonVegProducts);
+productRoute.get("/non-veg-products",isOtpAuth, getAllNonVegProducts);
 
 // update a product
 productRoute.patch(
@@ -70,12 +70,12 @@ productRoute.patch(
 );
 
 // get exclusive dishes
-productRoute.get("/get-exclusiveDishes", getExclusiveDishes);
+productRoute.get("/get-exclusiveDishes",isOtpAuth, getExclusiveDishes);
 
 // get exclusive dishes only veg
-productRoute.get("/get-exclusiveDishes/veg", getExclusiveVegDishes);
+productRoute.get("/get-exclusiveDishes/veg",isOtpAuth, getExclusiveVegDishes);
 
 // get exclusive dishes only non-veg
-productRoute.get("/get-exclusiveDishes/non-veg", getExclusiveNonVegDishes);
+productRoute.get("/get-exclusiveDishes/non-veg",isOtpAuth, getExclusiveNonVegDishes);
 
 module.exports = productRoute;

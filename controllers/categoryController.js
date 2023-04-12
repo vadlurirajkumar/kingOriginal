@@ -679,47 +679,122 @@ const getSingleCategoryWithVegProducts = async (req, res) => {
   }
 };
 
+// const getSingleCategoryWithVegProductsForUser = async (req, res) => {
+//   try {
+//     const categoryId = req.params.id;
+
+//     const category = await categoryModel
+//       .findById(categoryId, { status: "active" })
+//       .populate({
+//         path: "products",
+//         match: { status: "active", foodType: "veg" },
+//       });
+
+//     if (!category) {
+//       return res.status(404).send({
+//         status: false,
+//         message: "Category not found",
+//       });
+//     }
+
+//     const response = {
+//       id: category._id,
+//       categoryName: category.categoryName,
+//       status: category.status,
+//       categoryImage: category.avatar ? category.avatar.url : "",
+//       products: category.products.map((product) => {
+//         return {
+//           id: product._id,
+//           productName: product.name,
+//           price: product.price,
+//           description: product.description,
+//           productImage: product.avatar ? product.avatar.url : "",
+//           status: product.status,
+//           foodType: product.foodType,
+//         };
+//       }),
+//     };
+
+//     res.status(200).send({
+//       status: true,
+//       message: "Category details",
+//       response,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({
+//       status: false,
+//       error,
+//       message: "Error while getting category details",
+//     });
+//   }
+// };
+
+// single category with non veg products
+
 const getSingleCategoryWithVegProductsForUser = async (req, res) => {
   try {
-    const categoryId = req.params.id;
-
-    const category = await categoryModel
-      .findById(categoryId, { status: "active" })
-      .populate({
-        path: "products",
-        match: { status: "active", foodType: "veg" },
-      });
-
-    if (!category) {
-      return res.status(404).send({
+    const userId = req.data._id;
+    let user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({
         status: false,
-        message: "Category not found",
+        message: "User not found",
+        response: [],
+      });
+    } else {
+      const categoryId = req.params.id;
+
+      const category = await categoryModel
+        .findById(categoryId, { status: "active" })
+        .populate({
+          path: "products",
+          match: { status: "active", foodType: "veg" },
+        });
+
+      if (!category) {
+        return res.status(404).send({
+          status: false,
+          message: "Category not found",
+        });
+      }
+
+      const response = {
+        id: category._id,
+        categoryName: category.categoryName,
+        status: category.status,
+        categoryImage: category.avatar ? category.avatar.url : "",
+        products: category.products.map((product) => {
+          const { avatar, ...rest } = product._doc;
+          let cartProductStatus = 0;
+          if (user.pendingCart.length > 0) {
+            user.pendingCart[0].products.forEach((p) => {
+              if (p.productId.toString() === product._id.toString()) {
+                cartProductStatus = 1;
+              }
+            });
+          }
+
+          return {
+            ...rest,
+            id: product._id,
+            cartStatus: cartProductStatus,
+            productName: product.name,
+            price: product.price,
+            description: product.description,
+            productImage: avatar?.url || null,
+            status: product.status,
+            foodType: product.foodType,
+          };
+        }),
+      };
+
+      res.status(200).send({
+        status: true,
+        message: "Category details",
+        response,
       });
     }
-
-    const response = {
-      id: category._id,
-      categoryName: category.categoryName,
-      status: category.status,
-      categoryImage: category.avatar ? category.avatar.url : "",
-      products: category.products.map((product) => {
-        return {
-          id: product._id,
-          productName: product.name,
-          price: product.price,
-          description: product.description,
-          productImage: product.avatar ? product.avatar.url : "",
-          status: product.status,
-          foodType: product.foodType,
-        };
-      }),
-    };
-
-    res.status(200).send({
-      status: true,
-      message: "Category details",
-      response,
-    });
   } catch (error) {
     console.log(error);
     res.status(500).send({
@@ -730,7 +805,7 @@ const getSingleCategoryWithVegProductsForUser = async (req, res) => {
   }
 };
 
-// single category with non veg products
+
 const getSingleCategoryWithNonVegProducts = async (req, res) => {
   try {
     const categoryId = req.params.id;
@@ -782,45 +857,67 @@ const getSingleCategoryWithNonVegProducts = async (req, res) => {
 
 const getSingleCategoryWithNonVegProductsForUser = async (req, res) => {
   try {
-    const categoryId = req.params.id;
-
-    const category = await categoryModel
-      .findById(categoryId, { status: "active" })
-      .populate({
-        path: "products",
-        match: { status: "active", foodType: "non-veg" },
-      });
-
-    if (!category) {
-      return res.status(404).send({
+    const userId = req.data._id;
+    let user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({
         status: false,
-        message: "Category not found",
+        message: "User not found",
+        response: [],
+      });
+    } else {
+      const categoryId = req.params.id;
+
+      const category = await categoryModel
+        .findById(categoryId, { status: "active" })
+        .populate({
+          path: "products",
+          match: { status: "active", foodType: "non-veg" },
+        });
+
+      if (!category) {
+        return res.status(404).send({
+          status: false,
+          message: "Category not found",
+        });
+      }
+
+      const response = {
+        id: category._id,
+        categoryName: category.categoryName,
+        status: category.status,
+        categoryImage: category.avatar ? category.avatar.url : "",
+        products: category.products.map((product) => {
+          const { avatar, ...rest } = product._doc;
+          let cartProductStatus = 0;
+          if (user.pendingCart.length > 0) {
+            user.pendingCart[0].products.forEach((p) => {
+              if (p.productId.toString() === product._id.toString()) {
+                cartProductStatus = 1;
+              }
+            });
+          }
+
+          return {
+            ...rest,
+            id: product._id,
+            cartStatus: cartProductStatus,
+            productName: product.name,
+            price: product.price,
+            description: product.description,
+            productImage: avatar?.url || null,
+            status: product.status,
+            foodType: product.foodType,
+          };
+        }),
+      };
+
+      res.status(200).send({
+        status: true,
+        message: "Category details",
+        response,
       });
     }
-
-    const response = {
-      id: category._id,
-      categoryName: category.categoryName,
-      status: category.status,
-      categoryImage: category.avatar ? category.avatar.url : "",
-      products: category.products.map((product) => {
-        return {
-          id: product._id,
-          productName: product.name,
-          price: product.price,
-          description: product.description,
-          productImage: product.avatar ? product.avatar.url : "",
-          status: product.status,
-          foodType: product.foodType,
-        };
-      }),
-    };
-
-    res.status(200).send({
-      status: true,
-      message: "Category details",
-      response,
-    });
   } catch (error) {
     console.log(error);
     res.status(500).send({
@@ -830,6 +927,7 @@ const getSingleCategoryWithNonVegProductsForUser = async (req, res) => {
     });
   }
 };
+
 
 //delete category
 const deleteCategory = async (req, res) => {

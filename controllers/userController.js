@@ -351,39 +351,65 @@ const getSingleUser = async (req, res) => {
 
 //search products
 const searchProducts = async (req, res) => {
-  const { searchQuery } = req.body;
   try {
+    const userId = req.data._id;
+    let user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({
+        status: false,
+        message: "User not found",
+        response: [],
+      });
+    }
+    const searchQuery  = req.body.searchQuery;
     if (!searchQuery) {
       return res.status(404).json({
         status: false,
         message: "No products found"
       });
     }
+    
     const formattedQuery = searchQuery.toLowerCase().replace(/\s+/g, '');
     const products = await productModel.find({});
     const matchingProducts = products.filter((product) => {
       const productName = product.productName.toLowerCase().replace(/\s+/g, '');
       return productName.includes(formattedQuery);
     });
+
     if (matchingProducts.length === 0) {
       return res.status(404).json({
         status: false,
         message: "No matching products found"
       });
     }
-    const formattedProducts = matchingProducts.map((product) => ({
-      id: product._id,
-      price: product.price,
-      description: product.description,
-      productImage: product.avatar.url,
-      status: product.status,
-      foodType: product.foodType,
-    }));
+
+    const formattedProducts = matchingProducts.map((product) => {
+      let cartProductStatus = 0;
+      if (user.pendingCart.length > 0) {
+        user.pendingCart[0].products.forEach((p) => {
+          if (p.productId.toString() === product._id.toString()) {
+            cartProductStatus = 1;
+          }
+        });
+      }
+
+      return {
+        id: product._id,
+        price: product.price,
+        description: product.description,
+        productImage: product.avatar?.url || null,
+        status: product.status,
+        foodType: product.foodType,
+        cartStatus: cartProductStatus,
+      };
+    });
+
     res.status(200).json({
       status: true,
       message: "Matching products found",
       response: formattedProducts,
     });
+
   } catch (err) {
     console.error(err);
     res.status(500).send({

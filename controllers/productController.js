@@ -119,57 +119,6 @@ const getAllProducts = async (req, res) => {
 };
 
 //get single product
-// const getSingleProduct = async (req, res) => {
-//   try {
-//     const userId = req.data._id;
-//     let user = await User.findById(userId);
-//     if (!user) {
-//       return res.status(400).json({
-//         status: false,
-//         message: "User not found",
-//         response: [],
-//       });
-//     } else {
-//     const product = await productModel.findById(req.params.id);
-//     const name = product.productName;
-//     if (product && product.status === "active") {
-//       const response = {
-//         id: product._id,
-//         cartStatus:product.cartStatus,
-//         productName: product.productName,
-//         description: product.description,
-//         price: product.price,
-//         categoryId: product.categoryId,
-//         status: product.status,
-//         foodType: product.foodType,
-//         productImage: product.avatar?.url || null,
-//       };
-//       return res.status(200).send({
-//         status: true,
-//         message: "Get Single product successfully",
-//         product: response,
-//       });
-//     } else if (product && product.status === "inactive") {
-//       return res.status(200).send({
-//         status: false,
-//         message: `product - ${name} is inactive, please contact admin to activate it`,
-//       });
-//     } else {
-//       return res.status(404).send({
-//         status: false,
-//         message: "product not found",
-//       });
-//     }
-//   }
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).send({
-//       status: false,
-//       error,
-//       message: "Error while getting Single product",
-//     });
-//   }
-// };
 const getSingleProduct = async (req, res) => {
   try {
     const userId = req.data._id;
@@ -233,18 +182,38 @@ const getSingleProduct = async (req, res) => {
 //get all veg products
 const getAllVegProducts = async (req, res) => {
   try {
-    const products = await productModel.find({foodType: "veg" });
-    res.status(200).send({
-      status: true,
-      message: "All Veg Products List",
-      products: products.map((product) => {
-        const { avatar, ...rest } = product._doc;
-        return {
-          ...rest,
-          productImage: avatar?.url || null
-        }
-      }),
-    });
+    const userId = req.data._id;
+    let user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({
+        status: false,
+        message: "User not found",
+        response: [],
+      });
+    } else {
+      const products = await productModel.find({ foodType: "veg" });
+      res.status(200).send({
+        status: true,
+        message: "All Veg Products List",
+        products: products.map((product) => {
+          const { avatar, ...rest } = product._doc;
+          let cartProductStatus = 0;
+          if (user.pendingCart.length > 0) {
+            user.pendingCart[0].products.forEach((p) => {
+              if (p.productId.toString() === product._id.toString()) {
+                cartProductStatus = 1;
+              }
+            });
+          }
+
+          return {
+            ...rest,
+            productImage: avatar?.url || null,
+            cartStatus: cartProductStatus,
+          };
+        }),
+      });
+    }
   } catch (error) {
     console.log(error);
     res.status(500).send({
@@ -258,24 +227,44 @@ const getAllVegProducts = async (req, res) => {
 //get all non-veg products
 const getAllNonVegProducts = async (req, res) => {
   try {
-    const products = await productModel.find({foodType: "non-veg" });
-    res.status(200).send({
-      status: true,
-      message: "All Veg Products List",
-      products: products.map((product) => {
-        const { avatar, ...rest } = product._doc;
-        return {
-          ...rest,
-          productImage: avatar?.url || null
-        }
-      }),
-    });
+    const userId = req.data._id;
+    let user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({
+        status: false,
+        message: "User not found",
+        response: [],
+      });
+    } else {
+      const products = await productModel.find({ foodType: "non-veg" });
+      res.status(200).send({
+        status: true,
+        message: "All Veg Products List",
+        products: products.map((product) => {
+          const { avatar, ...rest } = product._doc;
+          let cartProductStatus = 0;
+          if (user.pendingCart.length > 0) {
+            user.pendingCart[0].products.forEach((p) => {
+              if (p.productId.toString() === product._id.toString()) {
+                cartProductStatus = 1;
+              }
+            });
+          }
+
+          return {
+            ...rest,
+            productImage: avatar?.url || null,
+            cartStatus: cartProductStatus,
+          };
+        }),
+      });
+    }
   } catch (error) {
     console.log(error);
     res.status(500).send({
       status: false,
       error,
-      message: "Error while getting all veg products",
+      message: "Error while getting all non-veg products",
     });
   }
 };
@@ -480,45 +469,88 @@ const removeFromExclusiveDish = async (req, res) => {
 };
 
 // get exclusive dishes 
-const getExclusiveDishes = async (req,res) => {
+const getExclusiveDishes = async (req, res) => {
   try {
-    const products = await productModel.find({status:"active",exclusiveStatus:"active"});
-    res.status(200).send({
-      status: true,
-      message: "All Products List",
-      products: products.map((product) => {
-        const { avatar, ...rest } = product._doc;
-        return {
-          ...rest,
-          productImage: avatar?.url || null
-        }
-      }),
-    });
+    const userId = req.data._id;
+    let user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({
+        status: false,
+        message: "User not found",
+        response: [],
+      });
+    } else {
+      const products = await productModel.find({status:"active",exclusiveStatus:"active"});
+      res.status(200).send({
+        status: true,
+        message: "Exclusive Dishes List",
+        products: products.map((product) => {
+          const { avatar, ...rest } = product._doc;
+          let cartProductStatus = 0;
+          if (user.pendingCart.length > 0) {
+            user.pendingCart[0].products.forEach((p) => {
+              if (p.productId.toString() === product._id.toString()) {
+                cartProductStatus = 1;
+              }
+            });
+          }
+
+          return {
+            ...rest,
+            productImage: avatar?.url || null,
+            cartStatus: cartProductStatus,
+          };
+        }),
+      });
+    }
   } catch (error) {
     console.log(error);
     res.status(500).send({
       status: false,
       error,
-      message: "Error while getting all products",
+      message: "Error while getting exclusive dishes",
     });
   }
-}
+};
 
 // get exclusive dishes only veg
-const getExclusiveVegDishes = async (req,res) => {
+const getExclusiveVegDishes = async (req, res) => {
   try {
-    const products = await productModel.find({status:"active",exclusiveStatus:"active",foodType:"veg"});
-    res.status(200).send({
-      status: true,
-      message: "All Products List",
-      products: products.map((product) => {
-        const { avatar, ...rest } = product._doc;
-        return {
-          ...rest,
-          productImage: avatar?.url || null
-        }
-      }),
-    });
+    const userId = req.data._id;
+    let user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({
+        status: false,
+        message: "User not found",
+        response: [],
+      });
+    } else {
+      const products = await productModel.find({
+        status: "active",
+        exclusiveStatus: "active",
+        foodType: "veg",
+      });
+      res.status(200).send({
+        status: true,
+        message: "All Products List",
+        products: products.map((product) => {
+          const { avatar, ...rest } = product._doc;
+          let cartProductStatus = 0;
+          if (user.pendingCart.length > 0) {
+            user.pendingCart[0].products.forEach((p) => {
+              if (p.productId.toString() === product._id.toString()) {
+                cartProductStatus = 1;
+              }
+            });
+          }
+          return {
+            ...rest,
+            productImage: avatar?.url || null,
+            cartStatus: cartProductStatus,
+          };
+        }),
+      });
+    }
   } catch (error) {
     console.log(error);
     res.status(500).send({
@@ -527,23 +559,47 @@ const getExclusiveVegDishes = async (req,res) => {
       message: "Error while getting all products",
     });
   }
-}
+};
+
 
 // get exclusive dishes only non-veg
-const getExclusiveNonVegDishes = async (req,res) => {
+const getExclusiveNonVegDishes = async (req, res) => {
   try {
-    const products = await productModel.find({status:"active",exclusiveStatus:"active",foodType:"non-veg"});
-    res.status(200).send({
-      status: true,
-      message: "All Products List",
-      products: products.map((product) => {
-        const { avatar, ...rest } = product._doc;
-        return {
-          ...rest,
-          productImage: avatar?.url || null
-        }
-      }),
-    });
+    const userId = req.data._id;
+    let user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({
+        status: false,
+        message: "User not found",
+        response: [],
+      });
+    } else {
+      const products = await productModel.find({
+        status: "active",
+        exclusiveStatus: "active",
+        foodType: "non-veg",
+      });
+      res.status(200).send({
+        status: true,
+        message: "All Products List",
+        products: products.map((product) => {
+          const { avatar, ...rest } = product._doc;
+          let cartProductStatus = 0;
+          if (user.pendingCart.length > 0) {
+            user.pendingCart[0].products.forEach((p) => {
+              if (p.productId.toString() === product._id.toString()) {
+                cartProductStatus = 1;
+              }
+            });
+          }
+          return {
+            ...rest,
+            productImage: avatar?.url || null,
+            cartStatus: cartProductStatus,
+          };
+        }),
+      });
+    }
   } catch (error) {
     console.log(error);
     res.status(500).send({
@@ -552,7 +608,8 @@ const getExclusiveNonVegDishes = async (req,res) => {
       message: "Error while getting all products",
     });
   }
-}
+};
+
 
 
 
