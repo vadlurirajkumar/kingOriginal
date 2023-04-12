@@ -39,17 +39,18 @@ const addToCart = async (req, res) => {
       if (existingProductIndex !== -1) {
         // if the product already exists in the cart, increase its quantity
         existingCart.products[existingProductIndex].quantity += 1;
-        existingCart.products[existingProductIndex].cartStatus = 1; // set cartStatus of product to 1
+        const cartStatus = existingCart.products[existingProductIndex].cartStatus;
       } else {
         // if the product doesn't exist in the cart, add it
         existingCart.products.push({
+          cartId:existingCart.cartId,
           productId: productId,
           productName: product.productName,
           quantity: 1,
           price: product.price,
           productImage: product.avatar.url,
           foodType: product.foodType,
-          cartStatus: 1, // set cartStatus of product to 1
+          cartStatus:product.cartStatus
         });
       }
       // Recalculate the total amount for the cart
@@ -64,14 +65,16 @@ const addToCart = async (req, res) => {
         message: "Product added to cart",
         response: {
           ...existingCart.toObject(),
-          cartId: existingCart._id,
         },
       });
     } else {
-      // if there is no existing cart with status inCart, create a new cart
+      // if there is no existing cart with status inCart, create a new one
       const newCart = {
+        buyer: userId,
         status: "inCart",
         totalAmount: product.price,
+        createdAt: new Date(),
+        cartId: mongoose.Types.ObjectId(),
         products: [
           {
             productId: productId,
@@ -80,22 +83,100 @@ const addToCart = async (req, res) => {
             price: product.price,
             productImage: product.avatar.url,
             foodType: product.foodType,
-            cartStatus: 1, // set cartStatus of product to 1
+            cartStatus: 1
           },
         ],
       };
+
       user.pendingCart.push(newCart);
       await user.save();
-
       return res.status(200).json({
         status: true,
         message: "Product added to cart",
         response: {
           ...newCart,
-          cartId: newCart._id,
         },
       });
     }
+    return res.status(200).json({
+      status: true,
+      message: "Product added to cart",
+      response: {
+        ...existingCart.toObject(),
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+// remove from cart
+const removeFromCart = async (req, res) => {
+  try {
+    const userId = req.data._id;
+    const productId = req.body.productId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({
+        status: false,
+        message: "User not found",
+      });
+    }
+
+    let existingCart = user.pendingCart.find((c) => c.status === "inCart");
+    if (!existingCart) {
+      return res.status(400).json({
+        status: false,
+        message: "Cart not found",
+      });
+    }
+
+    const existingProductIndex = existingCart.products.findIndex(
+      (p) => p.productId.toString() === productId
+    );
+    if (existingProductIndex === -1) {
+      return res.status(404).json({
+        status: false,
+        message: "Product not found in cart",
+        response: [],
+      });
+    }
+
+    const existingProduct = existingCart.products[existingProductIndex];
+
+    if (existingProduct.quantity > 1) {
+      existingProduct.quantity -= 1;
+      existingProduct.cartStatus = 1;
+    } else {
+      existingCart.products.splice(existingProductIndex, 1);
+      existingProduct.cartStatus = 0;
+    }
+
+    existingCart.totalAmount = existingCart.products.reduce(
+      (total, p) => total + p.price * p.quantity,
+      0
+    );
+
+    if (existingCart.products.length === 0) {
+      user.pendingCart = user.pendingCart.filter(
+        (c) => c.status !== "inCart"
+      );
+      await user.save();
+      return res.status(200).json({
+        status: true,
+        message: "No products found in cart",
+        response: [],
+      });
+    }
+
+    await user.save();
+
+    return res.status(200).json({
+      status: true,
+      message: "Product removed from cart",
+      response: existingCart,
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -105,217 +186,6 @@ const addToCart = async (req, res) => {
     });
   }
 };
-
-// remove from cart
-// const removeFromCart = async (req, res) => {
-//   try {
-//     const userId = req.data._id;
-//     const productId = req.body.productId;
-
-//     // find user
-//     const user = await User.findById(userId);
-//     if (!user) {
-//       return res.status(400).json({
-//         status: false,
-//         message: "User not found",
-//       });
-//     }
-
-//     // check if there is an existing cart with status inCart
-//     let existingCart = user.pendingCart.find((c) => c.status === "inCart");
-
-//     if (existingCart) {
-//       // if the cart already exists, remove the product from the cart
-//       const existingProductIndex = existingCart.products.findIndex(
-//         (p) => p.productId.toString() === productId
-//       );
-//       if (existingProductIndex !== -1) {
-//         // if the product exists in the cart, decrease its quantity by 1
-//         if (existingCart.products[existingProductIndex].quantity > 1) {
-//           existingCart.products[existingProductIndex].quantity -= 1;
-//         } else {
-//           existingCart.products.splice(existingProductIndex, 1);
-//         }
-//         // Recalculate the total amount for the cart
-//         existingCart.totalAmount = existingCart.products.reduce(
-//           (total, p) => total + p.price * p.quantity,
-//           0
-//         );
-//         await user.save();
-
-//         return res.status(200).json({
-//           status: true,
-//           message: "Product removed from cart",
-//           response: existingCart,
-//         });
-//       } else {
-//         return res.status(404).json({
-//           status: false,
-//           message: "Product not found in cart",
-//           response: [],
-//         });
-//       }
-//     } else {
-//       return res.status(404).json({
-//         status: false,
-//         message: "Cart not found",
-//         response: [],
-//       });
-//     }
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json({
-//       status: false,
-//       message: "Internal Server Error",
-//       response: error.message,
-//     });
-//   }
-// };
-// const removeFromCart = async (req, res) => {
-//   try {
-//     const userId = req.data._id;
-//     const productId = req.body.productId;
-
-//     // find user
-//     const user = await User.findById(userId);
-//     if (!user) {
-//       return res.status(400).json({
-//         status: false,
-//         message: "User not found",
-//       });
-//     }
-
-//     // check if there is an existing cart with status inCart
-//     let existingCart = user.pendingCart.find((c) => c.status === "inCart");
-
-//     if (existingCart) {
-//       // if the cart already exists, remove the product from the cart
-//       const existingProductIndex = existingCart.products.findIndex(
-//         (p) => p.productId.toString() === productId
-//       );
-//       if (existingProductIndex !== -1) {
-//         // if the product exists in the cart, decrease its quantity by 1
-//         if (existingCart.products[existingProductIndex].quantity > 1) {
-//           existingCart.products[existingProductIndex].quantity -= 1;
-//         } else {
-//           existingCart.products.splice(existingProductIndex, 1);
-//         }
-//         // Recalculate the total amount for the cart
-//         existingCart.totalAmount = existingCart.products.reduce(
-//           (total, p) => total + p.price * p.quantity,
-//           0
-//         );
-//         // Update cart status based on product availability
-//         existingCart.cartStatus = existingCart.products.length ? 1 : 0;
-//         await user.save();
-
-//         return res.status(200).json({
-//           status: true,
-//           message: "Product removed from cart",
-//           response: existingCart,
-//         });
-//       } else {
-//         return res.status(404).json({
-//           status: false,
-//           message: "Product not found in cart",
-//           response: [],
-//         });
-//       }
-//     } else {
-//       return res.status(404).json({
-//         status: false,
-//         message: "Cart not found",
-//         response: [],
-//       });
-//     }
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json({
-//       status: false,
-//       message: "Internal Server Error",
-//       response: error.message,
-//     });
-//   }
-// };
-const removeFromCart = async (req, res) => {
-  try {
-    const userId = req.data._id;
-    const productId = req.body.productId;
-
-    // find user
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(400).json({
-        status: false,
-        message: "User not found",
-      });
-    }
-
-    // check if there is an existing cart with status inCart
-    let existingCart = user.pendingCart.find((c) => c.status === "inCart");
-
-    if (existingCart) {
-      // if the cart already exists, remove the product from the cart
-      const existingProductIndex = existingCart.products.findIndex(
-        (p) => p.productId.toString() === productId
-      );
-      if (existingProductIndex !== -1) {
-        // if the product exists in the cart, decrease its quantity by 1
-        if (existingCart.products[existingProductIndex].quantity > 1) {
-          existingCart.products[existingProductIndex].quantity -= 1;
-        } else {
-          // If the product quantity is 1, remove it from the cart
-          existingCart.products.splice(existingProductIndex, 1);
-        }
-        // Recalculate the total amount for the cart
-        existingCart.totalAmount = existingCart.products.reduce(
-          (total, p) => total + p.price * p.quantity,
-          0
-        );
-        // Update cart status based on product availability
-        existingCart.cartStatus = existingCart.products.length ? 1 : 0;
-        await user.save();
-
-        if (existingCart.products.length) {
-          return res.status(200).json({
-            status: true,
-            message: "Product removed from cart",
-            response: existingCart,
-          });
-        } else {
-          // If there are no more products in the cart, remove the cart from pendingCart
-          user.pendingCart.pull(existingCart._id);
-          await user.save();
-          return res.status(200).json({
-            status: true,
-            message: "Product removed from cart",
-            response: [],
-          });
-        }
-      } else {
-        return res.status(404).json({
-          status: false,
-          message: "Product not found in cart",
-          response: [],
-        });
-      }
-    } else {
-      return res.status(404).json({
-        status: false,
-        message: "Cart not found",
-        response: [],
-      });
-    }
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      status: false,
-      message: "Internal Server Error",
-      response: error.message,
-    });
-  }
-};
-
 // get cart for single user
 const getCartForUser = async (req, res) => {
   try {
@@ -369,161 +239,160 @@ const getCartForUser = async (req, res) => {
   }
 };
 // order self-pickup
-const ChangeToSelfPickup = async (req, res) => {
-  try {
-    const userId = req.data._id;
-
-    // find user
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(400).json({
-        status: false,
-        message: "User not found",
-      });
-    }
-
-    // check if there is an existing cart with status inCart
-    let existingCart = user.pendingCart.find((c) => c.status === "inCart");
-    const { transactionId, status, cookingInstructions, ReceivedAmount } =
-      req.body;
-    if (existingCart) {
-      // update the existing cart status to "Self-pickup"
-      existingCart.status = "Self-pickup";
-
-      // move the existing cart to the selfPickupCart array
-      user.selfPickupCart.push(existingCart);
-
-      // remove the existing cart from the pendingCart array
-      user.pendingCart.splice(user.pendingCart.indexOf(existingCart), 1);
-
-      // Recalculate the total amount for the cart
-      existingCart.totalAmount = existingCart.products.reduce(
-        (total, p) => total + p.price * p.quantity,
-        0
-      );
-      existingCart.DeliveryCharge = 0;
-      existingCart.GovtTaxes = 20;
-      existingCart.GrandTotal =
-        Number(existingCart.totalAmount) +
-        Number(existingCart.DeliveryCharge) +
-        Number(existingCart.GovtTaxes);
-      existingCart.transactionId = transactionId;
-      existingCart.cookingInstructions = cookingInstructions;
-      existingCart.ReceivedAmount = ReceivedAmount;
-
-      // Convert cart object to plain object to avoid issues with Mongoose
-      const cartToSave = { ...existingCart.toObject(), ...req.body };
-      delete cartToSave._id;
-
-      // Add cart to selfPickupCart array
-      user.selfPickupCart.push({
-        ...cartToSave,
-        createdAt: new Date(),
-      });
-
-      // Save the changes to the database
-      await Promise.all([
-        user.save(),
-        Cart.findOneAndUpdate({ _id: existingCart._id }, existingCart, {
-          upsert: true,
-        }),
-      ]);
-
-      return res.status(200).json({
-        status: true,
-        message: "Cart updated successfully",
-        response: [existingCart],
-      });
-    } else {
-      return res.status(404).json({
-        status: false,
-        message: "Cart not found",
-        response: [],
-      });
-    }
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      status: false,
-      message: "Internal Server Error",
-      response: error.message,
-    });
-  }
-};
-// update cart
-// const updateCartStatus = async (req, res) => {
+// const ChangeToSelfPickup = async (req, res) => {
 //   try {
-//     // Retrieve userId from JWT token
-//     const userId = req.data.id;
+//     const userId = req.data._id;
 
-//     // Find pending cart for user
+//     // find user
 //     const user = await User.findById(userId);
-//     const pendingCartIndex = user.pendingCart.findIndex(
-//       (p) => p.status === "inCart"
-//     );
-//     if (pendingCartIndex === -1) {
-//       pendingCartIndex.createdAt = new Date();
-//       return res
-//         .status(404)
-//         .json({ status: false, message: "Pending cart not found" });
+//     if (!user) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "User not found",
+//       });
 //     }
 
-//     const { transactionId, status, cookingInstructions, ReceivedAmount } =
+//     // check if there is an existing cart with status inCart
+//     let existingCart = user.pendingCart.find((c) => c.status === "inCart");
+//     const { transactionId, cookingInstructions, ReceivedAmount } =
 //       req.body;
+//     if (existingCart) {
+//       // update the existing cart status to "Self-pickup"
+//       existingCart.status = "Self-pickup";
 
-//     if (status === "ordered") {
-//       // Move pending cart data to completed cart and empty pending cart
-//       const completedCart = user.completedCart || [];
-//       const cartToMove = user.pendingCart[pendingCartIndex];
+//       // remove the existing cart from the pendingCart array
+//       user.pendingCart.splice(user.pendingCart.indexOf(existingCart), 1);
 
 //       // Recalculate the total amount for the cart
-//       cartToMove.totalAmount = cartToMove.products.reduce(
+//       existingCart.totalAmount = existingCart.products.reduce(
 //         (total, p) => total + p.price * p.quantity,
 //         0
 //       );
-//       cartToMove.DeliveryCharge = 50;
-//       cartToMove.GovtTaxes = 20;
-//       cartToMove.GrandTotal =
-//         Number(cartToMove.totalAmount) +
-//         Number(cartToMove.DeliveryCharge) +
-//         Number(cartToMove.GovtTaxes);
+//       existingCart.DeliveryCharge = 0;
+//       existingCart.GovtTaxes = 20;
+//       existingCart.GrandTotal =
+//         Number(existingCart.totalAmount) +
+//         Number(existingCart.DeliveryCharge) +
+//         Number(existingCart.GovtTaxes);
+//       existingCart.transactionId = transactionId;
+//       existingCart.cookingInstructions = cookingInstructions;
+//       existingCart.ReceivedAmount = ReceivedAmount;
 
-//       cartToMove.status = status;
-//       cartToMove.transactionId = transactionId;
-//       cartToMove.cookingInstructions = cookingInstructions;
-//       cartToMove.ReceivedAmount = ReceivedAmount;
+//       // Convert cart object to plain object to avoid issues with Mongoose
+//       const cartToSave = { ...existingCart.toObject(), ...req.body, status: existingCart.status };
+//       delete cartToSave._id;
 
-//       completedCart.push({
-//         ...cartToMove.toObject(),
-//         transactionId,
-//         status,
-//         cookingInstructions,
-//         ReceivedAmount,
+//       // Add cart to selfPickupCart array
+//       user.selfPickupCart.push({
+//         ...cartToSave,
+//         createdAt: new Date(),
 //       });
 
-//       user.completedCart = completedCart;
-//       user.pendingCart.splice(pendingCartIndex, 1);
+//       // Save the changes to the database
+//       await Promise.all([
+//         user.save(),
+//         Cart.findOneAndUpdate({ _id: existingCart._id }, existingCart, {
+//           upsert: true,
+//         }),
+//       ]);
 
-//       // Save the user object to the database
-//       await user.save();
-
-//       res.status(200).json({
+//       return res.status(200).json({
 //         status: true,
 //         message: "Cart updated successfully",
-//         response: completedCart,
+//         response: [existingCart],
 //       });
 //     } else {
-//       res.status(400).json({ status: false, message: "Invalid status" });
+//       return res.status(404).json({
+//         status: false,
+//         message: "Cart not found",
+//         response: [],
+//       });
 //     }
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({
 //       status: false,
-//       message: "Internal server error",
-//       response: err.message,
+//       message: "Internal Server Error",
+//       response: error.message,
 //     });
 //   }
 // };
+const ChangeToSelfPickup = async (req, res) => {
+  try {
+    // Retrieve userId from JWT token
+    const userId = req.data.id;
+
+    // Find pending cart for user
+    const user = await User.findById(userId);
+    const pendingCartIndex = user.pendingCart.findIndex(
+      (p) => p.status === "inCart"
+    );
+    if (pendingCartIndex === -1) {
+      pendingCartIndex.createdAt = new Date();
+      return res
+        .status(404)
+        .json({ status: false, message: "Pending cart not found" });
+    }
+
+    const { transactionId, status, cookingInstructions, ReceivedAmount } =
+      req.body;
+
+    if (status === "Self-pickup") {
+      // Move pending cart data to completed cart and empty pending cart
+      const selfPickupCart = user.selfPickupCart || [];
+      const cartToMove = user.pendingCart[pendingCartIndex];
+
+      // Recalculate the total amount for the cart
+      cartToMove.totalAmount = cartToMove.products.reduce(
+        (total, p) => total + p.price * p.quantity,
+        0
+      );
+      cartToMove.DeliveryCharge = 0;
+      cartToMove.GovtTaxes = 20;
+      cartToMove.GrandTotal =
+        Number(cartToMove.totalAmount) +
+        Number(cartToMove.DeliveryCharge) +
+        Number(cartToMove.GovtTaxes);
+
+      cartToMove.status = status;
+      cartToMove.transactionId = transactionId;
+      cartToMove.cookingInstructions = cookingInstructions;
+      cartToMove.ReceivedAmount = ReceivedAmount;
+
+      selfPickupCart.push({
+        ...cartToMove.toObject(),
+        transactionId,
+        status,
+        cookingInstructions,
+        ReceivedAmount,
+      });
+
+      user.selfPickupCart = selfPickupCart;
+      user.pendingCart.splice(pendingCartIndex, 1);
+
+      // Save the user object to the database
+      await user.save();
+
+      res.status(200).json({
+        status: true,
+        message: "Cart updated successfully",
+        response: selfPickupCart,
+      });
+    } else {
+      res.status(400).json({ status: false, message: "Invalid status" });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: false,
+      message: "Internal server error",
+      response: err.message,
+    });
+  }
+};
+
+
+
 // update cart
 const updateCartStatus = async (req, res) => {
   try {
