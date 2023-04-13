@@ -22,6 +22,11 @@ const deliveryPersonSchema = new mongoose.Schema(
     area: {
       type: String,
     },
+    onDuty:{
+      type: String,
+      enum: ["on", "off"],
+      default:"off"
+    }
   },
   { timestamps: true }
 );

@@ -1,7 +1,6 @@
 const DeliveryPerson = require("../model/deliveryPersonModel")
 
 // signup delivery person
-
 const createDeliveryBoy = async(req, res) => {
     try {
         const {mobile, fullname, password, area} = req.body
@@ -34,9 +33,7 @@ const createDeliveryBoy = async(req, res) => {
     }
 }
 
-
 //login delivery person
-
 const loginDeliveryBoy = async (req,res) => {
     try {
         const {mobile, password} = req.body;
@@ -85,6 +82,52 @@ const loginDeliveryBoy = async (req,res) => {
     }
 };
 
+// delivery boy onDuty toggle
+const dbOnDuty = async (req,res) => {
+    try {
+        const delBoyId = req.params.id;
+        const delBoy = await DeliveryPerson.findById(delBoyId);
+    
+        if (!delBoy) {
+          return res.status(404).send({
+            status: false,
+            message: "deliverBoy not found",
+          });
+        }
+    
+        const newOnDuty = delBoy.onDuty === "on" ? "off" : "on";
+        const updatedDelBoy = await DeliveryPerson.findByIdAndUpdate(
+          delBoyId,
+          { $set: { onDuty: newOnDuty } },
+          { new: true }
+        );
+    
+        const response = {
+          id: updatedDelBoy._id,
+          fullname: updatedDelBoy.fullname,
+          area: updatedDelBoy.area,
+          mobile:updatedDelBoy.mobile,
+          password:updatedDelBoy.password,
+          status: updatedDelBoy.status,
+          onDuty:updatedDelBoy.onDuty,
+          createdAt: updatedDelBoy.createdAt,
+          updatedAt: updatedDelBoy.updatedAt,
+        };
+    
+        res.status(200).send({
+          status: true,
+          message: "delivery boy onDuty status updated successfully",
+          response: [response],
+        });
+      } catch (error) {
+        console.log(error);
+        res.status(500).send({
+          status: false,
+          message: "Error in updating deliveryBoy status",
+          error,
+        });
+      } 
+}
 
 
-module.exports = {createDeliveryBoy,loginDeliveryBoy}
+module.exports = {createDeliveryBoy,loginDeliveryBoy,dbOnDuty}

@@ -97,6 +97,7 @@ const userSchema = new mongoose.Schema(
     completedCart: [
       {
         buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        deliveryPerson:String,
         totalAmount: String,
         transactionId:String,
         cartId:String,
@@ -105,13 +106,13 @@ const userSchema = new mongoose.Schema(
         DeliveryCharge:String,
         GovtTaxes:String,
         GrandTotal:String,
+        status: String,
         createdAt: {
           type: Date,
           get: function(createdAt) {
             return moment(createdAt).format('D MMMM YYYY h:mm:ss a');
           }
         },
-        status: String,
         products: [
           {
             productId: {
@@ -149,6 +150,7 @@ const userSchema = new mongoose.Schema(
     canceledCart: [
       {
         buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        deliveryPerson:String,
         totalAmount: String,
         transactionId:String,
         status: String,
@@ -203,6 +205,7 @@ const userSchema = new mongoose.Schema(
     selfPickupCart: [
       {
         buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        deliveryPerson:String,
         totalAmount: String,
         transactionId:String,
         cartId:String,

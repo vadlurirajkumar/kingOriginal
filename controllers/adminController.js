@@ -2,6 +2,7 @@ const Admin = require("../model/adminModel");
 const User = require("../model/usermodel");
 const cloudinary = require("cloudinary");
 const DeliveryPerson = require("../model/deliveryPersonModel");
+// const Cart = require("../model/orderModel")
 
 // admin Login
 const adminLogin = async (req, res) => {
@@ -56,19 +57,20 @@ const totalUsers = async (req, res) => {
     }
     const users = await User.find({})
       .populate({
-        path: "pendingCart",
+        path: "completedCart",
         populate: {
           path: "products",
           select: "-_id name price quantity",
         },
       })
       .populate({
-        path: "completedCart",
+        path: "pendingCart",
         populate: {
           path: "products",
           select: "-_id name price quantity",
         },
       });
+
     if (users.length <= 0) {
       return res.json({
         status: false,
@@ -98,6 +100,38 @@ const totalDeliveryBoys = async (req, res) => {
       });
     }
     const delBoy = await DeliveryPerson.find({});
+    if (delBoy.length <= 0) {
+      return res.json({
+        status: false,
+        message: "No Delivery Persons Found",
+        response: [],
+      });
+    }
+    return res.json({
+      status: true,
+      message: "delivery boys data fetch successful",
+      response: [delBoy],
+    });
+  } catch (error) {
+    return res.json({ status: false, message: error.message, response: [] });
+  }
+};
+
+// get delivery boys whose onDuty
+const getdeliveryBoysOnduty = async (req, res) => {
+  try {
+    const admin = await Admin.findById(req.admin.id);
+    if (!admin) {
+      return res.json({
+        status: false,
+        message: "Admin not authorised",
+        response: [],
+      });
+    }
+    const delBoy = await DeliveryPerson.find({
+      onDuty: "on",
+      status: "active",
+    });
     if (delBoy.length <= 0) {
       return res.json({
         status: false,
@@ -183,8 +217,8 @@ const updateDeliveryboyStatus = async (req, res) => {
       id: updatedDelBoy._id,
       fullname: updatedDelBoy.fullname,
       area: updatedDelBoy.area,
-      mobile:updatedDelBoy.mobile,
-      password:updatedDelBoy.password,
+      mobile: updatedDelBoy.mobile,
+      password: updatedDelBoy.password,
       status: updatedDelBoy.status,
       createdAt: updatedDelBoy.createdAt,
       updatedAt: updatedDelBoy.updatedAt,
@@ -235,7 +269,7 @@ const deleteUser = async (req, res) => {
 };
 
 // delete delivery boy
-const deleteDeliveryBoy = async (req,res) => {
+const deleteDeliveryBoy = async (req, res) => {
   try {
     const admin = await Admin.findById(req.admin.id);
     if (!admin) {
@@ -251,7 +285,6 @@ const deleteDeliveryBoy = async (req,res) => {
         status: false,
         message: "Delivery Boy not found",
         response: [],
-        
       });
     }
     return res.json({
@@ -262,7 +295,80 @@ const deleteDeliveryBoy = async (req,res) => {
   } catch (error) {
     return res.json({ status: false, message: error.message, response: [] });
   }
-}
+};
+
+// assign db
+const assignDeliveryBoy = async (req, res) => {
+  try {
+    const admin = await Admin.findById(req.admin.id);
+    if (!admin) {
+      return res.status(401).json({
+        status: false,
+        message: "Admin not authorized",
+        response: [],
+      });
+    }
+    const cartId = req.params.id;
+    const cart = await User.findOne({ _id: cartId });
+    if (!cart) {
+      return res.status(400).json({
+        status: false,
+        message: "Cart not found",
+        response: [],
+      });
+    }
+
+    const user = await User.findById(cart.buyer);
+    if (!user) {
+      return res.status(400).json({
+        status: false,
+        message: "User not found",
+        response: [],
+      });
+    }
+
+    const deliveryBoyId = req.body.deliveryBoyId;
+    const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
+    if (!deliveryBoy) {
+      return res.status(400).json({
+        status: false,
+        message: "Delivery Boy not found",
+        response: [],
+      });
+    }
+
+    // Update the cart with the assigned delivery boy
+    cart.deliveryPerson = deliveryBoyId;
+    await cart.save();
+
+    res.status(200).json({
+      status: true,
+      message: "Delivery Boy assigned successfully",
+      response: {
+        cartId: cartId,
+        buyer: user,
+        deliveryPerson: deliveryBoy,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      response: error.message,
+    });
+  }
+};
 
 
-module.exports = { adminLogin, totalUsers, totalDeliveryBoys, updateUserStatus,updateDeliveryboyStatus, deleteUser, deleteDeliveryBoy };
+module.exports = {
+  adminLogin,
+  totalUsers,
+  totalDeliveryBoys,
+  updateUserStatus,
+  updateDeliveryboyStatus,
+  deleteUser,
+  deleteDeliveryBoy,
+  getdeliveryBoysOnduty,
+  assignDeliveryBoy,
+};
