@@ -33,13 +33,13 @@ categoryRoute.patch("/update-category/:id", isAdminAuth, uploadImage.single("ava
 categoryRoute.get("/get-category", getAllCategories); //admin
 
 //get all category which are active only
-categoryRoute.post("/get-category-active",isOtpAuth,getAllCategoriesForUser); //user
+categoryRoute.get("/get-category-active",isOtpAuth,getAllCategoriesForUser); //user
 
 //get all categories with products
 categoryRoute.get("/get-category-with-products", getAllCategoriesWithProducts); // admin 
 
 //get all categories with products active only
-categoryRoute.post("/get-category-with-products-active",isOtpAuth,  getAllCategoriesWithProductsForUser); // user 
+categoryRoute.get("/get-category-with-products-active",isOtpAuth,  getAllCategoriesWithProductsForUser); // user 
 
 //updateStatus
 categoryRoute.patch("/single-category/toggleStatus/:id", isAdminAuth, toggleCategoryStatus); //admin
@@ -48,19 +48,19 @@ categoryRoute.patch("/single-category/toggleStatus/:id", isAdminAuth, toggleCate
 categoryRoute.get("/single-category/:id", getSingleCategoryWithProducts); // admin
 
 //single category active only
-categoryRoute.post("/single-category-active/:id",isOtpAuth, getSingleCategoryWithProductsForUser); // user
+categoryRoute.get("/single-category-active/:id",isOtpAuth, getSingleCategoryWithProductsForUser); // user
 
 // single category with veg products
 categoryRoute.get("/single-category/veg/:id", getSingleCategoryWithVegProducts); // admin
 
 // single category with veg products active only
-categoryRoute.post("/single-category-active/veg/:id",isOtpAuth, getSingleCategoryWithVegProductsForUser); // user
+categoryRoute.get("/single-category-active/veg/:id",isOtpAuth, getSingleCategoryWithVegProductsForUser); // user
 
 // single category with non-veg products
 categoryRoute.get("/single-category/non-veg/:id", getSingleCategoryWithNonVegProducts); // admin
 
 // single category with non-veg products active only
-categoryRoute.post("/single-category-active/non-veg/:id",isOtpAuth, getSingleCategoryWithNonVegProductsForUser); // user
+categoryRoute.get("/single-category-active/non-veg/:id",isOtpAuth, getSingleCategoryWithNonVegProductsForUser); // user
 
 //delete category
 categoryRoute.delete("/delete-category/:id", isAdminAuth, deleteCategory); //admin

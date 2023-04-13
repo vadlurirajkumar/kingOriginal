@@ -430,7 +430,7 @@ const getRecentOrder = async (req, res) => {
           (p) => p.productId.toString() === product.productId.toString()
         );
         if (pendingProduct) {
-          product.cartStatus = pendingProduct.cartStatus;
+          product.cartStatus = 1;
         }
       });
     }

@@ -85,6 +85,11 @@ const userSchema = new mongoose.Schema(
               type: String,
               enum: ["veg", "non-veg"],
             },
+            cartStatus: {
+              type: String,
+              enum: ["1", "0"],
+              default: "0",
+            },
           },
         ],
       },
@@ -131,6 +136,11 @@ const userSchema = new mongoose.Schema(
             foodType: {
               type: String,
               enum: ["veg", "non-veg"],
+            },
+            cartStatus: {
+              type: String,
+              enum: ["1", "0"],
+              default: "0",
             },
           },
         ],
@@ -181,6 +191,11 @@ const userSchema = new mongoose.Schema(
               type: String,
               enum: ["veg", "non-veg"],
             },
+            cartStatus: {
+              type: String,
+              enum: ["1", "0"],
+              default: "0",
+            },
           },
         ],
       },
@@ -227,6 +242,11 @@ const userSchema = new mongoose.Schema(
             foodType: {
               type: String,
               enum: ["veg", "non-veg"],
+            },
+            cartStatus: {
+              type: String,
+              enum: ["1", "0"],
+              default: "0",
             },
           },
         ],

@@ -8,16 +8,16 @@ const {addToCart,getCartForUser, updateCartStatus, removeFromCart, getRecentOrde
 cartRoute.post("/add", isOtpAuth, addToCart);
 
 // get cart details for user
-cartRoute.post("/get", isOtpAuth, getCartForUser)
+cartRoute.get("/get", isOtpAuth, getCartForUser)
 
 // get recent order for user
-cartRoute.post("/getRecentOrder", isOtpAuth, getRecentOrder)
+cartRoute.get("/getRecentOrder", isOtpAuth, getRecentOrder)
 
 // get only veg products from recent order 
-cartRoute.post("/getRecentOrder/veg", isOtpAuth, getRecentOrderVegProducts)
+cartRoute.get("/getRecentOrder/veg", isOtpAuth, getRecentOrderVegProducts)
 
 // get only non veg products from recent order
-cartRoute.post("/getRecentOrder/non-veg", isOtpAuth, getRecentOrderNonVegProducts)
+cartRoute.get("/getRecentOrder/non-veg", isOtpAuth, getRecentOrderNonVegProducts)
 
 // cancel lastOrder for user
 cartRoute.post("/cancelLastOrder", isOtpAuth, cancelLastOrder)
