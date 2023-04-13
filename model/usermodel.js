@@ -148,6 +148,7 @@ const userSchema = new mongoose.Schema(
         DeliveryCharge:String,
         GovtTaxes:String,
         GrandTotal:String,
+        status: String,
         createdAt: {
           type: Date,
           get: function(createdAt) {
@@ -195,6 +196,7 @@ const userSchema = new mongoose.Schema(
         DeliveryCharge:String,
         GovtTaxes:String,
         GrandTotal:String,
+        status: String,
         createdAt: {
           type: Date,
           get: function(createdAt) {

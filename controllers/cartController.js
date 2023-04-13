@@ -39,18 +39,19 @@ const addToCart = async (req, res) => {
       if (existingProductIndex !== -1) {
         // if the product already exists in the cart, increase its quantity
         existingCart.products[existingProductIndex].quantity += 1;
-        const cartStatus = existingCart.products[existingProductIndex].cartStatus;
+        const cartStatus =
+          existingCart.products[existingProductIndex].cartStatus;
       } else {
         // if the product doesn't exist in the cart, add it
         existingCart.products.push({
-          cartId:existingCart.cartId,
+          cartId: existingCart.cartId,
           productId: productId,
           productName: product.productName,
           quantity: 1,
           price: product.price,
           productImage: product.avatar.url,
           foodType: product.foodType,
-          cartStatus:product.cartStatus
+          cartStatus: product.cartStatus,
         });
       }
       // Recalculate the total amount for the cart
@@ -83,7 +84,7 @@ const addToCart = async (req, res) => {
             price: product.price,
             productImage: product.avatar.url,
             foodType: product.foodType,
-            cartStatus: 1
+            cartStatus: 1,
           },
         ],
       };
@@ -159,9 +160,7 @@ const removeFromCart = async (req, res) => {
     );
 
     if (existingCart.products.length === 0) {
-      user.pendingCart = user.pendingCart.filter(
-        (c) => c.status !== "inCart"
-      );
+      user.pendingCart = user.pendingCart.filter((c) => c.status !== "inCart");
       await user.save();
       return res.status(200).json({
         status: true,
@@ -254,14 +253,10 @@ const ChangeToSelfPickup = async (req, res) => {
 
     // check if there is an existing cart with status inCart
     let existingCart = user.pendingCart.find((c) => c.status === "inCart");
-    const { transactionId, cookingInstructions, ReceivedAmount } =
-      req.body;
+    const { transactionId, cookingInstructions, ReceivedAmount } = req.body;
     if (existingCart) {
       // update the existing cart status to "Self-pickup"
       existingCart.status = "Self-pickup";
-
-      // move the existing cart to the selfPickupCart array
-      user.selfPickupCart.push(existingCart);
 
       // remove the existing cart from the pendingCart array
       user.pendingCart.splice(user.pendingCart.indexOf(existingCart), 1);
@@ -280,13 +275,13 @@ const ChangeToSelfPickup = async (req, res) => {
       existingCart.transactionId = transactionId;
       existingCart.cookingInstructions = cookingInstructions;
       existingCart.ReceivedAmount = ReceivedAmount;
-      
+
       // Convert cart object to plain object to avoid issues with Mongoose
       const cartToSave = existingCart.toObject();
       delete cartToSave._id;
 
-      // Add cart to completed cart array
-      user.completedCart.push({
+      // push the modified cart object to selfPickupCart array
+      user.selfPickupCart.push({
         ...cartToSave,
         transactionId,
         cookingInstructions,
@@ -295,14 +290,7 @@ const ChangeToSelfPickup = async (req, res) => {
       });
 
       // Save the changes to the database
-      await Promise.all([
-        user.save(),
-        Cart.findOneAndUpdate(
-          { _id: existingCart._id },
-          existingCart,
-          { upsert: true }
-        ),
-      ]);
+      await user.save();
 
       return res.status(200).json({
         status: true,
@@ -400,46 +388,6 @@ const updateCartStatus = async (req, res) => {
   }
 };
 // recent order of user
-// const getRecentOrder = async (req, res) => {
-//   try {
-//     const userId = req.data._id;
-
-//     // find user
-//     const user = await User.findById(userId);
-//     if (!user) {
-//       return res.status(400).json({
-//         status: false,
-//         message: "User not found",
-//       });
-//     }
-
-//     // get the most recent order from completedCart
-//     const completedCart = user.completedCart;
-//     if (completedCart.length === 0) {
-//       return res.status(404).json({
-//         status: false,
-//         message: "No completed orders found",
-//         response: [],
-//       });
-//     }
-
-//     const recentOrder = completedCart[completedCart.length - 1];
-//     const recentProduct = recentOrder.products[recentOrder.products.length - 1];
-
-//     return res.status(200).json({
-//       status: true,
-//       message: "Recent order retrieved",
-//       response: recentOrder,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json({
-//       status: false,
-//       message: "Internal Server Error",
-//       response: error.message,
-//     });
-//   }
-// };
 const getRecentOrder = async (req, res) => {
   try {
     const userId = req.data._id;
@@ -453,48 +401,43 @@ const getRecentOrder = async (req, res) => {
       });
     }
 
-    // get the most recent order from completedCart, selfPickupCart, canceledCart
-    let recentOrder;
-    const completedCart = user.completedCart;
-    const selfPickupCart = user.selfPickupCart;
-    const canceledCart = user.canceledCart;
-    const allCarts = [...completedCart, ...selfPickupCart, ...canceledCart];
+    // combine completedCart, selfPickupCart, and canceledCart arrays
+    const allOrders = user.completedCart
+      .concat(user.selfPickupCart)
+      .concat(user.canceledCart);
 
-    if (allCarts.length === 0) {
+    // sort the combined array by createdAt field in descending order
+    allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    // get the most recent order from the combined array
+    const recentOrder = allOrders[0];
+
+    if (!recentOrder) {
       return res.status(404).json({
         status: false,
-        message: "No completed orders found",
+        message: "No completed, self-pickup, or canceled orders found",
         response: [],
       });
     }
 
-    // get the most recent order from all carts
-    recentOrder = allCarts.reduce((prev, current) => {
-      if (new Date(prev.orderDate) < new Date(current.orderDate)) {
-        return current;
-      } else {
-        return prev;
-      }
-    });
-
-    // check if any products in recentOrder are also in pendingCart and mark them with cartStatus 1
-    const pendingCart = user.pendingCart;
-    if (pendingCart.length > 0) {
-      for (let i = 0; i < recentOrder.products.length; i++) {
-        const product = recentOrder.products[i];
-        const productInPendingCart = pendingCart.find((item) => item.productId === product.productId.toString());
-        if (productInPendingCart) {
-          const productDetails = await Product.findById(product.productId);
-          if (productDetails) {
-            product.cartStatus = productDetails.cartStatus;
-          }
+    // check if there are any products in pendingCart that match the recent order
+    const pendingCart = user.pendingCart.find(
+      (cart) => cart.status === "inCart"
+    );
+    if (pendingCart) {
+      recentOrder.products.forEach((product) => {
+        const pendingProduct = pendingCart.products.find(
+          (p) => p.productId.toString() === product.productId.toString()
+        );
+        if (pendingProduct) {
+          product.cartStatus = pendingProduct.cartStatus;
         }
-      }
+      });
     }
 
     return res.status(200).json({
       status: true,
-      message: "Recent order retrieved",
+      message: "Recent order found",
       response: recentOrder,
     });
   } catch (error) {
@@ -506,9 +449,7 @@ const getRecentOrder = async (req, res) => {
     });
   }
 };
-
-
-// recent order products only veg
+// recent order only veg
 const getRecentOrderVegProducts = async (req, res) => {
   try {
     const userId = req.data._id;
@@ -522,17 +463,38 @@ const getRecentOrderVegProducts = async (req, res) => {
       });
     }
 
-    // get the most recent order from completedCart
-    const completedCart = user.completedCart;
-    if (completedCart.length === 0) {
+    // combine completedCart, selfPickupCart, and canceledCart arrays
+    const allOrders = user.completedCart
+      .concat(user.selfPickupCart)
+      .concat(user.canceledCart);
+
+    // sort the combined array by createdAt field in descending order
+    allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    // get the most recent order from the combined array
+    const recentOrder = allOrders[0];
+
+    if (!recentOrder) {
       return res.status(404).json({
         status: false,
-        message: "No completed orders found",
+        message: "No completed, self-pickup, or canceled orders found",
         response: [],
       });
     }
-
-    const recentOrder = completedCart[completedCart.length - 1];
+    // check if there are any products in pendingCart that match the recent order
+    const pendingCart = user.pendingCart.find(
+      (cart) => cart.status === "inCart"
+    );
+    if (pendingCart) {
+      recentOrder.products.forEach((product) => {
+        const pendingProduct = pendingCart.products.find(
+          (p) => p.productId.toString() === product.productId.toString()
+        );
+        if (pendingProduct) {
+          product.cartStatus = pendingProduct.cartStatus;
+        }
+      });
+    }
     const vegProducts = recentOrder.products.filter(
       (product) => product.foodType === "veg"
     );
@@ -543,7 +505,6 @@ const getRecentOrderVegProducts = async (req, res) => {
       response: vegProducts,
     });
   } catch (error) {
-    console.error(error);
     return res.status(500).json({
       status: false,
       message: "Internal Server Error",
@@ -551,7 +512,7 @@ const getRecentOrderVegProducts = async (req, res) => {
     });
   }
 };
-// recent order products only veg
+// recent order only non veg
 const getRecentOrderNonVegProducts = async (req, res) => {
   try {
     const userId = req.data._id;
@@ -565,28 +526,48 @@ const getRecentOrderNonVegProducts = async (req, res) => {
       });
     }
 
-    // get the most recent order from completedCart
-    const completedCart = user.completedCart;
-    if (completedCart.length === 0) {
+    // combine completedCart, selfPickupCart, and canceledCart arrays
+    const allOrders = user.completedCart
+      .concat(user.selfPickupCart)
+      .concat(user.canceledCart);
+
+    // sort the combined array by createdAt field in descending order
+    allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    // get the most recent order from the combined array
+    const recentOrder = allOrders[0];
+
+    if (!recentOrder) {
       return res.status(404).json({
         status: false,
-        message: "No completed orders found",
+        message: "No completed, self-pickup, or canceled orders found",
         response: [],
       });
     }
-
-    const recentOrder = completedCart[completedCart.length - 1];
-    const vegProducts = recentOrder.products.filter(
+    // check if there are any products in pendingCart that match the recent order
+    const pendingCart = user.pendingCart.find(
+      (cart) => cart.status === "inCart"
+    );
+    if (pendingCart) {
+      recentOrder.products.forEach((product) => {
+        const pendingProduct = pendingCart.products.find(
+          (p) => p.productId.toString() === product.productId.toString()
+        );
+        if (pendingProduct) {
+          product.cartStatus = pendingProduct.cartStatus;
+        }
+      });
+    }
+    const NonvegProducts = recentOrder.products.filter(
       (product) => product.foodType === "non-veg"
     );
 
     return res.status(200).json({
       status: true,
-      message: "Recent vegetarian products retrieved",
-      response: vegProducts,
+      message: "Recent non-vegetarian products retrieved",
+      response: NonvegProducts,
     });
   } catch (error) {
-    console.error(error);
     return res.status(500).json({
       status: false,
       message: "Internal Server Error",
@@ -625,12 +606,8 @@ const cancelLastOrder = async (req, res) => {
       });
     }
 
-    // update the status of the most recent order to "canceled"
-    recentOrder.status = "canceled";
-
-    // move the most recent order from its original array to canceledCart
-    const canceledCart = user.canceledCart || [];
-    if (recentOrder.deliveryMethod === "Delivery") {
+    // delete the most recent order from its original array
+    if (recentOrder.status === "ordered") {
       user.completedCart = user.completedCart.filter(
         (cart) => cart._id.toString() !== recentOrder._id.toString()
       );
@@ -639,7 +616,15 @@ const cancelLastOrder = async (req, res) => {
         (cart) => cart._id.toString() !== recentOrder._id.toString()
       );
     }
+
+    // update the status of the most recent order to "canceled"
+    recentOrder.status = "canceled";
+
+    // add the canceled order to the canceledCart array
+    const canceledCart = user.canceledCart || [];
     canceledCart.push(recentOrder);
+
+    // update the user object with the modified arrays
     user.canceledCart = canceledCart;
 
     // save the user object with the updated canceledCart and original arrays
