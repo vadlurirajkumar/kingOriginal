@@ -1,6 +1,6 @@
 const express = require("express");
 const adminRouter = express.Router();
-const {adminLogin, totalUsers, totalDeliveryBoys, updateUserStatus, updateDeliveryboyStatus, deleteUser, deleteDeliveryBoy, getdeliveryBoysOnduty, assignDeliveryBoy} = require("../controllers/adminController")
+const {adminLogin, totalUsers, totalDeliveryBoys, updateUserStatus, updateDeliveryboyStatus, deleteUser, deleteDeliveryBoy, getdeliveryBoysOnduty, assignDeliveryBoy, getCartFromAllUsers} = require("../controllers/adminController")
 const isAdminAuth = require("../middleware/adminAuth");
 
 // routes
@@ -13,6 +13,6 @@ adminRouter.delete("/user/:id", isAdminAuth, deleteUser);
 adminRouter.delete("/deliveryBoy/:id", isAdminAuth, deleteDeliveryBoy)
 adminRouter.get("/onDutyBoys", isAdminAuth, getdeliveryBoysOnduty)
 adminRouter.post("/assignDb/:id", isAdminAuth, assignDeliveryBoy)
-
+adminRouter.post("/getParticularCart/:id", isAdminAuth, getCartFromAllUsers)
 
 module.exports =  adminRouter;

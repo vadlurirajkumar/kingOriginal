@@ -1,7 +1,7 @@
 const express = require("express");
 const cartRoute = express.Router();
 const isOtpAuth = require("../middleware/otpAuth")
-const {addToCart,getCartForUser, updateCartStatus, removeFromCart, getRecentOrder,getRecentOrderVegProducts,getRecentOrderNonVegProducts, cancelLastOrder, orderHistory, getOrderDetails, ChangeToSelfPickup} = require("../controllers/cartController")
+const {addToCart,getCartForUser, updateCartStatus,updateCartStatusWithSingleResponse, removeFromCart, getRecentOrder,getRecentOrderVegProducts,getRecentOrderNonVegProducts, cancelLastOrder, orderHistory, getOrderDetails, ChangeToSelfPickup} = require("../controllers/cartController")
 
 
 // Route to add a product to cart
@@ -27,6 +27,9 @@ cartRoute.patch("/removeFromCart", isOtpAuth, removeFromCart)
 
 //update cart
 cartRoute.patch("/cartUpdate", isOtpAuth, updateCartStatus)
+
+//update with single response
+cartRoute.put("/updateForDelivery", isOtpAuth, updateCartStatusWithSingleResponse)
 
 // order history
 cartRoute.get("/order-history", isOtpAuth, orderHistory)

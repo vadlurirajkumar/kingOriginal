@@ -373,8 +373,84 @@ const updateCartStatus = async (req, res) => {
       res.status(200).json({
         status: true,
         message: "Cart updated successfully",
-        response: completedCart,
+        response: completedCart, 
+        // response: completedCart[completedCart.length - 1], 
+     });
+    } else {
+      res.status(400).json({ status: false, message: "Invalid status" });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: false,
+      message: "Internal server error",
+      response: err.message,
+    });
+  }
+};
+//single response for update
+const updateCartStatusWithSingleResponse = async (req, res) => {
+  try {
+    // Retrieve userId from JWT token
+    const userId = req.data.id;
+
+    // Find pending cart for user
+    const user = await User.findById(userId);
+    const pendingCartIndex = user.pendingCart.findIndex(
+      (p) => p.status === "inCart"
+    );
+    if (pendingCartIndex === -1) {
+      pendingCartIndex.createdAt = new Date();
+      return res
+        .status(404)
+        .json({ status: false, message: "Pending cart not found" });
+    }
+
+    const { transactionId, status, cookingInstructions, ReceivedAmount } =
+      req.body;
+
+    if (status === "ordered") {
+      // Move pending cart data to completed cart and empty pending cart
+      const completedCart = user.completedCart || [];
+      const cartToMove = user.pendingCart[pendingCartIndex];
+
+      // Recalculate the total amount for the cart
+      cartToMove.totalAmount = cartToMove.products.reduce(
+        (total, p) => total + p.price * p.quantity,
+        0
+      );
+      cartToMove.DeliveryCharge = 50;
+      cartToMove.GovtTaxes = 20;
+      cartToMove.GrandTotal =
+        Number(cartToMove.totalAmount) +
+        Number(cartToMove.DeliveryCharge) +
+        Number(cartToMove.GovtTaxes);
+
+      cartToMove.status = status;
+      cartToMove.transactionId = transactionId;
+      cartToMove.cookingInstructions = cookingInstructions;
+      cartToMove.ReceivedAmount = ReceivedAmount;
+
+      completedCart.push({
+        ...cartToMove.toObject(),
+        transactionId,
+        status,
+        cookingInstructions,
+        ReceivedAmount,
       });
+
+      user.completedCart = completedCart;
+      user.pendingCart.splice(pendingCartIndex, 1);
+
+      // Save the user object to the database
+      await user.save();
+
+      res.status(200).json({
+        status: true,
+        message: "Cart updated successfully",
+        // response: completedCart, 
+        response: completedCart[completedCart.length - 1], 
+     });
     } else {
       res.status(400).json({ status: false, message: "Invalid status" });
     }
@@ -741,6 +817,7 @@ module.exports = {
   addToCart,
   getCartForUser,
   updateCartStatus,
+  updateCartStatusWithSingleResponse,
   removeFromCart,
   getRecentOrder,
   getRecentOrderVegProducts,
