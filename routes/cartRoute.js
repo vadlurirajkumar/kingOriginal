@@ -1,7 +1,7 @@
 const express = require("express");
 const cartRoute = express.Router();
 const isOtpAuth = require("../middleware/otpAuth")
-const {addToCart,getCartForUser, updateCartStatus,updateCartStatusWithSingleResponse, removeFromCart, getRecentOrder,getRecentOrderVegProducts,getRecentOrderNonVegProducts, cancelLastOrder, orderHistory, getOrderDetails, ChangeToSelfPickup} = require("../controllers/cartController")
+const {addToCart,getCartForUser, updateCartStatus,updateCartStatusWithSingleResponse,updateToSelfPickup, removeFromCart, getRecentOrder,getRecentOrderVegProducts,getRecentOrderNonVegProducts, cancelLastOrder, orderHistory, getOrderDetails, ChangeToSelfPickup} = require("../controllers/cartController")
 
 
 // Route to add a product to cart
@@ -29,7 +29,7 @@ cartRoute.patch("/removeFromCart", isOtpAuth, removeFromCart)
 cartRoute.patch("/cartUpdate", isOtpAuth, updateCartStatus)
 
 //update with single response
-cartRoute.put("/updateForDelivery", isOtpAuth, updateCartStatusWithSingleResponse)
+cartRoute.put("/updateForDelivery", isOtpAuth, updateCartStatusWithSingleResponse) // newly added for prashanth
 
 // order history
 cartRoute.get("/order-history", isOtpAuth, orderHistory)
@@ -39,5 +39,8 @@ cartRoute.get("/single-orderDetails/:id", isOtpAuth, getOrderDetails)
 
 // change for self-pickup
 cartRoute.patch("/self-pickup", isOtpAuth, ChangeToSelfPickup)
+
+// update for self-pickup
+cartRoute.put("/updateToSelfPickup", isOtpAuth, updateToSelfPickup) // newly added for prashanth
 
 module.exports = cartRoute

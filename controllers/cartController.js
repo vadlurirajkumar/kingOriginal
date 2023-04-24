@@ -313,6 +313,82 @@ const ChangeToSelfPickup = async (req, res) => {
     });
   }
 };
+//update to selfPickup
+const updateToSelfPickup = async (req, res) => {
+  try {
+    const userId = req.data._id;
+
+    // find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({
+        status: false,
+        message: "User not found",
+      });
+    }
+
+    // check if there is an existing cart with status inCart
+    let existingCart = user.pendingCart.find((c) => c.status === "inCart");
+    const { transactionId, cookingInstructions, ReceivedAmount } = req.body;
+    if (existingCart) {
+      // update the existing cart status to "Self-pickup"
+      existingCart.status = "Self-pickup";
+
+      // remove the existing cart from the pendingCart array
+      user.pendingCart.splice(user.pendingCart.indexOf(existingCart), 1);
+
+      // Recalculate the total amount for the cart
+      existingCart.totalAmount = existingCart.products.reduce(
+        (total, p) => total + p.price * p.quantity,
+        0
+      );
+      existingCart.DeliveryCharge = 0;
+      existingCart.GovtTaxes = 20;
+      existingCart.GrandTotal =
+        Number(existingCart.totalAmount) +
+        Number(existingCart.DeliveryCharge) +
+        Number(existingCart.GovtTaxes);
+      existingCart.transactionId = transactionId;
+      existingCart.cookingInstructions = cookingInstructions;
+      existingCart.ReceivedAmount = ReceivedAmount;
+
+      // Convert cart object to plain object to avoid issues with Mongoose
+      const cartToSave = existingCart.toObject();
+      delete cartToSave._id;
+
+      // push the modified cart object to selfPickupCart array
+      user.selfPickupCart.push({
+        ...cartToSave,
+        transactionId,
+        cookingInstructions,
+        ReceivedAmount,
+        createdAt: new Date(),
+      });
+
+      // Save the changes to the database
+      await user.save();
+
+      return res.status(200).json({
+        status: true,
+        message: "Cart updated successfully",
+        response: [existingCart],
+      });
+    } else {
+      return res.status(404).json({
+        status: false,
+        message: "Cart not found",
+        response: [],
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      response: error.message,
+    });
+  }
+};
 // update
 const updateCartStatus = async (req, res) => {
   try {
@@ -826,4 +902,5 @@ module.exports = {
   orderHistory,
   getOrderDetails,
   ChangeToSelfPickup,
+  updateToSelfPickup
 };
