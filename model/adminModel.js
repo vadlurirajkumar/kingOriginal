@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
-// const Category = require("../model/categoryModel")
 
 const adminSchema = new mongoose.Schema({
   userId: {
