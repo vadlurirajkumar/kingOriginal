@@ -22,19 +22,129 @@ const deliveryPersonSchema = new mongoose.Schema(
     area: {
       type: String,
     },
-    onDuty:{
+    onDuty: {
       type: String,
       enum: ["on", "off"],
-      default:"off"
-    }
+      default: "off",
+    },
+    completedOrders: [
+      {
+        buyer: String,
+        deliveryPerson: String,
+        // totalAmount: String,
+        transactionId: String,
+        cartId: String,
+        cookingInstructions: String,
+        ReceivedAmount: String,
+        location:String,
+        latitude:String,
+        longitude:String,
+        // DeliveryCharge: String,
+        // GovtTaxes: String,
+        // GrandTotal: String,
+        status: String,
+        updatedAt: {
+          type: Date,
+        },
+        products: [
+          {
+            productId: {
+              type: mongoose.ObjectId,
+              ref: "Products",
+            },
+            productName: {
+              type: String,
+              required: true,
+            },
+            quantity: {
+              type: Number,
+              required: true,
+            },
+            price: {
+              type: Number,
+              required: true,
+            },
+            productImage: {
+              type: String,
+            },
+            foodType: {
+              type: String,
+              enum: ["veg", "non-veg"],
+            },
+            cartStatus: {
+              type: String,
+              enum: ["1", "0"],
+              default: "0",
+            },
+          },
+        ],
+      },
+    ],
+    pendingOrders: [
+      {
+        buyer: String,
+        deliveryPerson: String,
+        // totalAmount: String,
+        transactionId: String,
+        cartId: String,
+        cookingInstructions: String,
+        ReceivedAmount: String,
+        location:String,
+        latitude:String,
+        longitude:String,
+        // DeliveryCharge: String,
+        // GovtTaxes: String,
+        // GrandTotal: String,
+        status: String,
+        updatedAt: {
+          type: Date,
+        },
+        products: [
+          {
+            productId: {
+              type: mongoose.ObjectId,
+              ref: "Products",
+            },
+            productName: {
+              type: String,
+              required: true,
+            },
+            quantity: {
+              type: Number,
+              required: true,
+            },
+            price: {
+              type: Number,
+              required: true,
+            },
+            productImage: {
+              type: String,
+            },
+            foodType: {
+              type: String,
+              enum: ["veg", "non-veg"],
+            },
+            cartStatus: {
+              type: String,
+              enum: ["1", "0"],
+              default: "0",
+            },
+          },
+        ],
+      },
+    ],
   },
+
   { timestamps: true }
 );
 
 deliveryPersonSchema.methods.comparePassword = function (password) {
-    return password === this.password;
-  };
+  return password === this.password;
+};
 
-const DeliveryPerson = new mongoose.model("DeliveryPerson", deliveryPersonSchema);
+const DeliveryPerson = new mongoose.model(
+  "DeliveryPerson",
+  deliveryPersonSchema
+);
 
 module.exports = DeliveryPerson;

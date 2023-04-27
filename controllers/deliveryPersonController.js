@@ -131,6 +131,62 @@ const dbOnDuty = async (req, res) => {
 };
 
 // get orders
+// const getOrders = async (req, res) => {
+//   const deliveryBoyId = req.params.id;
+//   try {
+//     const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
+//     if (!deliveryBoy) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "Delivery Boy not found",
+//         response: [],
+//       });
+//     }
+//     const orders = await User.find({
+//       $or: [{ "completedCart.deliveryPerson": deliveryBoy.fullname }],
+//     });
+//     if (!orders) {
+//       return res.json({
+//         status: false,
+//         message: "No orders found for this delivery boy",
+//         response: [],
+//       });
+//     }
+//     const formattedOrders = [];
+//     orders.forEach((user) => {
+//       user.completedCart.forEach((cart) => {
+//         if (cart.deliveryPerson === deliveryBoy.fullname) {
+//           formattedOrders.push({
+//             cartId: cart.cartId,
+//             buyer: user.fullname,
+//             location: user.location,
+//             latitude: user.latitude,
+//             longitude: user.longitude,
+//             transactionId: cart.transactionId,
+//             cookingInstructions: cart.cookingInstructions,
+//             ReceivedAmount: cart.ReceivedAmount,
+//             status: cart.status,
+//             products: cart.products,
+//           });
+//         }
+//       });
+//     });
+
+//     res.status(200).json({
+//       status: true,
+//       message: "Orders fetched successfully",
+//       response: formattedOrders,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({
+//       status: false,
+//       message: "Internal Server Error",
+//       response: error.message,
+//     });
+//   }
+// };
+
 const getOrders = async (req, res) => {
   const deliveryBoyId = req.params.id;
   try {
@@ -155,7 +211,10 @@ const getOrders = async (req, res) => {
     const formattedOrders = [];
     orders.forEach((user) => {
       user.completedCart.forEach((cart) => {
-        if (cart.deliveryPerson === deliveryBoy.fullname) {
+        if (
+          cart.deliveryPerson === deliveryBoy.fullname &&
+          cart.status !== "delivered" // Exclude carts with status "delivered"
+        ) {
           formattedOrders.push({
             cartId: cart.cartId,
             buyer: user.fullname,
@@ -186,6 +245,7 @@ const getOrders = async (req, res) => {
     });
   }
 };
+
 
 //select single order
 const getSingleOrderDetails = async (req, res) => {
@@ -314,6 +374,7 @@ const updateStatusToPickup = async (req, res) => {
           cookingInstructions: cart.cookingInstructions,
           ReceivedAmount: cart.ReceivedAmount,
           status: user.completedCart[cartIndex].status,
+          updatedAt:new Date(),
           products: cart.products,
         },
       });
@@ -390,6 +451,77 @@ const updateStatusToPickup = async (req, res) => {
   };
   
   //change status to delivery
+  // const updateStatusToDelivery = async (req, res) => {
+  //   const { cartId } = req.body;
+  //   const deliveryBoyId = req.params.id;
+  
+  //   try {
+  //     const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
+  //     if (!deliveryBoy) {
+  //       return res.status(400).json({
+  //         status: false,
+  //         message: "Delivery Boy not found",
+  //         response: [],
+  //       });
+  //     }
+  //     const user = await User.findOne({
+  //       $or: [{ "completedCart.cartId": cartId }],
+  //     });
+  //     if (!user) {
+  //       return res.json({
+  //         status: false,
+  //         message: "User not found with this cartId",
+  //         response: [],
+  //       });
+  //     }
+  //     const cartIndex = user.completedCart.findIndex(
+  //       (cart) => cart.cartId.toString() === cartId
+  //     );
+  //     if (cartIndex === -1) {
+  //       return res.json({
+  //         status: false,
+  //         message: "Cart not found with this cartId",
+  //         response: [],
+  //       });
+  //     }
+  //     const cart = user.completedCart[cartIndex];
+  //     if (cart.deliveryPerson !== deliveryBoy.fullname) {
+  //       return res.json({
+  //         status: false,
+  //         message: "Delivery Boy not authorized to update this cart",
+  //         response: [],
+  //       });
+  //     }
+  
+  //     user.completedCart[cartIndex].status = "delivered";
+  //     await user.save();
+  
+  //     res.status(200).json({
+  //       status: true,
+  //       message: "Cart status updated successfully",
+  //       response: {
+  //         cartId: cart.cartId,
+  //         buyer: user.fullname,
+  //         location: user.location,
+  //         latitude: user.latitude,
+  //         longitude: user.longitude,
+  //         transactionId: cart.transactionId,
+  //         cookingInstructions: cart.cookingInstructions,
+  //         ReceivedAmount: cart.ReceivedAmount,
+  //         status: user.completedCart[cartIndex].status,
+  //         products: cart.products,
+  //       },
+  //     });
+  //   } catch (error) {
+  //     console.log(error);
+  //     res.status(500).json({
+  //       status: false,
+  //       message: "Internal Server Error",
+  //       response: error.message,
+  //     });
+  //   }
+  // };
+
   const updateStatusToDelivery = async (req, res) => {
     const { cartId } = req.body;
     const deliveryBoyId = req.params.id;
@@ -435,21 +567,28 @@ const updateStatusToPickup = async (req, res) => {
       user.completedCart[cartIndex].status = "delivered";
       await user.save();
   
+      const updatedCart = {
+        cartId: cart.cartId,
+        buyer: user.fullname,
+        location: user.location,
+        latitude: user.latitude,
+        longitude: user.longitude,
+        transactionId: cart.transactionId,
+        cookingInstructions: cart.cookingInstructions,
+        ReceivedAmount: cart.ReceivedAmount,
+        status: user.completedCart[cartIndex].status,
+        updatedAt:new Date(),
+        products: cart.products,
+      };
+  
+      // Save the updated cart in the delivery boy's completedOrders array
+      deliveryBoy.completedOrders.push(updatedCart);
+      await deliveryBoy.save();
+  
       res.status(200).json({
         status: true,
         message: "Cart status updated successfully",
-        response: {
-          cartId: cart.cartId,
-          buyer: user.fullname,
-          location: user.location,
-          latitude: user.latitude,
-          longitude: user.longitude,
-          transactionId: cart.transactionId,
-          cookingInstructions: cart.cookingInstructions,
-          ReceivedAmount: cart.ReceivedAmount,
-          status: user.completedCart[cartIndex].status,
-          products: cart.products,
-        },
+        response: updatedCart,
       });
     } catch (error) {
       console.log(error);
@@ -461,6 +600,41 @@ const updateStatusToPickup = async (req, res) => {
     }
   };
   
+// order history
+const viewOrderHistory = async (req, res) => {
+  const deliveryBoyId = req.params.id;
+
+  try {
+    const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
+    if (!deliveryBoy) {
+      return res.status(400).json({
+        status: false,
+        message: "Delivery Boy not found",
+        response: [],
+      });
+    }
+
+    // const completedOrders = deliveryBoy.completedOrders;
+    const completedOrders = deliveryBoy.completedOrders.sort((a, b) => {
+      return b.updatedAt - a.updatedAt
+    });
+
+    res.status(200).json({
+      status: true,
+      message: "Order history retrieved successfully",
+      response: completedOrders,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      response: error.message,
+    });
+  }
+};
+
+  
 module.exports = {
   createDeliveryBoy,
   loginDeliveryBoy,
@@ -469,5 +643,6 @@ module.exports = {
   getSingleOrderDetails,
   updateStatusToPickup,
   getLocationDetails,
-  updateStatusToDelivery
+  updateStatusToDelivery,
+  viewOrderHistory
 };
