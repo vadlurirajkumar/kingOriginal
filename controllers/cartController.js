@@ -540,6 +540,67 @@ const updateCartStatusWithSingleResponse = async (req, res) => {
   }
 };
 // recent order of user
+// const getRecentOrder = async (req, res) => {
+//   try {
+//     const userId = req.data._id;
+
+//     // find user
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "User not found",
+//       });
+//     }
+
+//     // combine completedCart, selfPickupCart, and canceledCart arrays
+//     const allOrders = user.completedCart
+//       .concat(user.selfPickupCart)
+//       .concat(user.canceledCart);
+
+//     // sort the combined array by createdAt field in descending order
+//     allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+//     // get the most recent order from the combined array
+//     const recentOrder = allOrders[0];
+
+//     if (!recentOrder) {
+//       return res.status(404).json({
+//         status: false,
+//         message: "No completed, self-pickup, or canceled orders found",
+//         response: [],
+//       });
+//     }
+
+//     // check if there are any products in pendingCart that match the recent order
+//     const pendingCart = user.pendingCart.find(
+//       (cart) => cart.status === "inCart"
+//     );
+//     if (pendingCart) {
+//       recentOrder.products.forEach((product) => {
+//         const pendingProduct = pendingCart.products.find(
+//           (p) => p.productId.toString() === product.productId.toString()
+//         );
+//         if (pendingProduct !== undefined) {
+//           product.cartStatus = 1;
+//         }
+//       });
+//     }
+
+//     return res.status(200).json({
+//       status: true,
+//       message: "Recent order found",
+//       response: recentOrder,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({
+//       status: false,
+//       message: "Internal Server Error",
+//       response: error.message,
+//     });
+//   }
+// };
 const getRecentOrder = async (req, res) => {
   try {
     const userId = req.data._id;
@@ -581,9 +642,16 @@ const getRecentOrder = async (req, res) => {
         const pendingProduct = pendingCart.products.find(
           (p) => p.productId.toString() === product.productId.toString()
         );
-        if (pendingProduct) {
+        if (pendingProduct !== undefined) {
           product.cartStatus = 1;
+        } else {
+          product.cartStatus = 0;
         }
+      });
+    } else {
+      // set cartStatus to 0 for all products in recent order if there are no pending products
+      recentOrder.products.forEach((product) => {
+        product.cartStatus = 0;
       });
     }
 
@@ -602,6 +670,68 @@ const getRecentOrder = async (req, res) => {
   }
 };
 // recent order only veg
+// const getRecentOrderVegProducts = async (req, res) => {
+//   try {
+//     const userId = req.data._id;
+
+//     // find user
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "User not found",
+//       });
+//     }
+
+//     // combine completedCart, selfPickupCart, and canceledCart arrays
+//     const allOrders = user.completedCart
+//       .concat(user.selfPickupCart)
+//       .concat(user.canceledCart);
+
+//     // sort the combined array by createdAt field in descending order
+//     allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+//     // get the most recent order from the combined array
+//     const recentOrder = allOrders[0];
+
+//     if (!recentOrder) {
+//       return res.status(404).json({
+//         status: false,
+//         message: "No completed, self-pickup, or canceled orders found",
+//         response: [],
+//       });
+//     }
+//     // check if there are any products in pendingCart that match the recent order
+//     const pendingCart = user.pendingCart.find(
+//       (cart) => cart.status === "inCart"
+//     );
+//     if (pendingCart) {
+//       recentOrder.products.forEach((product) => {
+//         const pendingProduct = pendingCart.products.find(
+//           (p) => p.productId.toString() === product.productId.toString()
+//         );
+//         if (pendingProduct) {
+//           product.cartStatus = pendingProduct.cartStatus;
+//         }
+//       });
+//     }
+//     const vegProducts = recentOrder.products.filter(
+//       (product) => product.foodType === "veg"
+//     );
+
+//     return res.status(200).json({
+//       status: true,
+//       message: "Recent vegetarian products retrieved",
+//       response: vegProducts,
+//     });
+//   } catch (error) {
+//     return res.status(500).json({
+//       status: false,
+//       message: "Internal Server Error",
+//       response: error.message,
+//     });
+//   }
+// };
 const getRecentOrderVegProducts = async (req, res) => {
   try {
     const userId = req.data._id;
@@ -633,10 +763,12 @@ const getRecentOrderVegProducts = async (req, res) => {
         response: [],
       });
     }
+
     // check if there are any products in pendingCart that match the recent order
     const pendingCart = user.pendingCart.find(
       (cart) => cart.status === "inCart"
     );
+
     if (pendingCart) {
       recentOrder.products.forEach((product) => {
         const pendingProduct = pendingCart.products.find(
@@ -646,7 +778,13 @@ const getRecentOrderVegProducts = async (req, res) => {
           product.cartStatus = pendingProduct.cartStatus;
         }
       });
+    } else {
+      // set cartStatus to 0 for all products in recent order if there are no pending products
+      recentOrder.products.forEach((product) => {
+        product.cartStatus = 0;
+      });
     }
+
     const vegProducts = recentOrder.products.filter(
       (product) => product.foodType === "veg"
     );
@@ -657,6 +795,7 @@ const getRecentOrderVegProducts = async (req, res) => {
       response: vegProducts,
     });
   } catch (error) {
+    console.error(error);
     return res.status(500).json({
       status: false,
       message: "Internal Server Error",
@@ -665,6 +804,68 @@ const getRecentOrderVegProducts = async (req, res) => {
   }
 };
 // recent order only non veg
+// const getRecentOrderNonVegProducts = async (req, res) => {
+//   try {
+//     const userId = req.data._id;
+
+//     // find user
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "User not found",
+//       });
+//     }
+
+//     // combine completedCart, selfPickupCart, and canceledCart arrays
+//     const allOrders = user.completedCart
+//       .concat(user.selfPickupCart)
+//       .concat(user.canceledCart);
+
+//     // sort the combined array by createdAt field in descending order
+//     allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+//     // get the most recent order from the combined array
+//     const recentOrder = allOrders[0];
+
+//     if (!recentOrder) {
+//       return res.status(404).json({
+//         status: false,
+//         message: "No completed, self-pickup, or canceled orders found",
+//         response: [],
+//       });
+//     }
+//     // check if there are any products in pendingCart that match the recent order
+//     const pendingCart = user.pendingCart.find(
+//       (cart) => cart.status === "inCart"
+//     );
+//     if (pendingCart) {
+//       recentOrder.products.forEach((product) => {
+//         const pendingProduct = pendingCart.products.find(
+//           (p) => p.productId.toString() === product.productId.toString()
+//         );
+//         if (pendingProduct) {
+//           product.cartStatus = pendingProduct.cartStatus;
+//         }
+//       });
+//     }
+//     const NonvegProducts = recentOrder.products.filter(
+//       (product) => product.foodType === "non-veg"
+//     );
+
+//     return res.status(200).json({
+//       status: true,
+//       message: "Recent non-vegetarian products retrieved",
+//       response: NonvegProducts,
+//     });
+//   } catch (error) {
+//     return res.status(500).json({
+//       status: false,
+//       message: "Internal Server Error",
+//       response: error.message,
+//     });
+//   }
+// };
 const getRecentOrderNonVegProducts = async (req, res) => {
   try {
     const userId = req.data._id;
@@ -696,10 +897,12 @@ const getRecentOrderNonVegProducts = async (req, res) => {
         response: [],
       });
     }
+
     // check if there are any products in pendingCart that match the recent order
     const pendingCart = user.pendingCart.find(
       (cart) => cart.status === "inCart"
     );
+
     if (pendingCart) {
       recentOrder.products.forEach((product) => {
         const pendingProduct = pendingCart.products.find(
@@ -709,17 +912,24 @@ const getRecentOrderNonVegProducts = async (req, res) => {
           product.cartStatus = pendingProduct.cartStatus;
         }
       });
+    } else {
+      // set cartStatus to 0 for all products in recent order if there are no pending products
+      recentOrder.products.forEach((product) => {
+        product.cartStatus = 0;
+      });
     }
-    const NonvegProducts = recentOrder.products.filter(
+
+    const vegProducts = recentOrder.products.filter(
       (product) => product.foodType === "non-veg"
     );
 
     return res.status(200).json({
       status: true,
       message: "Recent non-vegetarian products retrieved",
-      response: NonvegProducts,
+      response: vegProducts,
     });
   } catch (error) {
+    console.error(error);
     return res.status(500).json({
       status: false,
       message: "Internal Server Error",
