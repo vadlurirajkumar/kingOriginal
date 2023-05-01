@@ -85,6 +85,63 @@ const adminLogin = async (req, res) => {
 //     return res.json({ status: false, message: error.message, response: [] });
 //   }
 // };
+// const totalUsers = async (req, res) => {
+//   try {
+//     const admin = await Admin.findById(req.admin.id);
+//     if (!admin) {
+//       return res.json({
+//         status: false,
+//         message: "Admin not authorised",
+//         response: [],
+//       });
+//     }
+//     const users = await User.find({})
+//       .populate({
+//         path: "completedCart",
+//         populate: {
+//           path: "products",
+//           select: "-_id name price quantity",
+//         },
+//       })
+//       .populate({
+//         path: "pendingCart",
+//         populate: {
+//           path: "products",
+//           select: "-_id name price quantity",
+//         },
+//       })
+//       .populate({
+//         path: "selfPickupCart",
+//         populate: {
+//           path: "products",
+//           select: "-_id name price quantity",
+//         },
+//       })
+//       .populate({
+//         path: "canceledCart",
+//         populate: {
+//           path: "products",
+//           select: "-_id name price quantity",
+//         },
+//       })
+//       .sort({createdAt: -1})
+
+//     if (users.length <= 0) {
+//       return res.json({
+//         status: false,
+//         message: "Users not found",
+//         response: [],
+//       });
+//     }
+//     return res.json({
+//       status: true,
+//       message: "users fetch success",
+//       response: users,
+//     });
+//   } catch (error) {
+//     return res.json({ status: false, message: error.message, response: [] });
+//   }
+// };
 const totalUsers = async (req, res) => {
   try {
     const admin = await Admin.findById(req.admin.id);
@@ -95,6 +152,7 @@ const totalUsers = async (req, res) => {
         response: [],
       });
     }
+
     const users = await User.find({})
       .populate({
         path: "completedCart",
@@ -124,7 +182,7 @@ const totalUsers = async (req, res) => {
           select: "-_id name price quantity",
         },
       })
-      .sort({createdAt: -1})
+      .sort({ createdAt: -1 });
 
     if (users.length <= 0) {
       return res.json({
@@ -133,15 +191,25 @@ const totalUsers = async (req, res) => {
         response: [],
       });
     }
+
+    let totalCartsCount = 0;
+    users.forEach((user) => {
+      totalCartsCount +=
+        user.completedCart.length +
+        user.selfPickupCart.length +
+        user.canceledCart.length;
+    });
+
     return res.json({
       status: true,
       message: "users fetch success",
-      response: users,
+      response: {totalCartsCount,users}
     });
   } catch (error) {
     return res.json({ status: false, message: error.message, response: [] });
   }
 };
+
 
 // find total delivery boys
 const totalDeliveryBoys = async (req, res) => {
