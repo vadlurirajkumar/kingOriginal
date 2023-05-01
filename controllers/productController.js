@@ -118,6 +118,32 @@ const getAllProducts = async (req, res) => {
   }
 };
 
+//get all products for admin
+const getAllProductsForAdmin = async (req, res) => {
+  try {
+      const products = await productModel.find();
+      res.status(200).send({
+        status: true,
+        message: "All Products List",
+        products: products.map((product) => {
+          const { avatar, ...rest } = product._doc;
+          return {
+            ...rest,
+            productImage: avatar?.url || null,
+          };
+        }),
+      });
+    }
+   catch (error) {
+    console.log(error);
+    res.status(500).send({
+      status: false,
+      error,
+      message: "Error while getting all products",
+    });
+  }
+};
+
 //get single product
 const getSingleProduct = async (req, res) => {
   try {
@@ -179,6 +205,36 @@ const getSingleProduct = async (req, res) => {
   }
 };
 
+//get single product for admin
+const getSingleProductForAdmin = async (req, res) => {
+  try {
+      const product = await productModel.findById(req.params.id);
+      const name = product.productName;
+        const response = {
+          id: product._id,
+          productName: product.productName,
+          description: product.description,
+          price: product.price,
+          categoryId: product.categoryId,
+          status: product.status,
+          exclusiveStatus:product.exclusiveStatus,
+          foodType: product.foodType,
+          productImage: product.avatar?.url || null,
+        };
+        return res.status(200).send({
+          status: true,
+          message: "Get Single product successfully",
+          product: response,
+        });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      status: false,
+      error,
+      message: "Error while getting Single product",
+    });
+  }
+};
 //get all veg products
 const getAllVegProducts = async (req, res) => {
   try {
@@ -513,6 +569,32 @@ const getExclusiveDishes = async (req, res) => {
   }
 };
 
+//get e-- dishes for admin
+const getExclusiveDishesForAdmin = async (req, res) => {
+  try {
+      const products = await productModel.find({status:"active",exclusiveStatus:"active"});
+      res.status(200).send({
+        status: true,
+        message: "Exclusive Dishes List",
+        products: products.map((product) => {
+          const { avatar, ...rest } = product._doc;
+          return {
+            ...rest,
+            productImage: avatar?.url || null,
+          };
+        }),
+      });
+    }
+   catch (error) {
+    console.log(error);
+    res.status(500).send({
+      status: false,
+      error,
+      message: "Error while getting exclusive dishes",
+    });
+  }
+};
+
 // get exclusive dishes only veg
 const getExclusiveVegDishes = async (req, res) => {
   try {
@@ -560,7 +642,6 @@ const getExclusiveVegDishes = async (req, res) => {
     });
   }
 };
-
 
 // get exclusive dishes only non-veg
 const getExclusiveNonVegDishes = async (req, res) => {
@@ -613,4 +694,4 @@ const getExclusiveNonVegDishes = async (req, res) => {
 
 
 
-module.exports = {createProduct, getAllProducts, getSingleProduct, getAllVegProducts, getAllNonVegProducts, updateProduct, deleteProduct, toggleProductStatus, addToExclusiveDish, removeFromExclusiveDish,getExclusiveDishes,getExclusiveVegDishes,getExclusiveNonVegDishes}
+module.exports = {createProduct, getAllProducts,getAllProductsForAdmin, getSingleProduct,getSingleProductForAdmin, getAllVegProducts, getAllNonVegProducts, updateProduct, deleteProduct, toggleProductStatus, addToExclusiveDish, removeFromExclusiveDish,getExclusiveDishes,getExclusiveDishesForAdmin,getExclusiveVegDishes,getExclusiveNonVegDishes}
