@@ -430,7 +430,8 @@ const updateStatusToPickup = async (req, res) => {
           response: [],
         });
       }
-  
+      user.completedCart[cartIndex].status = "on the way";
+      await user.save();
       res.status(200).json({
         status: true,
         message: "User location details fetched successfully",
@@ -634,6 +635,120 @@ const viewOrderHistory = async (req, res) => {
   }
 };
 
+// const addFeedback = async (req, res) => {
+//   const deliveryBoyId = req.params.id;
+//   try {
+//     const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
+//     if (!deliveryBoy) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "Delivery Boy not found",
+//         response: [],
+//       });
+//     }
+//     const { feedback } = req.body;
+//     deliveryBoy.feedback.push({
+//       feedback,
+//       createdAt: new Date(),
+//     });
+//     await deliveryBoy.save();
+
+//     const sortedFeedback = deliveryBoy.feedback.sort((a, b) => b.createdAt - a.createdAt);
+
+//     const response = {
+//       deliveryBoy: deliveryBoy.fullname,
+//       feedback: sortedFeedback,
+//     };
+
+//     return res.status(200).json({
+//       status: true,
+//       message: "Feedback added successfully",
+//       response: response,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({
+//       status: false,
+//       message: "Internal server error",
+//       response: [],
+//     });
+//   }
+// };
+
+const addFeedback = async (req, res) => {
+  const deliveryBoyId = req.params.id;
+  try {
+    const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
+    if (!deliveryBoy) {
+      return res.status(400).json({
+        status: false,
+        message: "Delivery Boy not found",
+        response: [],
+      });
+    }
+    const { feedback } = req.body;
+    deliveryBoy.feedback.push({
+      feedback,
+      createdAt: new Date(),
+    });
+    await deliveryBoy.save();
+
+    const sortedFeedback = deliveryBoy.feedback.sort((a, b) => b.createdAt - a.createdAt);
+
+    const response = {
+      deliveryBoy: deliveryBoy.fullname,
+      feedback: sortedFeedback,
+    };
+
+    return res.status(200).json({
+      status: true,
+      message: "Feedback added successfully",
+      response: response,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: false,
+      message: "Internal server error",
+      response: [],
+    });
+  }
+};
+
+
+
+const sortOrdersByDate = (completedOrders) => {
+  const now = new Date();
+  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+  const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+
+  const lastWeekOrders = [];
+  const lastMonthOrders = [];
+  const lastYearOrders = [];
+
+  completedOrders.forEach((order) => {
+    const updatedAt = new Date(order.updatedAt);
+    if (updatedAt >= oneWeekAgo) {
+      lastWeekOrders.push(order);
+    } else if (updatedAt >= oneMonthAgo) {
+      lastMonthOrders.push(order);
+    } else if (updatedAt >= oneYearAgo) {
+      lastYearOrders.push(order);
+    }
+  });
+
+  lastWeekOrders.sort((a, b) => b.updatedAt - a.updatedAt);
+  lastMonthOrders.sort((a, b) => b.updatedAt - a.updatedAt);
+  lastYearOrders.sort((a, b) => b.updatedAt - a.updatedAt);
+
+  return {
+    lastWeek: lastWeekOrders,
+    lastMonth: lastMonthOrders,
+    lastYear: lastYearOrders,
+  };
+};
+
   
 module.exports = {
   createDeliveryBoy,
@@ -644,5 +759,6 @@ module.exports = {
   updateStatusToPickup,
   getLocationDetails,
   updateStatusToDelivery,
-  viewOrderHistory
+  viewOrderHistory,
+  addFeedback
 };

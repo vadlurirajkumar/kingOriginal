@@ -27,6 +27,13 @@ const deliveryPersonSchema = new mongoose.Schema(
       enum: ["on", "off"],
       default: "off",
     },
+    feedback:[
+      {
+        feedback: { type: String, required: true },
+        createdAt: { type: Date, default: Date.now }
+      }
+    ],
+    
     completedOrders: [
       {
         buyer: String,
@@ -134,6 +141,7 @@ const deliveryPersonSchema = new mongoose.Schema(
       },
     ],
   },
+
 
   { timestamps: true }
 );

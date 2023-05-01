@@ -1,7 +1,7 @@
 const express = require("express")
 const deliveryBoy = express.Router()
 const adminAuth = require("../middleware/adminAuth")
-const {createDeliveryBoy, loginDeliveryBoy, dbOnDuty, getOrders, getSingleOrderDetails, updateStatusToPickup, getLocationDetails, updateStatusToDelivery, viewOrderHistory} = require("../controllers/deliveryPersonController")
+const {createDeliveryBoy, loginDeliveryBoy, dbOnDuty, getOrders, getSingleOrderDetails, updateStatusToPickup, getLocationDetails, updateStatusToDelivery, viewOrderHistory, addFeedback} = require("../controllers/deliveryPersonController")
 
 
 //signup route
@@ -30,5 +30,8 @@ deliveryBoy.patch("/change-status-delivered/:id", updateStatusToDelivery)
 
 // order -history
 deliveryBoy.get("/get-order-history/:id",viewOrderHistory)
+
+// add feedback
+deliveryBoy.post("/add-feedback/:id", addFeedback)
 
 module.exports = deliveryBoy
