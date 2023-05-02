@@ -12,6 +12,7 @@ const {
   verifyForLogin,
   checkLocationForDelivery,
   searchProducts,
+  deleteUserItSelf
 } = require("../controllers/userController");
 const isOtpAuth = require("../middleware/otpAuth");
 
@@ -27,5 +28,6 @@ router.post("/check-location", isOtpAuth, checkLocationForDelivery);
 router.patch("/update", isOtpAuth, editProfile);
 router.get("/getuser", isOtpAuth, getSingleUser);
 router.post("/search",isOtpAuth, searchProducts);
+router.delete("/delete-user", isOtpAuth, deleteUserItSelf)
 
 module.exports = router;

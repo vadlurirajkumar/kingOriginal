@@ -210,7 +210,6 @@ const totalUsers = async (req, res) => {
   }
 };
 
-
 // find total delivery boys
 const totalDeliveryBoys = async (req, res) => {
   try {

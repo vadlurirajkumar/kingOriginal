@@ -420,6 +420,28 @@ const searchProducts = async (req, res) => {
   }
 };
 
+// delete user it self
+const deleteUserItSelf = async (req, res) => {
+  try {
+    const user = await User.findById(req.data._id);
+    if (!user) {
+      return res.json({
+        status: false,
+        message: "User not authorised",
+        response: [],
+      });
+    }
+    const deletedUser = await User.findByIdAndDelete(user._id);
+    return res.json({
+      status: true,
+      message: "User deleted successfully",
+      response: deletedUser,
+    });
+  } catch (error) {
+    return res.json({ status: false, message: error.message, response: [] });
+  }
+};
+
 
 module.exports = {
   signupUser,
@@ -433,4 +455,5 @@ module.exports = {
   resendOtpForLogin,
   checkLocationForDelivery,
   searchProducts,
+  deleteUserItSelf
 };
