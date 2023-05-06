@@ -1,7 +1,14 @@
 const Admin = require("../model/adminModel");
+const Fireadmin = require('firebase-admin');
 const User = require("../model/usermodel");
 const cloudinary = require("cloudinary");
 const DeliveryPerson = require("../model/deliveryPersonModel");
+
+// Initialize Firebase Admin SDK with your service account credentials
+const serviceAccount = require('../conifg/serviceAccountKey.json');
+Fireadmin.initializeApp({
+  credential: Fireadmin.credential.cert(serviceAccount),
+});
 
 // admin Login
 const adminLogin = async (req, res) => {
@@ -209,7 +216,6 @@ const totalUsers = async (req, res) => {
     return res.json({ status: false, message: error.message, response: [] });
   }
 };
-
 // find total delivery boys
 const totalDeliveryBoys = async (req, res) => {
   try {
@@ -550,7 +556,76 @@ const assignDeliveryBoy = async (req, res) => {
   }
 };
 
+//notifications for user
+const sendNotification = async (req, res) => {
+  try {
+    const { userId, title, message } = req.body;
 
+    let users;
+
+    if (userId === 'allUsers') {
+      users = await User.find({}, 'device_token notifications');
+    } else {
+      const user = await User.findById(userId, 'device_token notifications');
+      if (!user) {
+        return res.status(400).json({
+          status: false,
+          message: "User not found",
+        });
+      }
+      users = [user];
+    }
+
+    if (users.length === 0) {
+      return res.status(400).json({
+        status: false,
+        message: "No users found",
+      });
+    }
+
+    const tokens = users.map(user => user.device_token);
+
+    const payload = {
+      notification: {
+        title: title,
+        body: message,
+      },
+    };
+    const options = {
+      priority: 'high',
+      sound: 'default',
+      timeToLive: 10, // 10 sec
+    };
+
+    const response = await Fireadmin.messaging().sendToDevice(tokens, payload, options);
+    const successfulTokens = response.results
+      .filter((result, index) => result.error === undefined)
+      .map((result, index) => tokens[index]);
+
+    const notification = {
+      title: title,
+      message: message,
+    };
+
+    const saveNotificationPromises = users.map((user) => {
+      user.notifications.push(notification);
+      return user.save();
+    });
+
+    await Promise.all(saveNotificationPromises);
+    res.json({
+      status: true,
+      message: "Notification sent successfully",
+      sentTo: successfulTokens,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: false,
+      message: "Failed to send notification",
+    });
+  }
+};
 
 
 module.exports = {
@@ -563,5 +638,6 @@ module.exports = {
   deleteDeliveryBoy,
   getdeliveryBoysOnduty,
   assignDeliveryBoy,
-  getCartFromAllUsers
+  getCartFromAllUsers,
+  sendNotification
 };

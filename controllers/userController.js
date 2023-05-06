@@ -227,17 +227,50 @@ const resendOtpForLogin = async (req, res) => {
 };
 
 //verify for login
+// const verifyForLogin = async (req, res) => {
+//   try {
+//     const { otp } = req.body;
+//     const user = await User.findById(req.data._id);
+//     if (user.login_otp !== otp || user.login_otp_expiry < Date.now()) {
+//       return res.json({
+//         status: false,
+//         message: "Invalid OTP or has been Expired",
+//         response: [],
+//       });
+//     }
+//     user.login_otp = null;
+//     user.login_otp_expiry = null;
+//     await user.save();
+
+//     const token = generateToken(user._id);
+//     res.json({
+//       status: true,
+//       message: `Welcome ${user.fullname}, Logged in successfully`,
+//       response: [{ ...user._doc, token: token }],
+//     });
+//   } catch (error) {
+//     res.json({ status: false, message: error.message, response: [] });
+//   }
+// };
 const verifyForLogin = async (req, res) => {
   try {
-    const { otp } = req.body;
+    const { otp, device_token } = req.body;
     const user = await User.findById(req.data._id);
+
     if (user.login_otp !== otp || user.login_otp_expiry < Date.now()) {
       return res.json({
         status: false,
-        message: "Invalid OTP or has been Expired",
+        message: "Invalid OTP or has been expired",
         response: [],
       });
     }
+
+    // Update device token if it has changed
+    if (device_token && user.device_token !== device_token) {
+      user.device_token = device_token;
+      await user.save();
+    }
+
     user.login_otp = null;
     user.login_otp_expiry = null;
     await user.save();
@@ -245,13 +278,14 @@ const verifyForLogin = async (req, res) => {
     const token = generateToken(user._id);
     res.json({
       status: true,
-      message: `Welcome ${user.fullname}, Logged in successfully`,
-      response: [{ ...user._doc, token: token }],
+      message: `Welcome ${user.fullname}, logged in successfully`,
+      response: [{ ...user._doc, token: token, device_token: user.device_token }],
     });
   } catch (error) {
     res.json({ status: false, message: error.message, response: [] });
   }
 };
+
 
 // update location of user
 const updateLocation = async (req, res) => {

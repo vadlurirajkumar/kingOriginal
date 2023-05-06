@@ -1,4 +1,3 @@
-const moment = require('moment');
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
@@ -41,7 +40,14 @@ const userSchema = new mongoose.Schema(
     login_otp_expiry: {
       type: Date,
     },
-    
+    device_token:String,
+    notifications:[
+      {
+        userId:String,
+        title:String,
+        message:String
+      }
+    ],
     pendingCart: [
       {
         buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -56,8 +62,17 @@ const userSchema = new mongoose.Schema(
         GrandTotal:String,
         createdAt: {
           type: Date,
-          get: function(createdAt) {
-            return moment(createdAt).format('D MMMM YYYY h:mm:ss a');
+          default: Date.now,
+          get: function (val) {
+            const options = {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+              hour: 'numeric',
+              minute: 'numeric',
+              hour12: true,
+            };
+            return new Date(val).toLocaleString('en-US', options);
           }
         },
         products: [
@@ -109,8 +124,17 @@ const userSchema = new mongoose.Schema(
         status: String,
         createdAt: {
           type: Date,
-          get: function(createdAt) {
-            return moment(createdAt).format('D MMMM YYYY h:mm:ss a');
+          default: Date.now,
+          get: function (val) {
+            const options = {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+              hour: 'numeric',
+              minute: 'numeric',
+              hour12: true,
+            };
+            return new Date(val).toLocaleString('en-US', options);
           }
         },
         products: [
@@ -163,8 +187,17 @@ const userSchema = new mongoose.Schema(
         status: String,
         createdAt: {
           type: Date,
-          get: function(createdAt) {
-            return moment(createdAt).format('D MMMM YYYY h:mm:ss a');
+          default: Date.now,
+          get: function (val) {
+            const options = {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+              hour: 'numeric',
+              minute: 'numeric',
+              hour12: true,
+            };
+            return new Date(val).toLocaleString('en-US', options);
           }
         },
         
@@ -217,8 +250,17 @@ const userSchema = new mongoose.Schema(
         status: String,
         createdAt: {
           type: Date,
-          get: function(createdAt) {
-            return moment(createdAt).format('D MMMM YYYY h:mm:ss a');
+          default: Date.now,
+          get: function (val) {
+            const options = {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+              hour: 'numeric',
+              minute: 'numeric',
+              hour12: true,
+            };
+            return new Date(val).toLocaleString('en-US', options);
           }
         },
         products: [

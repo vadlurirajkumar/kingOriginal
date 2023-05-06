@@ -28,6 +28,15 @@ const addToCart = async (req, res) => {
       });
     }
 
+    const options = {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      // hour12: true,
+    };
+
     // check if there is an existing cart with status inCart
     let existingCart = user.pendingCart.find((c) => c.status === "inCart");
 
@@ -74,7 +83,8 @@ const addToCart = async (req, res) => {
         buyer: userId,
         status: "inCart",
         totalAmount: product.price,
-        createdAt: new Date(),
+        createdAt: new Date().toLocaleString("en-US", options),
+        location:user.location,
         cartId: mongoose.Types.ObjectId(),
         products: [
           {
@@ -395,13 +405,22 @@ const updateCartStatus = async (req, res) => {
     // Retrieve userId from JWT token
     const userId = req.data.id;
 
+    const options = {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      // hour12: true,
+    };
+
     // Find pending cart for user
     const user = await User.findById(userId);
     const pendingCartIndex = user.pendingCart.findIndex(
       (p) => p.status === "inCart"
     );
     if (pendingCartIndex === -1) {
-      pendingCartIndex.createdAt = new Date();
+      pendingCartIndex.createdAt = new Date().toLocaleString("en-US", options);
       return res
         .status(404)
         .json({ status: false, message: "Pending cart not found" });
@@ -449,9 +468,9 @@ const updateCartStatus = async (req, res) => {
       res.status(200).json({
         status: true,
         message: "Cart updated successfully",
-        response: completedCart, 
-        // response: completedCart[completedCart.length - 1], 
-     });
+        response: completedCart,
+        // response: completedCart[completedCart.length - 1],
+      });
     } else {
       res.status(400).json({ status: false, message: "Invalid status" });
     }
@@ -524,9 +543,9 @@ const updateCartStatusWithSingleResponse = async (req, res) => {
       res.status(200).json({
         status: true,
         message: "Cart updated successfully",
-        // response: completedCart, 
-        response: completedCart[completedCart.length - 1], 
-     });
+        // response: completedCart,
+        response: completedCart[completedCart.length - 1],
+      });
     } else {
       res.status(400).json({ status: false, message: "Invalid status" });
     }
@@ -1112,5 +1131,5 @@ module.exports = {
   orderHistory,
   getOrderDetails,
   ChangeToSelfPickup,
-  updateToSelfPickup
+  updateToSelfPickup,
 };
