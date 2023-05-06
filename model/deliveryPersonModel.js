@@ -33,6 +33,14 @@ const deliveryPersonSchema = new mongoose.Schema(
         createdAt: { type: Date, default: Date.now }
       }
     ],
+    device_token:String,
+    notifications:[
+      {
+        userId:String,
+        title:String,
+        message:String
+      }
+    ],
     
     completedOrders: [
       {

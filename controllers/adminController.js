@@ -560,7 +560,6 @@ const assignDeliveryBoy = async (req, res) => {
 const sendNotification = async (req, res) => {
   try {
     const { userId, title, message } = req.body;
-
     let users;
 
     if (userId === 'allUsers') {
@@ -627,6 +626,76 @@ const sendNotification = async (req, res) => {
   }
 };
 
+//notifications for deliveryBoy
+const sendNotificationForDeliveryBoy = async (req, res) => {
+  try {
+    const { deliveryBoyId, title, message } = req.body;
+    let deliveryBoys;
+
+    if (deliveryBoyId === 'allBoys') {
+      deliveryBoys = await DeliveryPerson.find({}, 'device_token notifications');
+    } else {
+      const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId, 'device_token notifications');
+      if (!deliveryBoy) {
+        return res.status(400).json({
+          status: false,
+          message: "deliveryBoy not found",
+        });
+      }
+      deliveryBoys = [deliveryBoy];
+    }
+
+    if (deliveryBoys.length === 0) {
+      return res.status(400).json({
+        status: false,
+        message: "No deliveryBoys found",
+      });
+    }
+
+    const tokens = deliveryBoys.map(deliveryBoy => deliveryBoy.device_token);
+
+    const payload = {
+      notification: {
+        title: title,
+        body: message,
+      },
+    };
+    const options = {
+      priority: 'high',
+      sound: 'default',
+      timeToLive: 10, // 10 sec
+    };
+
+    const response = await Fireadmin.messaging().sendToDevice(tokens, payload, options);
+    const successfulTokens = response.results
+      .filter((result, index) => result.error === undefined)
+      .map((result, index) => tokens[index]);
+
+    const notification = {
+      title: title,
+      message: message,
+    };
+
+    const saveNotificationPromises = deliveryBoys.map((deliveryBoy) => {
+      deliveryBoy.notifications.push(notification);
+      return deliveryBoy.save();
+    });
+
+    await Promise.all(saveNotificationPromises);
+    res.json({
+      status: true,
+      message: "Notification sent successfully",
+      sentTo: successfulTokens,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: false,
+      message: "Failed to send notification",
+    });
+  }
+};
+
 
 module.exports = {
   adminLogin,
@@ -639,5 +708,6 @@ module.exports = {
   getdeliveryBoysOnduty,
   assignDeliveryBoy,
   getCartFromAllUsers,
-  sendNotification
+  sendNotification,
+  sendNotificationForDeliveryBoy
 };

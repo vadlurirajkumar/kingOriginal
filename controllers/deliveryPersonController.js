@@ -37,7 +37,7 @@ const createDeliveryBoy = async (req, res) => {
 //login delivery person
 const loginDeliveryBoy = async (req, res) => {
   try {
-    const { mobile, password } = req.body;
+    const { mobile, password, device_token } = req.body;
     if (!mobile || !password) {
       return res.status(400).json({
         status: false,
@@ -69,10 +69,17 @@ const loginDeliveryBoy = async (req, res) => {
         response: [],
       });
     }
+
+    // Update device token if it has changed
+    if (device_token && delBoy.device_token !== device_token) {
+      delBoy.device_token = device_token;
+      await delBoy.save();
+    }
+
     res.status(200).json({
       status: true,
       message: `welcome ${delBoy.fullname}, Logged in successfully`,
-      response: [delBoy],
+      response: [{...delBoy._doc,device_token: delBoy.device_token}],
     });
   } catch (error) {
     res.status(500).json({
