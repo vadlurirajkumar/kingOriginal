@@ -138,62 +138,6 @@ const dbOnDuty = async (req, res) => {
 };
 
 // get orders
-// const getOrders = async (req, res) => {
-//   const deliveryBoyId = req.params.id;
-//   try {
-//     const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
-//     if (!deliveryBoy) {
-//       return res.status(400).json({
-//         status: false,
-//         message: "Delivery Boy not found",
-//         response: [],
-//       });
-//     }
-//     const orders = await User.find({
-//       $or: [{ "completedCart.deliveryPerson": deliveryBoy.fullname }],
-//     });
-//     if (!orders) {
-//       return res.json({
-//         status: false,
-//         message: "No orders found for this delivery boy",
-//         response: [],
-//       });
-//     }
-//     const formattedOrders = [];
-//     orders.forEach((user) => {
-//       user.completedCart.forEach((cart) => {
-//         if (cart.deliveryPerson === deliveryBoy.fullname) {
-//           formattedOrders.push({
-//             cartId: cart.cartId,
-//             buyer: user.fullname,
-//             location: user.location,
-//             latitude: user.latitude,
-//             longitude: user.longitude,
-//             transactionId: cart.transactionId,
-//             cookingInstructions: cart.cookingInstructions,
-//             ReceivedAmount: cart.ReceivedAmount,
-//             status: cart.status,
-//             products: cart.products,
-//           });
-//         }
-//       });
-//     });
-
-//     res.status(200).json({
-//       status: true,
-//       message: "Orders fetched successfully",
-//       response: formattedOrders,
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({
-//       status: false,
-//       message: "Internal Server Error",
-//       response: error.message,
-//     });
-//   }
-// };
-
 const getOrders = async (req, res) => {
   const deliveryBoyId = req.params.id;
   try {
@@ -459,77 +403,6 @@ const updateStatusToPickup = async (req, res) => {
   };
   
   //change status to delivery
-  // const updateStatusToDelivery = async (req, res) => {
-  //   const { cartId } = req.body;
-  //   const deliveryBoyId = req.params.id;
-  
-  //   try {
-  //     const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
-  //     if (!deliveryBoy) {
-  //       return res.status(400).json({
-  //         status: false,
-  //         message: "Delivery Boy not found",
-  //         response: [],
-  //       });
-  //     }
-  //     const user = await User.findOne({
-  //       $or: [{ "completedCart.cartId": cartId }],
-  //     });
-  //     if (!user) {
-  //       return res.json({
-  //         status: false,
-  //         message: "User not found with this cartId",
-  //         response: [],
-  //       });
-  //     }
-  //     const cartIndex = user.completedCart.findIndex(
-  //       (cart) => cart.cartId.toString() === cartId
-  //     );
-  //     if (cartIndex === -1) {
-  //       return res.json({
-  //         status: false,
-  //         message: "Cart not found with this cartId",
-  //         response: [],
-  //       });
-  //     }
-  //     const cart = user.completedCart[cartIndex];
-  //     if (cart.deliveryPerson !== deliveryBoy.fullname) {
-  //       return res.json({
-  //         status: false,
-  //         message: "Delivery Boy not authorized to update this cart",
-  //         response: [],
-  //       });
-  //     }
-  
-  //     user.completedCart[cartIndex].status = "delivered";
-  //     await user.save();
-  
-  //     res.status(200).json({
-  //       status: true,
-  //       message: "Cart status updated successfully",
-  //       response: {
-  //         cartId: cart.cartId,
-  //         buyer: user.fullname,
-  //         location: user.location,
-  //         latitude: user.latitude,
-  //         longitude: user.longitude,
-  //         transactionId: cart.transactionId,
-  //         cookingInstructions: cart.cookingInstructions,
-  //         ReceivedAmount: cart.ReceivedAmount,
-  //         status: user.completedCart[cartIndex].status,
-  //         products: cart.products,
-  //       },
-  //     });
-  //   } catch (error) {
-  //     console.log(error);
-  //     res.status(500).json({
-  //       status: false,
-  //       message: "Internal Server Error",
-  //       response: error.message,
-  //     });
-  //   }
-  // };
-
   const updateStatusToDelivery = async (req, res) => {
     const { cartId } = req.body;
     const deliveryBoyId = req.params.id;
@@ -641,47 +514,7 @@ const viewOrderHistory = async (req, res) => {
     });
   }
 };
-
-// const addFeedback = async (req, res) => {
-//   const deliveryBoyId = req.params.id;
-//   try {
-//     const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
-//     if (!deliveryBoy) {
-//       return res.status(400).json({
-//         status: false,
-//         message: "Delivery Boy not found",
-//         response: [],
-//       });
-//     }
-//     const { feedback } = req.body;
-//     deliveryBoy.feedback.push({
-//       feedback,
-//       createdAt: new Date(),
-//     });
-//     await deliveryBoy.save();
-
-//     const sortedFeedback = deliveryBoy.feedback.sort((a, b) => b.createdAt - a.createdAt);
-
-//     const response = {
-//       deliveryBoy: deliveryBoy.fullname,
-//       feedback: sortedFeedback,
-//     };
-
-//     return res.status(200).json({
-//       status: true,
-//       message: "Feedback added successfully",
-//       response: response,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json({
-//       status: false,
-//       message: "Internal server error",
-//       response: [],
-//     });
-//   }
-// };
-
+// add feedback
 const addFeedback = async (req, res) => {
   const deliveryBoyId = req.params.id;
   try {
@@ -722,6 +555,34 @@ const addFeedback = async (req, res) => {
   }
 };
 
+//get notifications for deliveryBoy
+const getNotificationsForDeliveryBoy = async (req, res) => {
+  try {
+    const deliveryBoyId = req.params.id;
+    const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
+    if (!deliveryBoy) {
+      return res.status(400).json({
+        status: false,
+        message: "Delivery Boy not found",
+        response: [],
+      });
+    }
+
+    const sortedNotifications = deliveryBoy.notifications.sort((a, b) => b.createdAt - a.createdAt)
+
+    res.status(201).json({
+      status: true,
+      message:"notifications fetch success",
+      notifications: sortedNotifications,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: false,
+      message: "Failed to get notifications",
+    });
+  }
+};
 
 
 const sortOrdersByDate = (completedOrders) => {
@@ -767,5 +628,6 @@ module.exports = {
   getLocationDetails,
   updateStatusToDelivery,
   viewOrderHistory,
-  addFeedback
+  addFeedback,
+  getNotificationsForDeliveryBoy
 };

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const moment = require('moment');
 
 const userSchema = new mongoose.Schema(
   {
@@ -22,11 +23,11 @@ const userSchema = new mongoose.Schema(
     location: {
       type: String,
     },
-    latitude:{
-      type:String
+    latitude: {
+      type: String,
     },
-    longitude:{
-      type:String
+    longitude: {
+      type: String,
     },
     otp: {
       type: String,
@@ -40,40 +41,40 @@ const userSchema = new mongoose.Schema(
     login_otp_expiry: {
       type: Date,
     },
-    device_token:String,
-    notifications:[
+    device_token: String,
+    notifications: [
       {
-        userId:String,
-        title:String,
-        message:String
-      }
+        title: String,
+        message: String,
+        createdAt:Date
+      },
     ],
     pendingCart: [
       {
         buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         totalAmount: String,
-        transactionId:String,
+        transactionId: String,
         status: String,
-        cookingInstructions:String,
-        ReceivedAmount:String,
-        cartId:String,
-        DeliveryCharge:String,
-        GovtTaxes:String,
-        GrandTotal:String,
+        cookingInstructions: String,
+        ReceivedAmount: String,
+        cartId: String,
+        DeliveryCharge: String,
+        GovtTaxes: String,
+        GrandTotal: String,
         createdAt: {
           type: Date,
           default: Date.now,
           get: function (val) {
             const options = {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-              hour: 'numeric',
-              minute: 'numeric',
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+              hour: "numeric",
+              minute: "numeric",
               hour12: true,
             };
-            return new Date(val).toLocaleString('en-US', options);
-          }
+            return new Date(val).toLocaleString("en-US", options);
+          },
         },
         products: [
           {
@@ -112,30 +113,30 @@ const userSchema = new mongoose.Schema(
     completedCart: [
       {
         buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        deliveryPerson:String,
+        deliveryPerson: String,
         totalAmount: String,
-        transactionId:String,
-        cartId:String,
-        cookingInstructions:String,
-        ReceivedAmount:String,
-        DeliveryCharge:String,
-        GovtTaxes:String,
-        GrandTotal:String,
+        transactionId: String,
+        cartId: String,
+        cookingInstructions: String,
+        ReceivedAmount: String,
+        DeliveryCharge: String,
+        GovtTaxes: String,
+        GrandTotal: String,
         status: String,
         createdAt: {
           type: Date,
           default: Date.now,
           get: function (val) {
             const options = {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-              hour: 'numeric',
-              minute: 'numeric',
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+              hour: "numeric",
+              minute: "numeric",
               hour12: true,
             };
-            return new Date(val).toLocaleString('en-US', options);
-          }
+            return new Date(val).toLocaleString("en-US", options);
+          },
         },
         products: [
           {
@@ -174,33 +175,33 @@ const userSchema = new mongoose.Schema(
     canceledCart: [
       {
         buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        deliveryPerson:String,
+        deliveryPerson: String,
         totalAmount: String,
-        transactionId:String,
+        transactionId: String,
         status: String,
-        cookingInstructions:String,
-        ReceivedAmount:String,
-        cartId:String,
-        DeliveryCharge:String,
-        GovtTaxes:String,
-        GrandTotal:String,
+        cookingInstructions: String,
+        ReceivedAmount: String,
+        cartId: String,
+        DeliveryCharge: String,
+        GovtTaxes: String,
+        GrandTotal: String,
         status: String,
         createdAt: {
           type: Date,
           default: Date.now,
           get: function (val) {
             const options = {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-              hour: 'numeric',
-              minute: 'numeric',
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+              hour: "numeric",
+              minute: "numeric",
               hour12: true,
             };
-            return new Date(val).toLocaleString('en-US', options);
-          }
+            return new Date(val).toLocaleString("en-US", options);
+          },
         },
-        
+
         products: [
           {
             productId: {
@@ -238,30 +239,30 @@ const userSchema = new mongoose.Schema(
     selfPickupCart: [
       {
         buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        deliveryPerson:String,
+        deliveryPerson: String,
         totalAmount: String,
-        transactionId:String,
-        cartId:String,
-        cookingInstructions:String,
-        ReceivedAmount:String,
-        DeliveryCharge:String,
-        GovtTaxes:String,
-        GrandTotal:String,
+        transactionId: String,
+        cartId: String,
+        cookingInstructions: String,
+        ReceivedAmount: String,
+        DeliveryCharge: String,
+        GovtTaxes: String,
+        GrandTotal: String,
         status: String,
         createdAt: {
           type: Date,
           default: Date.now,
           get: function (val) {
             const options = {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-              hour: 'numeric',
-              minute: 'numeric',
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+              hour: "numeric",
+              minute: "numeric",
               hour12: true,
             };
-            return new Date(val).toLocaleString('en-US', options);
-          }
+            return new Date(val).toLocaleString("en-US", options);
+          },
         },
         products: [
           {
@@ -302,7 +303,8 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.index({ otp_expiry: 1 }, { expireAfterSeconds: 0 });
-userSchema.set('toJSON', { getters: true });
+userSchema.set("toJSON", { getters: true });
+userSchema.set('toObject', { getters: true });
 
 const User = new mongoose.model("User", userSchema);
 

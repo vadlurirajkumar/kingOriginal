@@ -1,11 +1,11 @@
 const Admin = require("../model/adminModel");
-const Fireadmin = require('firebase-admin');
+const Fireadmin = require("firebase-admin");
 const User = require("../model/usermodel");
 const cloudinary = require("cloudinary");
 const DeliveryPerson = require("../model/deliveryPersonModel");
 
 // Initialize Firebase Admin SDK with your service account credentials
-const serviceAccount = require('../conifg/serviceAccountKey.json');
+const serviceAccount = require("../conifg/serviceAccountKey.json");
 Fireadmin.initializeApp({
   credential: Fireadmin.credential.cert(serviceAccount),
 });
@@ -210,7 +210,7 @@ const totalUsers = async (req, res) => {
     return res.json({
       status: true,
       message: "users fetch success",
-      response: {totalCartsCount,users}
+      response: { totalCartsCount, users },
     });
   } catch (error) {
     return res.json({ status: false, message: error.message, response: [] });
@@ -407,10 +407,10 @@ const getCartFromAllUsers = async (req, res) => {
     console.log(cartId);
     const user = await User.findOne({
       $or: [
-        { 'completedCart.cartId': cartId },
-        { 'selfPickupCart.cartId': cartId },
-        { 'canceledCart.cartId': cartId }
-      ]
+        { "completedCart.cartId": cartId },
+        { "selfPickupCart.cartId": cartId },
+        { "canceledCart.cartId": cartId },
+      ],
     });
     console.log("users = " + user);
     if (user.length <= 0) {
@@ -488,10 +488,10 @@ const assignDeliveryBoy = async (req, res) => {
     const cartId = req.params.id;
     const user = await User.findOne({
       $or: [
-        { 'completedCart.cartId': cartId },
-        { 'selfPickupCart.cartId': cartId },
-        { 'canceledCart.cartId': cartId }
-      ]
+        { "completedCart.cartId": cartId },
+        { "selfPickupCart.cartId": cartId },
+        { "canceledCart.cartId": cartId },
+      ],
     });
     if (!user) {
       return res.json({
@@ -510,16 +510,22 @@ const assignDeliveryBoy = async (req, res) => {
     }
     // Update the cart with the assigned delivery boy
     let updatedCart;
-    if (user.completedCart && user.completedCart.find(cart => cart.cartId.toString() === cartId)) {
-      user.completedCart.forEach(cart => {
+    if (
+      user.completedCart &&
+      user.completedCart.find((cart) => cart.cartId.toString() === cartId)
+    ) {
+      user.completedCart.forEach((cart) => {
         if (cart.cartId.toString() === cartId) {
           cart.deliveryPerson = deliveryBoy.fullname;
-          cart.status = "confirmed"
+          cart.status = "confirmed";
           updatedCart = cart.toObject(); // convert to plain JS object
         }
       });
-    } else if (user.pendingCart && user.pendingCart.find(cart => cart.cartId.toString() === cartId)) {
-      user.pendingCart.forEach(cart => {
+    } else if (
+      user.pendingCart &&
+      user.pendingCart.find((cart) => cart.cartId.toString() === cartId)
+    ) {
+      user.pendingCart.forEach((cart) => {
         if (cart.cartId.toString() === cartId) {
           cart.deliveryPerson = deliveryBoy.fullname;
           updatedCart = cart.toObject(); // convert to plain JS object
@@ -543,7 +549,7 @@ const assignDeliveryBoy = async (req, res) => {
         cartId: cartId,
         buyer: user.fullname,
         deliveryPerson: deliveryBoy.fullname,
-        updatedCart: updatedCart ? updatedCart : null
+        updatedCart: updatedCart ? updatedCart : null,
       },
     });
   } catch (error) {
@@ -562,10 +568,10 @@ const sendNotification = async (req, res) => {
     const { userId, title, message } = req.body;
     let users;
 
-    if (userId === 'allUsers') {
-      users = await User.find({}, 'device_token notifications');
+    if (userId === "allUsers") {
+      users = await User.find({}, "device_token notifications");
     } else {
-      const user = await User.findById(userId, 'device_token notifications');
+      const user = await User.findById(userId, "device_token notifications");
       if (!user) {
         return res.status(400).json({
           status: false,
@@ -582,7 +588,7 @@ const sendNotification = async (req, res) => {
       });
     }
 
-    const tokens = users.map(user => user.device_token);
+    const tokens = users.map((user) => user.device_token);
 
     const payload = {
       notification: {
@@ -591,12 +597,16 @@ const sendNotification = async (req, res) => {
       },
     };
     const options = {
-      priority: 'high',
-      sound: 'default',
+      priority: "high",
+      sound: "default",
       timeToLive: 10, // 10 sec
     };
 
-    const response = await Fireadmin.messaging().sendToDevice(tokens, payload, options);
+    const response = await Fireadmin.messaging().sendToDevice(
+      tokens,
+      payload,
+      options
+    );
     const successfulTokens = response.results
       .filter((result, index) => result.error === undefined)
       .map((result, index) => tokens[index]);
@@ -604,6 +614,7 @@ const sendNotification = async (req, res) => {
     const notification = {
       title: title,
       message: message,
+      createdAt: new Date() // Add current date and time
     };
 
     const saveNotificationPromises = users.map((user) => {
@@ -632,10 +643,16 @@ const sendNotificationForDeliveryBoy = async (req, res) => {
     const { deliveryBoyId, title, message } = req.body;
     let deliveryBoys;
 
-    if (deliveryBoyId === 'allBoys') {
-      deliveryBoys = await DeliveryPerson.find({}, 'device_token notifications');
+    if (deliveryBoyId === "allBoys") {
+      deliveryBoys = await DeliveryPerson.find(
+        {},
+        "device_token notifications"
+      );
     } else {
-      const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId, 'device_token notifications');
+      const deliveryBoy = await DeliveryPerson.findById(
+        deliveryBoyId,
+        "device_token notifications"
+      );
       if (!deliveryBoy) {
         return res.status(400).json({
           status: false,
@@ -652,7 +669,7 @@ const sendNotificationForDeliveryBoy = async (req, res) => {
       });
     }
 
-    const tokens = deliveryBoys.map(deliveryBoy => deliveryBoy.device_token);
+    const tokens = deliveryBoys.map((deliveryBoy) => deliveryBoy.device_token);
 
     const payload = {
       notification: {
@@ -661,12 +678,16 @@ const sendNotificationForDeliveryBoy = async (req, res) => {
       },
     };
     const options = {
-      priority: 'high',
-      sound: 'default',
+      priority: "high",
+      sound: "default",
       timeToLive: 10, // 10 sec
     };
 
-    const response = await Fireadmin.messaging().sendToDevice(tokens, payload, options);
+    const response = await Fireadmin.messaging().sendToDevice(
+      tokens,
+      payload,
+      options
+    );
     const successfulTokens = response.results
       .filter((result, index) => result.error === undefined)
       .map((result, index) => tokens[index]);
@@ -674,6 +695,15 @@ const sendNotificationForDeliveryBoy = async (req, res) => {
     const notification = {
       title: title,
       message: message,
+      createdAt: new Intl.DateTimeFormat("en-US", {
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        second: "numeric",
+        hour12: true,
+      }), // Add current date and time
     };
 
     const saveNotificationPromises = deliveryBoys.map((deliveryBoy) => {
@@ -696,7 +726,6 @@ const sendNotificationForDeliveryBoy = async (req, res) => {
   }
 };
 
-
 module.exports = {
   adminLogin,
   totalUsers,
@@ -709,5 +738,5 @@ module.exports = {
   assignDeliveryBoy,
   getCartFromAllUsers,
   sendNotification,
-  sendNotificationForDeliveryBoy
+  sendNotificationForDeliveryBoy,
 };

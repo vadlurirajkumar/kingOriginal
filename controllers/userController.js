@@ -476,6 +476,35 @@ const deleteUserItSelf = async (req, res) => {
   }
 };
 
+//get notifications for user
+const getNotificationsForUser = async (req, res) => {
+  try {
+    const  userId  = req.data._id;
+    const user = await User.findById(userId, 'notifications');
+    if (!user) {
+      return res.status(400).json({
+        status: false,
+        message: "User not found",
+      });
+    }
+
+    const sortedNotifications = user.notifications.sort((a, b) => b.createdAt - a.createdAt)
+
+    res.status(201).json({
+      status: true,
+      message:"notifications fetch success",
+      notifications: sortedNotifications,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: false,
+      message: "Failed to get notifications",
+    });
+  }
+};
+
+
 
 module.exports = {
   signupUser,
@@ -489,5 +518,6 @@ module.exports = {
   resendOtpForLogin,
   checkLocationForDelivery,
   searchProducts,
-  deleteUserItSelf
+  deleteUserItSelf,
+  getNotificationsForUser
 };

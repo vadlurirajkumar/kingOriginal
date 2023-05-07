@@ -36,9 +36,10 @@ const deliveryPersonSchema = new mongoose.Schema(
     device_token:String,
     notifications:[
       {
-        userId:String,
+        deliveryBoyId:String,
         title:String,
-        message:String
+        message:String,
+        createdAt:Date
       }
     ],
     
