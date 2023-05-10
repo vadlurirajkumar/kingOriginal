@@ -199,8 +199,74 @@ const getOrders = async (req, res) => {
 
 
 //select single order
+// const getSingleOrderDetails = async (req, res) => {
+//   const { cartId } = req.body;
+//   const deliveryBoyId = req.params.id;
+
+//   try {
+//     const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
+//     if (!deliveryBoy) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "Delivery Boy not found",
+//         response: [],
+//       });
+//     }
+//     const user = await User.findOne({
+//       $or: [{ "completedCart.cartId": cartId }],
+//     });
+//     if (!user) {
+//       return res.json({
+//         status: false,
+//         message: "User not found with this cartId",
+//         response: [],
+//       });
+//     }
+//     const cart = user.completedCart.find(
+//       (cart) => cart.cartId.toString() === cartId
+//     );
+//     if (!cart) {
+//       return res.json({
+//         status: false,
+//         message: "Cart not found with this cartId",
+//         response: [],
+//       });
+//     }
+//     if (cart.deliveryPerson !== deliveryBoy.fullname) {
+//       return res.json({
+//         status: false,
+//         message: "Delivery Boy not authorized to view this cart",
+//         response: [],
+//       });
+//     }
+
+//     res.status(200).json({
+//       status: true,
+//       message: "Cart details fetched successfully",
+//       response: {
+//         cartId: cart.cartId,
+//         buyer: user.fullname,
+//         location: user.location,
+//         latitude: user.latitude,
+//         longitude: user.longitude,
+//         transactionId: cart.transactionId,
+//         cookingInstructions: cart.cookingInstructions,
+//         ReceivedAmount: cart.ReceivedAmount,
+//         status: cart.status,
+//         products: cart.products,
+//       },
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({
+//       status: false,
+//       message: "Internal Server Error",
+//       response: error.message,
+//     });
+//   }
+// };
 const getSingleOrderDetails = async (req, res) => {
-  const { cartId } = req.body;
+  const { cartId } = req.params; // Extract cartId from route parameters
   const deliveryBoyId = req.params.id;
 
   try {
@@ -266,10 +332,11 @@ const getSingleOrderDetails = async (req, res) => {
   }
 };
 
+
 // change status to pickup
 const updateStatusToPickup = async (req, res) => {
-    const { cartId } = req.body;
-    const deliveryBoyId = req.params.id;
+  const { cartId } = req.params; // Extract cartId from route parameters
+  const deliveryBoyId = req.params.id;
   
     try {
       const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
@@ -341,8 +408,8 @@ const updateStatusToPickup = async (req, res) => {
 
   // get user location
   const getLocationDetails = async (req, res) => {
-    const { cartId } = req.body;
-    const deliveryBoyId = req.params.id;
+    const { cartId } = req.params; // Extract cartId from route parameters
+  const deliveryBoyId = req.params.id;
   
     try {
       const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
@@ -404,8 +471,8 @@ const updateStatusToPickup = async (req, res) => {
   
   //change status to delivery
   const updateStatusToDelivery = async (req, res) => {
-    const { cartId } = req.body;
-    const deliveryBoyId = req.params.id;
+    const { cartId } = req.params; // Extract cartId from route parameters
+  const deliveryBoyId = req.params.id;
   
     try {
       const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);

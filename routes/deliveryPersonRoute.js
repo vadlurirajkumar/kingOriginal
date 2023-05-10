@@ -17,16 +17,16 @@ deliveryBoy.patch("/dutyToggle/:id", dbOnDuty)
 deliveryBoy.get("/get-orders/:id",getOrders)
 
 //get single order details
-deliveryBoy.get("/get-single-order/:id", getSingleOrderDetails)
+deliveryBoy.get("/get-single-order/:id/details/:cartId", getSingleOrderDetails)
 
 //updateStatus
-deliveryBoy.patch("/change-status-pickup/:id", updateStatusToPickup)
+deliveryBoy.patch("/change-status-pickup/:id/details/:cartId", updateStatusToPickup)
 
 //get user location
-deliveryBoy.get("/get-location/:id", getLocationDetails)
+deliveryBoy.get("/get-location/:id/details/:cartId", getLocationDetails)
 
 //update status to delivered
-deliveryBoy.patch("/change-status-delivered/:id", updateStatusToDelivery)
+deliveryBoy.patch("/change-status-delivered/:id/details/:cartId", updateStatusToDelivery)
 
 // order -history
 deliveryBoy.get("/get-order-history/:id",viewOrderHistory)
