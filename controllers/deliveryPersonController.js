@@ -312,6 +312,7 @@ const getSingleOrderDetails = async (req, res) => {
       response: {
         cartId: cart.cartId,
         buyer: user.fullname,
+        phone:user.mobile,
         location: user.location,
         latitude: user.latitude,
         longitude: user.longitude,
@@ -385,6 +386,7 @@ const updateStatusToPickup = async (req, res) => {
         response: {
           cartId: cart.cartId,
           buyer: user.fullname,
+          phone:user.mobile,
           location: user.location,
           latitude: user.latitude,
           longitude: user.longitude,
@@ -518,6 +520,7 @@ const updateStatusToPickup = async (req, res) => {
       const updatedCart = {
         cartId: cart.cartId,
         buyer: user.fullname,
+        phone:user.mobile,
         location: user.location,
         latitude: user.latitude,
         longitude: user.longitude,
