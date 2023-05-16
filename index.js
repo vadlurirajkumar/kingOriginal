@@ -27,6 +27,7 @@ const aboutUsRoute = require("./routes/aboutusRoute")
 const deliveryBoy = require("./routes/deliveryPersonRoute")
 const contactUs = require("./routes/contactUsRoute")
 const ratings = require("./routes/ratingRoute")
+const ContactUsDeliveryBoy = require("./routes/contactUsDeliveryBoyRoute")
 // middleware
 app.use(express.json())
 app.use(cors());
@@ -43,6 +44,7 @@ app.use("/about-us", aboutUsRoute) // about us route calling
 app.use("/delivery", deliveryBoy) //delivery person route calling
 app.use("/feedback", contactUs) // contactUs route calling
 app.use("/rating", ratings) // ratings route calling
+app.use("/deliveryBoy-contactUs", ContactUsDeliveryBoy) // contact us delivery boy route
 
 // Port 
 app.listen(port, ()=>{

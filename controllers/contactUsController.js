@@ -44,7 +44,6 @@ const addContactUs = async(req,res)=>{
         })
     }
 }
-
 // get feedback
 const getAllContactUs = async(req,res)=>{
     try {
