@@ -107,10 +107,19 @@ const changePassword = async (req, res) => {
     deliveryBoy.password = newPassword;
     await deliveryBoy.save();
 
+    const response = {
+      deliveryBoyId:deliveryBoyId,
+      fullName:deliveryBoy.fullname,
+      mobile:deliveryBoy.mobile,
+      password:deliveryBoy.password,
+      status:deliveryBoy.status,
+      area:deliveryBoy.area
+    }
+
     res.status(200).json({
       status: true,
       message: "Password changed successfully",
-      response: deliveryBoy
+      response: response
     });
   } catch (error) {
     res.status(500).json({
@@ -1144,12 +1153,6 @@ const sortHistoryByDate = async (req, res) => {
     });
   }
 };
-
-
-
-
-
-
 
 module.exports = {
   createDeliveryBoy,
