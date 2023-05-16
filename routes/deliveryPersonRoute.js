@@ -11,7 +11,7 @@ deliveryBoy.post("/signup", adminAuth, createDeliveryBoy)
 deliveryBoy.post("/login",loginDeliveryBoy)
 
 // edit details like change password
-deliveryBoy.post("/edit-details/:id", changePassword)
+deliveryBoy.post("/edit-details", changePassword)
 
 //onduty toggle
 deliveryBoy.patch("/dutyToggle/:id", dbOnDuty)
@@ -41,7 +41,7 @@ deliveryBoy.get("/get-pending-history/:id", pendingHistory)
 deliveryBoy.get("/get-completed-orders/:id", deliveredHistory)
 
 // add feedback
-deliveryBoy.post("/add-feedback/:id", addFeedback)
+deliveryBoy.post("/add-feedback", addFeedback)
 
 // get notifications
 deliveryBoy.get("/get-notification-deliveryBoy/:id", getNotificationsForDeliveryBoy)

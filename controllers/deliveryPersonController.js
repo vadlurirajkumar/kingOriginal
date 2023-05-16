@@ -92,7 +92,9 @@ const loginDeliveryBoy = async (req, res) => {
 
 //change password
 const changePassword = async (req, res) => {
-    const deliveryBoyId = req.params.id;
+    // const deliveryBoyId = req.params.id;
+    const {newPassword,deliveryBoyId} = req.body;
+
   try {
     const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
     if (!deliveryBoy) {
@@ -102,7 +104,6 @@ const changePassword = async (req, res) => {
         response: [],
       });
     }
-    const {newPassword} = req.body;
     deliveryBoy.password = newPassword;
     await deliveryBoy.save();
 
@@ -858,7 +859,8 @@ const deliveredHistory = async (req, res) => {
 
 // add feedback
 const addFeedback = async (req, res) => {
-  const deliveryBoyId = req.params.id;
+  const { feedback, deliveryBoyId } = req.body;
+
   try {
     const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
     if (!deliveryBoy) {
@@ -868,7 +870,6 @@ const addFeedback = async (req, res) => {
         response: [],
       });
     }
-    const { feedback } = req.body;
     deliveryBoy.feedback.push({
       feedback,
       createdAt: new Date(),
