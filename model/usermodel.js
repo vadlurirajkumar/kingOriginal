@@ -138,6 +138,21 @@ const userSchema = new mongoose.Schema(
             return new Date(val).toLocaleString("en-US", options);
           },
         },
+        updatedAt: {
+          type: Date,
+          default: Date.now,
+          get: function (val) {
+            const options = {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+              hour: "numeric",
+              minute: "numeric",
+              hour12: true,
+            };
+            return new Date(val).toLocaleString("en-US", options);
+          },
+        },
         products: [
           {
             productId: {

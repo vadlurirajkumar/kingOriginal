@@ -517,7 +517,8 @@ const assignDeliveryBoy = async (req, res) => {
       user.completedCart.forEach((cart) => {
         if (cart.cartId.toString() === cartId) {
           cart.deliveryPerson = deliveryBoy.fullname;
-          cart.status = "confirmed";
+          cart.status = "pending for pickup";
+          cart.updatedAt = new Date() ;
           updatedCart = cart.toObject(); // convert to plain JS object
         }
       });

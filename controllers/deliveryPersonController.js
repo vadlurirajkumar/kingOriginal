@@ -79,7 +79,37 @@ const loginDeliveryBoy = async (req, res) => {
     res.status(200).json({
       status: true,
       message: `welcome ${delBoy.fullname}, Logged in successfully`,
-      response: [{...delBoy._doc,device_token: delBoy.device_token}],
+      response: [{ ...delBoy._doc, device_token: delBoy.device_token }],
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      message: error.message,
+      response: [],
+    });
+  }
+};
+
+//change password
+const changePassword = async (req, res) => {
+    const deliveryBoyId = req.params.id;
+  try {
+    const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
+    if (!deliveryBoy) {
+      return res.status(400).json({
+        status: false,
+        message: "Delivery Boy not found",
+        response: [],
+      });
+    }
+    const {newPassword} = req.body;
+    deliveryBoy.password = newPassword;
+    await deliveryBoy.save();
+
+    res.status(200).json({
+      status: true,
+      message: "Password changed successfully",
+      response: deliveryBoy
     });
   } catch (error) {
     res.status(500).json({
@@ -164,7 +194,7 @@ const getOrders = async (req, res) => {
       user.completedCart.forEach((cart) => {
         if (
           cart.deliveryPerson === deliveryBoy.fullname &&
-          cart.status !== "delivered" // Exclude carts with status "delivered"
+          cart.status === "pending for pickup"  // Exclude carts with status "delivered"
         ) {
           formattedOrders.push({
             cartId: cart.cartId,
@@ -176,11 +206,15 @@ const getOrders = async (req, res) => {
             cookingInstructions: cart.cookingInstructions,
             ReceivedAmount: cart.ReceivedAmount,
             status: cart.status,
+            updatedAt: cart.updatedAt,
             products: cart.products,
           });
         }
       });
     });
+
+     // Sort orders by updatedAt in descending order
+     formattedOrders.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
     res.status(200).json({
       status: true,
@@ -196,7 +230,6 @@ const getOrders = async (req, res) => {
     });
   }
 };
-
 
 //select single order
 // const getSingleOrderDetails = async (req, res) => {
@@ -312,7 +345,7 @@ const getSingleOrderDetails = async (req, res) => {
       response: {
         cartId: cart.cartId,
         buyer: user.fullname,
-        phone:user.mobile,
+        phone: user.mobile,
         location: user.location,
         latitude: user.latitude,
         longitude: user.longitude,
@@ -333,194 +366,59 @@ const getSingleOrderDetails = async (req, res) => {
   }
 };
 
-
 // change status to pickup
 const updateStatusToPickup = async (req, res) => {
   const { cartId } = req.params; // Extract cartId from route parameters
   const deliveryBoyId = req.params.id;
-  
-    try {
-      const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
-      if (!deliveryBoy) {
-        return res.status(400).json({
-          status: false,
-          message: "Delivery Boy not found",
-          response: [],
-        });
-      }
-      const user = await User.findOne({
-        $or: [{ "completedCart.cartId": cartId }],
-      });
-      if (!user) {
-        return res.json({
-          status: false,
-          message: "User not found with this cartId",
-          response: [],
-        });
-      }
-      const cartIndex = user.completedCart.findIndex(
-        (cart) => cart.cartId.toString() === cartId
-      );
-      if (cartIndex === -1) {
-        return res.json({
-          status: false,
-          message: "Cart not found with this cartId",
-          response: [],
-        });
-      }
-      const cart = user.completedCart[cartIndex];
-      if (cart.deliveryPerson !== deliveryBoy.fullname) {
-        return res.json({
-          status: false,
-          message: "Delivery Boy not authorized to update this cart",
-          response: [],
-        });
-      }
-  
-      user.completedCart[cartIndex].status = "picked up";
-      await user.save();
-  
-      res.status(200).json({
-        status: true,
-        message: "Cart status updated successfully",
-        response: {
-          cartId: cart.cartId,
-          buyer: user.fullname,
-          phone:user.mobile,
-          location: user.location,
-          latitude: user.latitude,
-          longitude: user.longitude,
-          transactionId: cart.transactionId,
-          cookingInstructions: cart.cookingInstructions,
-          ReceivedAmount: cart.ReceivedAmount,
-          status: user.completedCart[cartIndex].status,
-          updatedAt:new Date(),
-          products: cart.products,
-        },
-      });
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({
-        status: false,
-        message: "Internal Server Error",
-        response: error.message,
-      });
-    }
-  };
 
-  // get user location
-  const getLocationDetails = async (req, res) => {
-    const { cartId } = req.params; // Extract cartId from route parameters
-  const deliveryBoyId = req.params.id;
-  
-    try {
-      const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
-      if (!deliveryBoy) {
-        return res.status(400).json({
-          status: false,
-          message: "Delivery Boy not found",
-          response: [],
-        });
-      }
-      const user = await User.findOne({
-        $or: [{ "completedCart.cartId": cartId }],
-      });
-      if (!user) {
-        return res.json({
-          status: false,
-          message: "User not found with this cartId",
-          response: [],
-        });
-      }
-      const cartIndex = user.completedCart.findIndex(
-        (cart) => cart.cartId.toString() === cartId
-      );
-      if (cartIndex === -1) {
-        return res.json({
-          status: false,
-          message: "Cart not found with this cartId",
-          response: [],
-        });
-      }
-      const cart = user.completedCart[cartIndex];
-      if (cart.deliveryPerson !== deliveryBoy.fullname) {
-        return res.json({
-          status: false,
-          message: "Delivery Boy not authorized to view this cart",
-          response: [],
-        });
-      }
-      user.completedCart[cartIndex].status = "on the way";
-      await user.save();
-      res.status(200).json({
-        status: true,
-        message: "User location details fetched successfully",
-        response: {
-          location: user.location,
-          latitude: user.latitude,
-          longitude: user.longitude,
-        },
-      });
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({
+  try {
+    const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
+    if (!deliveryBoy) {
+      return res.status(400).json({
         status: false,
-        message: "Internal Server Error",
-        response: error.message,
+        message: "Delivery Boy not found",
+        response: [],
       });
     }
-  };
-  
-  //change status to delivery
-  const updateStatusToDelivery = async (req, res) => {
-    const { cartId } = req.params; // Extract cartId from route parameters
-  const deliveryBoyId = req.params.id;
-  
-    try {
-      const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
-      if (!deliveryBoy) {
-        return res.status(400).json({
-          status: false,
-          message: "Delivery Boy not found",
-          response: [],
-        });
-      }
-      const user = await User.findOne({
-        $or: [{ "completedCart.cartId": cartId }],
+    const user = await User.findOne({
+      $or: [{ "completedCart.cartId": cartId }],
+    });
+    if (!user) {
+      return res.json({
+        status: false,
+        message: "User not found with this cartId",
+        response: [],
       });
-      if (!user) {
-        return res.json({
-          status: false,
-          message: "User not found with this cartId",
-          response: [],
-        });
-      }
-      const cartIndex = user.completedCart.findIndex(
-        (cart) => cart.cartId.toString() === cartId
-      );
-      if (cartIndex === -1) {
-        return res.json({
-          status: false,
-          message: "Cart not found with this cartId",
-          response: [],
-        });
-      }
-      const cart = user.completedCart[cartIndex];
-      if (cart.deliveryPerson !== deliveryBoy.fullname) {
-        return res.json({
-          status: false,
-          message: "Delivery Boy not authorized to update this cart",
-          response: [],
-        });
-      }
-  
-      user.completedCart[cartIndex].status = "delivered";
-      await user.save();
-  
-      const updatedCart = {
+    }
+    const cartIndex = user.completedCart.findIndex(
+      (cart) => cart.cartId.toString() === cartId
+    );
+    if (cartIndex === -1) {
+      return res.json({
+        status: false,
+        message: "Cart not found with this cartId",
+        response: [],
+      });
+    }
+    const cart = user.completedCart[cartIndex];
+    if (cart.deliveryPerson !== deliveryBoy.fullname) {
+      return res.json({
+        status: false,
+        message: "Delivery Boy not authorized to update this cart",
+        response: [],
+      });
+    }
+
+    user.completedCart[cartIndex].status = "picked up";
+    await user.save();
+
+    res.status(200).json({
+      status: true,
+      message: "Cart status updated successfully",
+      response: {
         cartId: cart.cartId,
         buyer: user.fullname,
-        phone:user.mobile,
+        phone: user.mobile,
         location: user.location,
         latitude: user.latitude,
         longitude: user.longitude,
@@ -528,29 +426,175 @@ const updateStatusToPickup = async (req, res) => {
         cookingInstructions: cart.cookingInstructions,
         ReceivedAmount: cart.ReceivedAmount,
         status: user.completedCart[cartIndex].status,
-        updatedAt:new Date(),
+        updatedAt: new Date().toLocaleString("en-US", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+          hour12: true,
+        }),
         products: cart.products,
-      };
-  
-      // Save the updated cart in the delivery boy's completedOrders array
-      deliveryBoy.completedOrders.push(updatedCart);
-      await deliveryBoy.save();
-  
-      res.status(200).json({
-        status: true,
-        message: "Cart status updated successfully",
-        response: updatedCart,
-      });
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      response: error.message,
+    });
+  }
+};
+
+// get user location
+const getLocationDetails = async (req, res) => {
+  const { cartId } = req.params; // Extract cartId from route parameters
+  const deliveryBoyId = req.params.id;
+
+  try {
+    const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
+    if (!deliveryBoy) {
+      return res.status(400).json({
         status: false,
-        message: "Internal Server Error",
-        response: error.message,
+        message: "Delivery Boy not found",
+        response: [],
       });
     }
-  };
-  
+    const user = await User.findOne({
+      $or: [{ "completedCart.cartId": cartId }],
+    });
+    if (!user) {
+      return res.json({
+        status: false,
+        message: "User not found with this cartId",
+        response: [],
+      });
+    }
+    const cartIndex = user.completedCart.findIndex(
+      (cart) => cart.cartId.toString() === cartId
+    );
+    if (cartIndex === -1) {
+      return res.json({
+        status: false,
+        message: "Cart not found with this cartId",
+        response: [],
+      });
+    }
+    const cart = user.completedCart[cartIndex];
+    if (cart.deliveryPerson !== deliveryBoy.fullname) {
+      return res.json({
+        status: false,
+        message: "Delivery Boy not authorized to view this cart",
+        response: [],
+      });
+    }
+    user.completedCart[cartIndex].status = "on the way";
+    await user.save();
+    res.status(200).json({
+      status: true,
+      message: "User location details fetched successfully",
+      response: {
+        location: user.location,
+        latitude: user.latitude,
+        longitude: user.longitude,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      response: error.message,
+    });
+  }
+};
+//change status to delivery
+const updateStatusToDelivery = async (req, res) => {
+  const { cartId } = req.params; // Extract cartId from route parameters
+  const deliveryBoyId = req.params.id;
+
+  try {
+    const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
+    if (!deliveryBoy) {
+      return res.status(400).json({
+        status: false,
+        message: "Delivery Boy not found",
+        response: [],
+      });
+    }
+    const user = await User.findOne({
+      $or: [{ "completedCart.cartId": cartId }],
+    });
+    if (!user) {
+      return res.json({
+        status: false,
+        message: "User not found with this cartId",
+        response: [],
+      });
+    }
+    const cartIndex = user.completedCart.findIndex(
+      (cart) => cart.cartId.toString() === cartId
+    );
+    if (cartIndex === -1) {
+      return res.json({
+        status: false,
+        message: "Cart not found with this cartId",
+        response: [],
+      });
+    }
+    const cart = user.completedCart[cartIndex];
+    if (cart.deliveryPerson !== deliveryBoy.fullname) {
+      return res.json({
+        status: false,
+        message: "Delivery Boy not authorized to update this cart",
+        response: [],
+      });
+    }
+
+    user.completedCart[cartIndex].status = "delivered";
+    await user.save();
+
+    const updatedCart = {
+      cartId: cart.cartId,
+      buyer: user.fullname,
+      phone: user.mobile,
+      location: user.location,
+      latitude: user.latitude,
+      longitude: user.longitude,
+      transactionId: cart.transactionId,
+      cookingInstructions: cart.cookingInstructions,
+      ReceivedAmount: cart.ReceivedAmount,
+      status: user.completedCart[cartIndex].status,
+      updatedAt: new Date().toLocaleString("en-US", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      }),
+      products: cart.products,
+    };
+
+    // Save the updated cart in the delivery boy's completedOrders array
+    deliveryBoy.completedOrders.push(updatedCart);
+    await deliveryBoy.save();
+
+    res.status(200).json({
+      status: true,
+      message: "Cart status updated successfully",
+      response: updatedCart,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      response: error.message,
+    });
+  }
+};
 // order history
 const viewOrderHistory = async (req, res) => {
   const deliveryBoyId = req.params.id;
@@ -565,15 +609,113 @@ const viewOrderHistory = async (req, res) => {
       });
     }
 
-    // const completedOrders = deliveryBoy.completedOrders;
-    const completedOrders = deliveryBoy.completedOrders.sort((a, b) => {
-      return b.updatedAt - a.updatedAt
+    const orders = await User.find({
+      $or: [{ "completedCart.deliveryPerson": deliveryBoy.fullname }],
     });
+    if (!orders) {
+      return res.json({
+        status: false,
+        message: "No orders found for this delivery boy",
+        response: [],
+      });
+    }
+    const formattedOrders = [];
+    orders.forEach((user) => {
+      user.completedCart.forEach((cart) => {
+        if (
+          cart.deliveryPerson === deliveryBoy.fullname &&
+          cart.status !== "delivered" // Exclude carts with status "delivered"
+        ) {
+          formattedOrders.push({
+            cartId: cart.cartId,
+            buyer: user.fullname,
+            location: user.location,
+            latitude: user.latitude,
+            longitude: user.longitude,
+            transactionId: cart.transactionId,
+            cookingInstructions: cart.cookingInstructions,
+            ReceivedAmount: cart.ReceivedAmount,
+            status: cart.status,
+            createdAt:cart.createdAt,
+            products: cart.products,
+          });
+        }
+      });
+    });
+
+const combinedOrders = [
+  ...deliveryBoy.completedOrders.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)),
+  ...formattedOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+];
+
+res.status(200).json({
+  status: true,
+  message: "Order history retrieved successfully",
+  response: combinedOrders,
+});
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      response: error.message,
+    });
+  }
+};
+
+//order history only pending
+const pendingHistory = async (req, res) => {
+  const deliveryBoyId = req.params.id;
+  try {
+    const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
+    if (!deliveryBoy) {
+      return res.status(400).json({
+        status: false,
+        message: "Delivery Boy not found",
+        response: [],
+      });
+    }
+    const orders = await User.find({
+      $or: [{ "completedCart.deliveryPerson": deliveryBoy.fullname }],
+    });
+    if (!orders) {
+      return res.json({
+        status: false,
+        message: "No orders found for this delivery boy",
+        response: [],
+      });
+    }
+    const formattedOrders = [];
+    orders.forEach((user) => {
+      user.completedCart.forEach((cart) => {
+        if (
+          cart.deliveryPerson === deliveryBoy.fullname &&
+          (cart.status === "pending for pickup" || cart.status === "picked up")
+        ) {
+          formattedOrders.push({
+            cartId: cart.cartId,
+            buyer: user.fullname,
+            location: user.location,
+            latitude: user.latitude,
+            longitude: user.longitude,
+            transactionId: cart.transactionId,
+            cookingInstructions: cart.cookingInstructions,
+            ReceivedAmount: cart.ReceivedAmount,
+            status: cart.status,
+            updatedAt: cart.updatedAt,
+            products: cart.products,
+          });
+        }
+      });
+    });
+
+    // Sort orders by updatedAt in descending order
+    formattedOrders.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
     res.status(200).json({
       status: true,
-      message: "Order history retrieved successfully",
-      response: completedOrders,
+      message: "Orders fetched successfully",
+      response: formattedOrders,
     });
   } catch (error) {
     console.log(error);
@@ -584,6 +726,136 @@ const viewOrderHistory = async (req, res) => {
     });
   }
 };
+
+//order history only completed
+const deliveredHistory = async (req, res) => {
+  const deliveryBoyId = req.params.id;
+  try {
+    const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
+    if (!deliveryBoy) {
+      return res.status(400).json({
+        status: false,
+        message: "Delivery Boy not found",
+        response: [],
+      });
+    }
+    const orders = await User.find({
+      $or: [{ "completedCart.deliveryPerson": deliveryBoy.fullname }],
+    });
+    if (!orders) {
+      return res.json({
+        status: false,
+        message: "No orders found for this delivery boy",
+        response: [],
+      });
+    }
+    const formattedOrders = [];
+    orders.forEach((user) => {
+      user.completedCart.forEach((cart) => {
+        if (
+          cart.deliveryPerson === deliveryBoy.fullname &&
+          (cart.status === "delivered")
+        ) {
+          formattedOrders.push({
+            cartId: cart.cartId,
+            buyer: user.fullname,
+            location: user.location,
+            latitude: user.latitude,
+            longitude: user.longitude,
+            transactionId: cart.transactionId,
+            cookingInstructions: cart.cookingInstructions,
+            ReceivedAmount: cart.ReceivedAmount,
+            status: cart.status,
+            updatedAt: cart.updatedAt,
+            products: cart.products,
+          });
+        }
+      });
+    });
+
+    // Sort orders by updatedAt in descending order
+    formattedOrders.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+    res.status(200).json({
+      status: true,
+      message: "Orders fetched successfully",
+      response: formattedOrders,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      response: error.message,
+    });
+  }
+};
+
+// const viewOrderHistory = async (req, res) => {
+//   const deliveryBoyId = req.params.id;
+
+//   try {
+//     const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
+//     if (!deliveryBoy) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "Delivery Boy not found",
+//         response: [],
+//       });
+//     }
+
+//     const orders = await User.find({
+//       "completedCart.deliveryPerson": deliveryBoy.fullname,
+//       "completedCart.status": { $ne: "delivered" },
+//     });
+//     if (!orders || orders.length === 0) {
+//       return res.json({
+//         status: false,
+//         message: "No orders found for this delivery boy",
+//         response: [],
+//       });
+//     }
+
+//     const formattedOrders = orders
+//       .map((user) => {
+//         return user.completedCart.map((cart) => {
+//           return {
+//             cartId: cart.cartId,
+//             buyer: user.fullname,
+//             location: user.location,
+//             latitude: user.latitude,
+//             longitude: user.longitude,
+//             transactionId: cart.transactionId,
+//             cookingInstructions: cart.cookingInstructions,
+//             ReceivedAmount: cart.ReceivedAmount,
+//             status: cart.status,
+//             createdAt: cart.createdAt,
+//             products: cart.products,
+//           };
+//         });
+//       })
+//       .flat();
+
+//     const combinedOrders = [
+//       ...deliveryBoy.completedOrders.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)),
+//       ...formattedOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+//     ];
+
+//     res.status(200).json({
+//       status: true,
+//       message: "Order history retrieved successfully",
+//       response: combinedOrders,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({
+//       status: false,
+//       message: "Internal Server Error",
+//       response: error.message,
+//     });
+//   }
+// };
+
 // add feedback
 const addFeedback = async (req, res) => {
   const deliveryBoyId = req.params.id;
@@ -603,7 +875,9 @@ const addFeedback = async (req, res) => {
     });
     await deliveryBoy.save();
 
-    const sortedFeedback = deliveryBoy.feedback.sort((a, b) => b.createdAt - a.createdAt);
+    const sortedFeedback = deliveryBoy.feedback.sort(
+      (a, b) => b.createdAt - a.createdAt
+    );
 
     const response = {
       deliveryBoy: deliveryBoy.fullname,
@@ -638,11 +912,13 @@ const getNotificationsForDeliveryBoy = async (req, res) => {
       });
     }
 
-    const sortedNotifications = deliveryBoy.notifications.sort((a, b) => b.createdAt - a.createdAt)
+    const sortedNotifications = deliveryBoy.notifications.sort(
+      (a, b) => b.createdAt - a.createdAt
+    );
 
     res.status(201).json({
       status: true,
-      message:"notifications fetch success",
+      message: "notifications fetch success",
       notifications: sortedNotifications,
     });
   } catch (error) {
@@ -654,43 +930,230 @@ const getNotificationsForDeliveryBoy = async (req, res) => {
   }
 };
 
+// const sortHistoryByToday = async (req, res) => {
+//   try {
+//     const deliveryBoyId = req.params.id;
+//     const today = new Date();
+//     today.setHours(0, 0, 0, 0); // Set the time to the beginning of the day
 
-const sortOrdersByDate = (completedOrders) => {
-  const now = new Date();
-  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-  const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+//     const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
+//     if (!deliveryBoy) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "Delivery Boy not found",
+//         response: [],
+//       });
+//     }
 
-  const lastWeekOrders = [];
-  const lastMonthOrders = [];
-  const lastYearOrders = [];
+//     const orders = await User.find({
+//       "completedCart.deliveryPerson": deliveryBoy.fullname,
+//       "completedCart.status": { $ne: "delivered" }, // Exclude carts with status "delivered"
+//       "completedCart.createdAt": { $gte: today }, // Filter by createdAt field for today's date
+//     });
 
-  completedOrders.forEach((order) => {
-    const updatedAt = new Date(order.updatedAt);
-    if (updatedAt >= oneWeekAgo) {
-      lastWeekOrders.push(order);
-    } else if (updatedAt >= oneMonthAgo) {
-      lastMonthOrders.push(order);
-    } else if (updatedAt >= oneYearAgo) {
-      lastYearOrders.push(order);
+//     if (!orders || orders.length === 0) {
+//       return res.json({
+//         status: false,
+//         message: "No orders found for this delivery boy",
+//         response: [],
+//       });
+//     }
+
+//     const formattedOrders = orders
+//       .map((user) => {
+//         return user.completedCart.map((cart) => {
+//           return {
+//             cartId: cart.cartId,
+//             buyer: user.fullname,
+//             location: user.location,
+//             latitude: user.latitude,
+//             longitude: user.longitude,
+//             transactionId: cart.transactionId,
+//             cookingInstructions: cart.cookingInstructions,
+//             ReceivedAmount: cart.ReceivedAmount,
+//             status: cart.status,
+//             createdAt: cart.createdAt,
+//             products: cart.products,
+//           };
+//         });
+//       })
+//       .flat();
+
+//     const sortedOrders = formattedOrders.sort(
+//       (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+//     );
+
+//     res.status(200).json({
+//       status: true,
+//       message: "Order history sorted by today's date",
+//       response: sortedOrders,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({
+//       status: false,
+//       message: "Internal Server Error",
+//       response: error.message,
+//     });
+//   }
+// };
+// const sortHistoryByDate = async (req, res) => {
+//   const deliveryBoyId = req.params.id;
+
+//   try {
+//     const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
+//     if (!deliveryBoy) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "Delivery Boy not found",
+//         response: [],
+//       });
+//     }
+
+//     const today = new Date();
+//     today.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to zero
+
+//     const orders = await User.find({
+//       $or: [{ "completedCart.deliveryPerson": deliveryBoy.fullname }],
+//     });
+//     if (!orders) {
+//       return res.json({
+//         status: false,
+//         message: "No orders found for this delivery boy",
+//         response: [],
+//       });
+//     }
+    
+//     const formattedOrders = [];
+//     orders.forEach((user) => {
+//       user.completedCart.forEach((cart) => {
+//         if (
+//           cart.deliveryPerson === deliveryBoy.fullname &&
+//           cart.status !== "delivered" && // Exclude carts with status "delivered"
+//           new Date(cart.updatedAt).setHours(0, 0, 0, 0) >= today // Only include orders with updatedAt date greater than or equal to today
+//         ) {
+//           formattedOrders.push({
+//             cartId: cart.cartId,
+//             buyer: user.fullname,
+//             location: user.location,
+//             latitude: user.latitude,
+//             longitude: user.longitude,
+//             transactionId: cart.transactionId,
+//             cookingInstructions: cart.cookingInstructions,
+//             ReceivedAmount: cart.ReceivedAmount,
+//             status: cart.status,
+//             updatedAt: cart.updatedAt,
+//             products: cart.products,
+//           });
+//         }
+//       });
+//     });
+
+//     const combinedOrders = [
+//       ...deliveryBoy.completedOrders,
+//       ...formattedOrders,
+//     ].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+//     res.status(200).json({
+//       status: true,
+//       message: "Order history retrieved successfully",
+//       response: combinedOrders,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({
+//       status: false,
+//       message: "Internal Server Error",
+//       response: error.message,
+//     });
+//   }
+// };
+const sortHistoryByDate = async (req, res) => {
+  const deliveryBoyId = req.params.id;
+
+  try {
+    const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
+    if (!deliveryBoy) {
+      return res.status(400).json({
+        status: false,
+        message: "Delivery Boy not found",
+        response: [],
+      });
     }
-  });
 
-  lastWeekOrders.sort((a, b) => b.updatedAt - a.updatedAt);
-  lastMonthOrders.sort((a, b) => b.updatedAt - a.updatedAt);
-  lastYearOrders.sort((a, b) => b.updatedAt - a.updatedAt);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to zero
 
-  return {
-    lastWeek: lastWeekOrders,
-    lastMonth: lastMonthOrders,
-    lastYear: lastYearOrders,
-  };
+    const orders = await User.find({
+      $or: [{ "completedCart.deliveryPerson": deliveryBoy.fullname }],
+    });
+    if (!orders) {
+      return res.json({
+        status: false,
+        message: "No orders found for this delivery boy",
+        response: [],
+      });
+    }
+    
+    const formattedOrders = orders.reduce((acc, user) => {
+      const filteredCarts = user.completedCart.filter((cart) => {
+        return (
+          cart.deliveryPerson === deliveryBoy.fullname &&
+          cart.status !== "delivered" && // Exclude carts with status "delivered"
+          new Date(cart.updatedAt).setHours(0, 0, 0, 0) >= today // Only include orders with updatedAt date greater than or equal to today
+        );
+      });
+
+      if (filteredCarts.length > 0) {
+        const formattedCarts = filteredCarts.map((cart) => ({
+          cartId: cart.cartId,
+          buyer: user.fullname,
+          location: user.location,
+          latitude: user.latitude,
+          longitude: user.longitude,
+          transactionId: cart.transactionId,
+          cookingInstructions: cart.cookingInstructions,
+          ReceivedAmount: cart.ReceivedAmount,
+          status: cart.status,
+          updatedAt: cart.updatedAt,
+          products: cart.products,
+        }));
+
+        return [...acc, ...formattedCarts];
+      }
+
+      return acc;
+    }, []);
+
+    const combinedOrders = [...deliveryBoy.completedOrders, ...formattedOrders].sort(
+      (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+    );
+
+    res.status(200).json({
+      status: true,
+      message: "Order history retrieved successfully",
+      response: combinedOrders,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      response: error.message,
+    });
+  }
 };
 
-  
+
+
+
+
+
+
 module.exports = {
   createDeliveryBoy,
   loginDeliveryBoy,
+  changePassword,
   dbOnDuty,
   getOrders,
   getSingleOrderDetails,
@@ -698,6 +1161,9 @@ module.exports = {
   getLocationDetails,
   updateStatusToDelivery,
   viewOrderHistory,
+  pendingHistory,
+  deliveredHistory,
   addFeedback,
-  getNotificationsForDeliveryBoy
+  getNotificationsForDeliveryBoy,
+  sortHistoryByDate
 };
