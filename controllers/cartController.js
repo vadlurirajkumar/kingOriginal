@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Cart = require("../model/orderModel");
 const Product = require("../model/productModel");
 const User = require("../model/usermodel");
+const DeliveryPerson = require("../model/deliveryPersonModel");
 
 // add to cart
 const addToCart = async (req, res) => {
@@ -84,7 +85,7 @@ const addToCart = async (req, res) => {
         status: "inCart",
         totalAmount: product.price,
         createdAt: new Date().toLocaleString("en-US", options),
-        location:user.location,
+        location: user.location,
         cartId: mongoose.Types.ObjectId(),
         products: [
           {
@@ -1066,26 +1067,138 @@ const orderHistory = async (req, res) => {
   }
 };
 // get particular order
+// const getOrderDetails = async (req, res) => {
+//   try {
+//     const userId = req.data._id;
+//     const cartId = req.params.id;
+//     let user = await User.findById(userId);
+//     if (!user) {
+//       res.status(400).json({
+//         status: false,
+//         message: "user not found",
+//       });
+//     } else {
+//       const cart =
+//         user.completedCart.find((cart) => cart.cartId === cartId) ||
+//         user.canceledCart.find((cart) => cart.cartId === cartId) ||
+//         user.selfPickupCart.find((cart) => cart.cartId === cartId);
+
+//         if (!cart) {
+//           res.status(400).json({
+//             status: false,
+//             message: "cart not found",
+//           });
+//         }
+
+//       else if(cart.status === "pending for pickup" || "picked up" || "delivered"){
+//         const delBoy = cart.deliveryPerson //here we are delivery boy name
+//         const deliveryPerson = await DeliveryPerson.findOne({ fullname: delBoy });
+//         if(deliveryPerson){
+//           const dbDetails = {
+//             deliveryPersonName:deliveryPerson.fullname,
+//             deliveryPersonMobile:deliveryPerson.mobile
+//           }
+//         }
+//       }
+
+//       else {
+//         const response = {
+//           cartId: cartId,
+//           buyer: cart.buyer,
+//           transactionId: cart.transactionId,
+//           status: cart.status,
+//           totalAmount: cart.totalAmount,
+//           cookingInstructions: cart.cookingInstructions,
+//           ReceivedAmount: cart.ReceivedAmount,
+//           createdAt: cart.createdAt,
+//           DeliveryCharge: cart.DeliveryCharge,
+//           GovtTaxes: cart.GovtTaxes,
+//           GrandTotal: cart.GrandTotal,
+//           products: cart.products,
+//           deliverydetails:dbDetails?dbDetails:null
+//         };
+//         res.status(200).json({
+//           status: true,
+//           message: "order details fetched successfully",
+//           response: response,
+//         });
+//       }
+//     }
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({
+//       status: false,
+//       message: "Internal Server Error",
+//       response: error.message,
+//     });
+//   }
+// };
 const getOrderDetails = async (req, res) => {
   try {
     const userId = req.data._id;
     const cartId = req.params.id;
     let user = await User.findById(userId);
     if (!user) {
-      res.status(400).json({
+      return res.status(400).json({
         status: false,
-        message: "user not found",
+        message: "User not found",
       });
     } else {
       const cart =
         user.completedCart.find((cart) => cart.cartId === cartId) ||
         user.canceledCart.find((cart) => cart.cartId === cartId) ||
         user.selfPickupCart.find((cart) => cart.cartId === cartId);
+
       if (!cart) {
-        res.status(400).json({
+        return res.status(400).json({
           status: false,
-          message: "cart not found",
+          message: "Cart not found",
         });
+      } else if (
+        cart.status === "pending for pickup" ||
+        cart.status === "picked up" ||
+        cart.status === "delivered"
+      ) {
+        const delBoy = cart.deliveryPerson; // Here we get the delivery boy name
+        const deliveryPerson = await DeliveryPerson.findOne({
+          fullname: delBoy,
+        });
+        if (deliveryPerson) {
+          const dbDetails = {
+            deliveryPersonName: deliveryPerson.fullname,
+            deliveryPersonMobile: deliveryPerson.mobile,
+            deliveryPersonId: deliveryPerson._id,
+          };
+          const response = {
+            cartId: cartId,
+            buyer: cart.buyer,
+            transactionId: cart.transactionId,
+            status: cart.status,
+            totalAmount: cart.totalAmount,
+            cookingInstructions: cart.cookingInstructions,
+            ReceivedAmount: cart.ReceivedAmount,
+            createdAt: cart.createdAt,
+            DeliveryCharge: cart.DeliveryCharge,
+            GovtTaxes: cart.GovtTaxes,
+            GrandTotal: cart.GrandTotal,
+            location: user.location,
+            deliveryPersonName: dbDetails ? dbDetails.deliveryPersonName : null,
+            deliveryPersonMobile: dbDetails
+              ? dbDetails.deliveryPersonMobile
+              : null,
+            deliveryPersonId: dbDetails ? dbDetails.deliveryPersonId : null,
+            trackOrder: "on",
+            products: cart.products,
+          };
+
+          await user.save();
+
+          return res.status(200).json({
+            status: true,
+            message: "Order details fetched successfully",
+            response: response,
+          });
+        }
       } else {
         const response = {
           cartId: cartId,
@@ -1099,24 +1212,132 @@ const getOrderDetails = async (req, res) => {
           DeliveryCharge: cart.DeliveryCharge,
           GovtTaxes: cart.GovtTaxes,
           GrandTotal: cart.GrandTotal,
+          location: user.location,
+          deliveryPersonName: null,
+          deliveryPersonMobile: null,
+          deliveryPersonId: null,
+          trackOrder: "off",
           products: cart.products,
         };
-        res.status(200).json({
+
+        await user.save();
+
+        return res.status(200).json({
           status: true,
-          message: "order details fetched successfully",
+          message: "Order details fetched successfully",
           response: response,
         });
       }
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({
+    return res.status(500).json({
       status: false,
       message: "Internal Server Error",
       response: error.message,
     });
   }
 };
+// const getOrderDetails = async (req, res) => {
+//   try {
+//     const userId = req.data._id;
+//     const cartId = req.params.id;
+//     let user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "User not found",
+//       });
+//     } else {
+//       const cart =
+//         user.completedCart.find((cart) => cart.cartId === cartId) ||
+//         user.canceledCart.find((cart) => cart.cartId === cartId) ||
+//         user.selfPickupCart.find((cart) => cart.cartId === cartId);
+
+//       if (!cart) {
+//         return res.status(400).json({
+//           status: false,
+//           message: "Cart not found",
+//         });
+//       } else if (
+//         cart.status === "ordered" ||
+//         cart.status === "pending for pickup" ||
+//         cart.status === "picked up"
+//       ) {
+//         const trackStatus = "on";
+//         const delBoy = cart.deliveryPerson; // Here we get the delivery boy name
+//         const deliveryPerson = await DeliveryPerson.findOne({ fullname: delBoy });
+//         if (deliveryPerson) {
+//           const dbDetails = {
+//             deliveryPersonName: deliveryPerson.fullname,
+//             deliveryPersonMobile: deliveryPerson.mobile,
+//           };
+//           const response = {
+//             cartId: cartId,
+//             buyer: cart.buyer,
+//             transactionId: cart.transactionId,
+//             status: cart.status,
+//             totalAmount: cart.totalAmount,
+//             cookingInstructions: cart.cookingInstructions,
+//             ReceivedAmount: cart.ReceivedAmount,
+//             createdAt: cart.createdAt,
+//             DeliveryCharge: cart.DeliveryCharge,
+//             GovtTaxes: cart.GovtTaxes,
+//             GrandTotal: cart.GrandTotal,
+//             products: cart.products,
+//             deliverydetails: dbDetails ? dbDetails : null,
+//             trackStatus: trackStatus,
+//           };
+//           return res.status(200).json({
+//             status: true,
+//             message: "Order details fetched successfully",
+//             response: response,
+//           });
+//         }
+//       } else if (cart.status === "delivered") {
+//         const trackStatus = "off";
+//         const deliveryPerson = await DeliveryPerson.findOne({ fullname: cart.deliveryPerson });
+//         const dbDetails = {
+//           deliveryPersonName: deliveryPerson.fullname,
+//           deliveryPersonMobile: deliveryPerson.mobile,
+//         };
+//         const response = {
+//           cartId: cartId,
+//           buyer: cart.buyer,
+//           transactionId: cart.transactionId,
+//           status: cart.status,
+//           totalAmount: cart.totalAmount,
+//           cookingInstructions: cart.cookingInstructions,
+//           ReceivedAmount: cart.ReceivedAmount,
+//           createdAt: cart.createdAt,
+//           DeliveryCharge: cart.DeliveryCharge,
+//           GovtTaxes: cart.GovtTaxes,
+//           GrandTotal: cart.GrandTotal,
+//           products: cart.products,
+//           deliverydetails: dbDetails,
+//           trackStatus: trackStatus,
+//         };
+//         return res.status(200).json({
+//           status: true,
+//           message: "Order details fetched successfully",
+//           response: response,
+//         });
+//       } else {
+//         return res.status(400).json({
+//           status: false,
+//           message: "Invalid cart status",
+//         });
+//       }
+//     }
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(500).json({
+//       status: false,
+//       message: "Internal Server Error",
+//       response: error.message,
+//     });
+//   }
+// };
 
 module.exports = {
   addToCart,

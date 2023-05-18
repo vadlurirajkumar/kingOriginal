@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const moment = require('moment');
+const moment = require("moment");
 
 const userSchema = new mongoose.Schema(
   {
@@ -46,7 +46,7 @@ const userSchema = new mongoose.Schema(
       {
         title: String,
         message: String,
-        createdAt:Date
+        createdAt: Date,
       },
     ],
     pendingCart: [
@@ -61,6 +61,11 @@ const userSchema = new mongoose.Schema(
         DeliveryCharge: String,
         GovtTaxes: String,
         GrandTotal: String,
+        location: String,
+        deliveryPersonName: String,
+        deliveryPersonMobile: String,
+        deliveryPersonId: String,
+        trackOrder: { type: String, enum: ["on", "off"] },
         createdAt: {
           type: Date,
           default: Date.now,
@@ -123,6 +128,11 @@ const userSchema = new mongoose.Schema(
         GovtTaxes: String,
         GrandTotal: String,
         status: String,
+        location: String,
+        deliveryPersonName: String,
+        deliveryPersonMobile: String,
+        deliveryPersonId: String,
+        trackOrder: { type: String, enum: ["on", "off"] },
         createdAt: {
           type: Date,
           default: Date.now,
@@ -201,6 +211,11 @@ const userSchema = new mongoose.Schema(
         GovtTaxes: String,
         GrandTotal: String,
         status: String,
+        location: String,
+        deliveryPersonName: String,
+        deliveryPersonMobile: String,
+        deliveryPersonId: String,
+        trackOrder: { type: String, enum: ["on", "off"] },
         createdAt: {
           type: Date,
           default: Date.now,
@@ -264,6 +279,11 @@ const userSchema = new mongoose.Schema(
         GovtTaxes: String,
         GrandTotal: String,
         status: String,
+        location: String,
+        deliveryPersonName: String,
+        deliveryPersonMobile: String,
+        deliveryPersonId: String,
+        trackOrder: { type: String, enum: ["on", "off"] },
         createdAt: {
           type: Date,
           default: Date.now,
@@ -319,7 +339,7 @@ const userSchema = new mongoose.Schema(
 
 userSchema.index({ otp_expiry: 1 }, { expireAfterSeconds: 0 });
 userSchema.set("toJSON", { getters: true });
-userSchema.set('toObject', { getters: true });
+userSchema.set("toObject", { getters: true });
 
 const User = new mongoose.model("User", userSchema);
 
