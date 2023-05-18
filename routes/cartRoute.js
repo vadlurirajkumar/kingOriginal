@@ -23,7 +23,7 @@ cartRoute.get("/getRecentOrder/non-veg", isOtpAuth, getRecentOrderNonVegProducts
 cartRoute.post("/cancelLastOrder", isOtpAuth, cancelLastOrder)
 
 //removeQuantity for product
-cartRoute.post("/removeFromCart", isOtpAuth, removeFromCart)
+cartRoute.patch("/removeFromCart", isOtpAuth, removeFromCart)
 
 //update cart
 cartRoute.patch("/cartUpdate", isOtpAuth, updateCartStatus)
