@@ -641,14 +641,19 @@ const sendNotification = async (req, res) => {
 //notifications for deliveryBoy
 const sendNotificationForDeliveryBoy = async (req, res) => {
   try {
-    const { deliveryBoyId, title, message } = req.body;
+    const { deliveryBoyId, title, order } = req.body;
+
+    if (!deliveryBoyId) {
+      return res.status(400).json({
+        status: false,
+        message: "deliveryBoyId is required",
+      });
+    }
+
     let deliveryBoys;
 
     if (deliveryBoyId === "allBoys") {
-      deliveryBoys = await DeliveryPerson.find(
-        {},
-        "device_token notifications"
-      );
+      deliveryBoys = await DeliveryPerson.find({}, "device_token notifications");
     } else {
       const deliveryBoy = await DeliveryPerson.findById(
         deliveryBoyId,
@@ -675,7 +680,7 @@ const sendNotificationForDeliveryBoy = async (req, res) => {
     const payload = {
       notification: {
         title: title,
-        body: message,
+        body: order,
       },
     };
     const options = {
@@ -695,16 +700,8 @@ const sendNotificationForDeliveryBoy = async (req, res) => {
 
     const notification = {
       title: title,
-      message: message,
-      createdAt: new Intl.DateTimeFormat("en-US", {
-        year: "numeric",
-        month: "numeric",
-        day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        second: "numeric",
-        hour12: true,
-      }), // Add current date and time
+      order: order,
+      createdAt: new Date(),
     };
 
     const saveNotificationPromises = deliveryBoys.map((deliveryBoy) => {
@@ -726,6 +723,7 @@ const sendNotificationForDeliveryBoy = async (req, res) => {
     });
   }
 };
+
 
 module.exports = {
   adminLogin,

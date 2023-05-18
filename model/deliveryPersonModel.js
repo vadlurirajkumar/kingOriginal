@@ -38,7 +38,7 @@ const deliveryPersonSchema = new mongoose.Schema(
       {
         deliveryBoyId:String,
         title:String,
-        message:String,
+        order:String,
         createdAt:Date
       }
     ],
