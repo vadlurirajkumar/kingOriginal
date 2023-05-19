@@ -1169,6 +1169,14 @@ const getOrderDetails = async (req, res) => {
             deliveryPersonMobile: deliveryPerson.mobile,
             deliveryPersonId: deliveryPerson._id,
           };
+
+          const orderItems = cart.products.map((item) => ({
+            productName: item.productName,
+            productQuantity: item.quantity,
+          }));
+
+          const orderItemsString = orderItems.map((item) => `${item.productName} X ${item.productQuantity}`).join(", ");
+
           const response = {
             cartId: cartId,
             buyer: cart.buyer,
@@ -1183,11 +1191,11 @@ const getOrderDetails = async (req, res) => {
             GrandTotal: cart.GrandTotal,
             location: user.location,
             deliveryPersonName: dbDetails ? dbDetails.deliveryPersonName : null,
-            deliveryPersonMobile: dbDetails
-              ? dbDetails.deliveryPersonMobile
-              : null,
+            deliveryPersonMobile: dbDetails ? dbDetails.deliveryPersonMobile : null,
             deliveryPersonId: dbDetails ? dbDetails.deliveryPersonId : null,
             trackOrder: "on",
+            productCount: cart.products.length,
+            orderItems: orderItemsString,
             products: cart.products,
           };
 
@@ -1217,6 +1225,7 @@ const getOrderDetails = async (req, res) => {
           deliveryPersonMobile: null,
           deliveryPersonId: null,
           trackOrder: "off",
+          productCount: cart.products.length,
           products: cart.products,
         };
 
