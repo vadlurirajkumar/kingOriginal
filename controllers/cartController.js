@@ -62,6 +62,7 @@ const addToCart = async (req, res) => {
           productImage: product.avatar.url,
           foodType: product.foodType,
           cartStatus: product.cartStatus,
+          trackOrder:"off"
         });
       }
       // Recalculate the total amount for the cart
@@ -87,6 +88,7 @@ const addToCart = async (req, res) => {
         createdAt: new Date().toLocaleString("en-US", options),
         location: user.location,
         cartId: mongoose.Types.ObjectId(),
+        trackOrder:"off",
         products: [
           {
             productId: productId,
