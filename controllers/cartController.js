@@ -414,6 +414,81 @@ const ChangeToSelfPickup = async (req, res) => {
   }
 };
 //update to selfPickup
+// const updateToSelfPickup = async (req, res) => {
+//   try {
+//     const userId = req.data._id;
+
+//     // find user
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "User not found",
+//       });
+//     }
+
+//     // check if there is an existing cart with status inCart
+//     let existingCart = user.pendingCart.find((c) => c.status === "inCart");
+//     const { transactionId, cookingInstructions, ReceivedAmount } = req.body;
+//     if (existingCart) {
+//       // update the existing cart status to "Self-pickup"
+//       existingCart.status = "Self-pickup";
+
+//       // remove the existing cart from the pendingCart array
+//       user.pendingCart.splice(user.pendingCart.indexOf(existingCart), 1);
+
+//       // Recalculate the total amount for the cart
+//       existingCart.totalAmount = existingCart.products.reduce(
+//         (total, p) => total + p.price * p.quantity,
+//         0
+//       );
+//       existingCart.DeliveryCharge = 0;
+//       existingCart.GovtTaxes = 20;
+//       existingCart.GrandTotal =
+//         Number(existingCart.totalAmount) +
+//         Number(existingCart.DeliveryCharge) +
+//         Number(existingCart.GovtTaxes);
+//       existingCart.transactionId = transactionId;
+//       existingCart.cookingInstructions = cookingInstructions;
+//       existingCart.ReceivedAmount = ReceivedAmount;
+
+//       // Convert cart object to plain object to avoid issues with Mongoose
+//       const cartToSave = existingCart.toObject();
+//       delete cartToSave._id;
+
+//       // push the modified cart object to selfPickupCart array
+//       user.selfPickupCart.push({
+//         ...cartToSave,
+//         transactionId,
+//         cookingInstructions,
+//         ReceivedAmount,
+//         createdAt: new Date(),
+//       });
+
+//       // Save the changes to the database
+//       await user.save();
+
+//       return res.status(200).json({
+//         status: true,
+//         message: "Cart updated successfully",
+//         response: [existingCart],
+//       });
+//     } else {
+//       return res.status(404).json({
+//         status: false,
+//         message: "Cart not found",
+//         response: [],
+//       });
+//     }
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({
+//       status: false,
+//       message: "Internal Server Error",
+//       response: error.message,
+//     });
+//   }
+// };
 const updateToSelfPickup = async (req, res) => {
   try {
     const userId = req.data._id;
@@ -435,7 +510,9 @@ const updateToSelfPickup = async (req, res) => {
       existingCart.status = "Self-pickup";
 
       // remove the existing cart from the pendingCart array
-      user.pendingCart.splice(user.pendingCart.indexOf(existingCart), 1);
+      user.pendingCart = user.pendingCart.filter(
+        (cart) => cart.cartId !== existingCart.cartId
+      );
 
       // Recalculate the total amount for the cart
       existingCart.totalAmount = existingCart.products.reduce(
@@ -489,6 +566,7 @@ const updateToSelfPickup = async (req, res) => {
     });
   }
 };
+
 // update
 const updateCartStatus = async (req, res) => {
   try {
@@ -1047,6 +1125,74 @@ const getRecentOrderNonVegProducts = async (req, res) => {
   }
 };
 // cancel last order for user
+// const cancelLastOrder = async (req, res) => {
+//   try {
+//     const userId = req.data._id;
+
+//     // find user
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "User not found",
+//       });
+//     }
+
+//     // combine completedCart and selfPickupCart arrays
+//     const allOrders = user.completedCart.concat(user.selfPickupCart);
+
+//     // sort the combined array by createdAt field in descending order
+//     allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+//     // get the most recent order from the combined array
+//     const recentOrder = allOrders[0];
+
+//     if (!recentOrder) {
+//       return res.status(404).json({
+//         status: false,
+//         message: "No completed or self-pickup orders found",
+//         response: [],
+//       });
+//     }
+
+//     // delete the most recent order from its original array
+//     if (recentOrder.status === "ordered") {
+//       user.completedCart = user.completedCart.filter(
+//         (cart) => cart._id.toString() !== recentOrder._id.toString()
+//       );
+//     } else {
+//       user.selfPickupCart = user.selfPickupCart.filter(
+//         (cart) => cart._id.toString() !== recentOrder._id.toString()
+//       );
+//     }
+
+//     // update the status of the most recent order to "canceled"
+//     recentOrder.status = "canceled";
+
+//     // add the canceled order to the canceledCart array
+//     const canceledCart = user.canceledCart || [];
+//     canceledCart.push(recentOrder);
+
+//     // update the user object with the modified arrays
+//     user.canceledCart = canceledCart;
+
+//     // save the user object with the updated canceledCart and original arrays
+//     await user.save();
+
+//     return res.status(200).json({
+//       status: true,
+//       message: "Last order canceled",
+//       response: canceledCart,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({
+//       status: false,
+//       message: "Internal Server Error",
+//       response: error.message,
+//     });
+//   }
+// };
 const cancelLastOrder = async (req, res) => {
   try {
     const userId = req.data._id;
@@ -1095,6 +1241,17 @@ const cancelLastOrder = async (req, res) => {
     const canceledCart = user.canceledCart || [];
     canceledCart.push(recentOrder);
 
+    // Check if the cart with the same cartId exists in the pendingCart array
+    const cartToDelete = user.pendingCart.find(
+      (cart) => cart.cartId === recentOrder.cartId
+    );
+    if (cartToDelete) {
+      // Remove the cart with the same cartId from the pendingCart array
+      user.pendingCart = user.pendingCart.filter(
+        (cart) => cart.cartId !== recentOrder.cartId
+      );
+    }
+
     // update the user object with the modified arrays
     user.canceledCart = canceledCart;
 
@@ -1115,6 +1272,7 @@ const cancelLastOrder = async (req, res) => {
     });
   }
 };
+
 // get orderHistory
 const orderHistory = async (req, res) => {
   try {
