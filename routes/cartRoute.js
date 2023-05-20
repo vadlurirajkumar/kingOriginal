@@ -29,7 +29,7 @@ cartRoute.patch("/removeFromCart", isOtpAuth, removeFromCart)
 // cartRoute.patch("/cartUpdate", isOtpAuth, updateCartStatus)
 
 //update with single response
-cartRoute.put("/cartUpdate", isOtpAuth, updateCartStatusWithSingleResponse) // newly added for prashanth
+cartRoute.patch("/cartUpdate", isOtpAuth, updateCartStatusWithSingleResponse) // newly added for prashanth
 
 // order history
 cartRoute.get("/order-history", isOtpAuth, orderHistory)

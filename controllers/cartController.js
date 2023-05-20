@@ -199,6 +199,57 @@ const removeFromCart = async (req, res) => {
   }
 };
 // get cart for single user
+// const getCartForUser = async (req, res) => {
+//   try {
+//     const userId = req.data._id;
+
+//     // find user
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "User not found",
+//       });
+//     }
+
+//     // check if there is an existing cart with status inCart
+//     let existingCart = user.pendingCart.find((c) => c.status === "inCart") ||   user.pendingCart.find((c) => c.status === "ordered");
+
+//     if (existingCart) {
+//       // Recalculate the total amount for the cart
+//       existingCart.totalAmount = existingCart.products.reduce(
+//         (total, p) => total + p.price * p.quantity,
+//         0
+//       );
+//       existingCart.DeliveryCharge = 50;
+//       existingCart.GovtTaxes = 20;
+//       existingCart.GrandTotal =
+//         Number(existingCart.totalAmount) +
+//         Number(existingCart.DeliveryCharge) +
+//         Number(existingCart.GovtTaxes);
+//       await user.save();
+
+//       return res.status(200).json({
+//         status: true,
+//         message: "Cart fetched successfully",
+//         response: existingCart,
+//       });
+//     } else {
+//       return res.status(404).json({
+//         status: false,
+//         message: "Cart not found",
+//         response: [],
+//       });
+//     }
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({
+//       status: false,
+//       message: "Internal Server Error",
+//       response: error.message,
+//     });
+//   }
+// };
 const getCartForUser = async (req, res) => {
   try {
     const userId = req.data._id;
@@ -212,8 +263,10 @@ const getCartForUser = async (req, res) => {
       });
     }
 
-    // check if there is an existing cart with status inCart
-    let existingCart = user.pendingCart.find((c) => c.status === "inCart") ||   user.pendingCart.find((c) => c.status === "ordered");
+    // check if there is an existing cart with status inCart or ordered
+    let existingCart =
+      user.pendingCart.find((c) => c.status === "inCart") ||
+      user.pendingCart.find((c) => c.status === "ordered");
 
     if (existingCart) {
       // Recalculate the total amount for the cart
@@ -229,10 +282,43 @@ const getCartForUser = async (req, res) => {
         Number(existingCart.GovtTaxes);
       await user.save();
 
+      const orderItems = existingCart.products.map((item) => ({
+        productName: item.productName,
+        productQuantity: item.quantity,
+      }));
+
+      const orderItemsString = orderItems
+        .map(
+          (item) => `${item.productName} X ${item.productQuantity}`
+        )
+        .join(", ");
+
+      const response = {
+        cartId: existingCart.cartId,
+        buyer: user.fullname,
+        transactionId: existingCart.transactionId,
+        status: existingCart.status,
+        totalAmount: existingCart.totalAmount,
+        cookingInstructions: existingCart.cookingInstructions,
+        ReceivedAmount: existingCart.ReceivedAmount,
+        createdAt: existingCart.createdAt,
+        DeliveryCharge: existingCart.DeliveryCharge,
+        GovtTaxes: existingCart.GovtTaxes,
+        GrandTotal: existingCart.GrandTotal,
+        location: user.location,
+        deliveryPersonName: null,
+        deliveryPersonMobile: null,
+        deliveryPersonId: null,
+        trackOrder: "off",
+        productCount: existingCart.products.length,
+        orderItems: orderItemsString,
+        products: existingCart.products,
+      };
+
       return res.status(200).json({
         status: true,
         message: "Cart fetched successfully",
-        response: existingCart,
+        response: response,
       });
     } else {
       return res.status(404).json({
@@ -250,6 +336,7 @@ const getCartForUser = async (req, res) => {
     });
   }
 };
+
 // order self-pickup
 const ChangeToSelfPickup = async (req, res) => {
   try {
