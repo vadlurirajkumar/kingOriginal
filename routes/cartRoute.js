@@ -26,10 +26,10 @@ cartRoute.post("/cancelLastOrder", isOtpAuth, cancelLastOrder)
 cartRoute.patch("/removeFromCart", isOtpAuth, removeFromCart)
 
 //update cart
-cartRoute.patch("/cartUpdate", isOtpAuth, updateCartStatus)
+// cartRoute.patch("/cartUpdate", isOtpAuth, updateCartStatus)
 
 //update with single response
-cartRoute.put("/updateForDelivery", isOtpAuth, updateCartStatusWithSingleResponse) // newly added for prashanth
+cartRoute.put("/cartUpdate", isOtpAuth, updateCartStatusWithSingleResponse) // newly added for prashanth
 
 // order history
 cartRoute.get("/order-history", isOtpAuth, orderHistory)

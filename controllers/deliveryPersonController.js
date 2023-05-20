@@ -520,6 +520,91 @@ const getLocationDetails = async (req, res) => {
   }
 };
 //change status to delivery
+// const updateStatusToDelivery = async (req, res) => {
+//   const { cartId } = req.params; // Extract cartId from route parameters
+//   const deliveryBoyId = req.params.id;
+
+//   try {
+//     const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
+//     if (!deliveryBoy) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "Delivery Boy not found",
+//         response: [],
+//       });
+//     }
+//     const user = await User.findOne({
+//       $or: [{ "completedCart.cartId": cartId }],
+//     });
+//     if (!user) {
+//       return res.json({
+//         status: false,
+//         message: "User not found with this cartId",
+//         response: [],
+//       });
+//     }
+//     const cartIndex = user.completedCart.findIndex(
+//       (cart) => cart.cartId.toString() === cartId
+//     );
+//     if (cartIndex === -1) {
+//       return res.json({
+//         status: false,
+//         message: "Cart not found with this cartId",
+//         response: [],
+//       });
+//     }
+//     const cart = user.completedCart[cartIndex];
+//     if (cart.deliveryPerson !== deliveryBoy.fullname) {
+//       return res.json({
+//         status: false,
+//         message: "Delivery Boy not authorized to update this cart",
+//         response: [],
+//       });
+//     }
+
+//     user.completedCart[cartIndex].status = "delivered";
+//     await user.save();
+
+//     const updatedCart = {
+//       cartId: cart.cartId,
+//       buyer: user.fullname,
+//       phone: user.mobile,
+//       location: user.location,
+//       latitude: user.latitude,
+//       longitude: user.longitude,
+//       transactionId: cart.transactionId,
+//       cookingInstructions: cart.cookingInstructions,
+//       ReceivedAmount: cart.ReceivedAmount,
+//       status: user.completedCart[cartIndex].status,
+//       updatedAt: new Date().toLocaleString("en-US", {
+//         day: "numeric",
+//         month: "short",
+//         year: "numeric",
+//         hour: "numeric",
+//         minute: "numeric",
+//         hour12: true,
+//       }),
+//       products: cart.products,
+//     };
+
+//     // Save the updated cart in the delivery boy's completedOrders array
+//     deliveryBoy.completedOrders.push(updatedCart);
+//     await deliveryBoy.save();
+
+//     res.status(200).json({
+//       status: true,
+//       message: "Cart status updated successfully",
+//       response: updatedCart,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({
+//       status: false,
+//       message: "Internal Server Error",
+//       response: error.message,
+//     });
+//   }
+// };
 const updateStatusToDelivery = async (req, res) => {
   const { cartId } = req.params; // Extract cartId from route parameters
   const deliveryBoyId = req.params.id;
@@ -591,6 +676,14 @@ const updateStatusToDelivery = async (req, res) => {
     deliveryBoy.completedOrders.push(updatedCart);
     await deliveryBoy.save();
 
+    const pendingCartIndex = user.pendingCart.findIndex(
+      (cart) => cart.cartId.toString() === cartId
+    );
+    if (pendingCartIndex !== -1) {
+      user.pendingCart.splice(pendingCartIndex, 1);
+      await user.save();
+    }
+
     res.status(200).json({
       status: true,
       message: "Cart status updated successfully",
@@ -605,6 +698,7 @@ const updateStatusToDelivery = async (req, res) => {
     });
   }
 };
+
 // order history
 const viewOrderHistory = async (req, res) => {
   const deliveryBoyId = req.params.id;

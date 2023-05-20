@@ -213,7 +213,7 @@ const getCartForUser = async (req, res) => {
     }
 
     // check if there is an existing cart with status inCart
-    let existingCart = user.pendingCart.find((c) => c.status === "inCart");
+    let existingCart = user.pendingCart.find((c) => c.status === "inCart") ||   user.pendingCart.find((c) => c.status === "ordered");
 
     if (existingCart) {
       // Recalculate the total amount for the cart
@@ -538,7 +538,6 @@ const updateCartStatusWithSingleResponse = async (req, res) => {
       });
 
       user.completedCart = completedCart;
-      user.pendingCart.splice(pendingCartIndex, 1);
 
       // Save the user object to the database
       await user.save();
@@ -561,6 +560,7 @@ const updateCartStatusWithSingleResponse = async (req, res) => {
     });
   }
 };
+
 // recent order of user
 // const getRecentOrder = async (req, res) => {
 //   try {
