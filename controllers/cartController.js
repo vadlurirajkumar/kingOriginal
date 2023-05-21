@@ -297,7 +297,7 @@ const getCartForUser = async (req, res) => {
         cartId: existingCart.cartId,
         buyer: user.fullname,
         transactionId: existingCart.transactionId,
-        cartStatus: existingCart.status,
+        getStatus: existingCart.status,
         totalAmount: existingCart.totalAmount,
         cookingInstructions: existingCart.cookingInstructions,
         ReceivedAmount: existingCart.ReceivedAmount,
