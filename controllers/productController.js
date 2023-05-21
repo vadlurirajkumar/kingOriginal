@@ -74,6 +74,49 @@ const createProduct = async (req, res) => {
 };
 
 // get all products
+// const getAllProducts = async (req, res) => {
+//   try {
+//     const userId = req.data._id;
+//     let user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "User not found",
+//         response: [],
+//       });
+//     } else {
+//       const products = await productModel.find();
+//       res.status(200).send({
+//         status: true,
+//         message: "All Products List",
+//         products: products.map((product) => {
+//           const { avatar, ...rest } = product._doc;
+//           let cartProductStatus = 0;
+//           if (user.pendingCart.length > 0) {
+//             user.pendingCart[0].products.forEach((p) => {
+//               if (p.productId.toString() === product._id.toString()) {
+//                 cartProductStatus = 1;
+//               }
+//             });
+//           }
+
+//           return {
+//             ...rest,
+//             productImage: avatar?.url || null,
+//             cartStatus: cartProductStatus,
+//           };
+//         }),
+//       });
+//     }
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({
+//       status: false,
+//       error,
+//       message: "Error while getting all products",
+//     });
+//   }
+// };
 const getAllProducts = async (req, res) => {
   try {
     const userId = req.data._id;
@@ -95,7 +138,9 @@ const getAllProducts = async (req, res) => {
           if (user.pendingCart.length > 0) {
             user.pendingCart[0].products.forEach((p) => {
               if (p.productId.toString() === product._id.toString()) {
-                cartProductStatus = 1;
+                if (user.pendingCart[0].cartStatus === 'inCart') {
+                  cartProductStatus = 1;
+                }
               }
             });
           }
@@ -117,6 +162,7 @@ const getAllProducts = async (req, res) => {
     });
   }
 };
+
 
 //get all products for admin
 const getAllProductsForAdmin = async (req, res) => {
@@ -162,7 +208,9 @@ const getSingleProduct = async (req, res) => {
       if (user.pendingCart.length > 0) {
         user.pendingCart[0].products.forEach((p) => {
           if (p.productId.toString() === product._id.toString()) {
-            cartProductStatus = 1;
+            if (user.pendingCart[0].cartStatus === 'inCart') {
+              cartProductStatus = 1;
+            }
           }
         });
       }
@@ -257,7 +305,9 @@ const getAllVegProducts = async (req, res) => {
           if (user.pendingCart.length > 0) {
             user.pendingCart[0].products.forEach((p) => {
               if (p.productId.toString() === product._id.toString()) {
-                cartProductStatus = 1;
+                if (user.pendingCart[0].cartStatus === 'inCart') {
+                  cartProductStatus = 1;
+                }
               }
             });
           }
@@ -302,7 +352,9 @@ const getAllNonVegProducts = async (req, res) => {
           if (user.pendingCart.length > 0) {
             user.pendingCart[0].products.forEach((p) => {
               if (p.productId.toString() === product._id.toString()) {
-                cartProductStatus = 1;
+                if (user.pendingCart[0].cartStatus === 'inCart') {
+                  cartProductStatus = 1;
+                }
               }
             });
           }
@@ -546,7 +598,9 @@ const getExclusiveDishes = async (req, res) => {
           if (user.pendingCart.length > 0) {
             user.pendingCart[0].products.forEach((p) => {
               if (p.productId.toString() === product._id.toString()) {
-                cartProductStatus = 1;
+                if (user.pendingCart[0].cartStatus === 'inCart') {
+                  cartProductStatus = 1;
+                }
               }
             });
           }
@@ -621,7 +675,9 @@ const getExclusiveVegDishes = async (req, res) => {
           if (user.pendingCart.length > 0) {
             user.pendingCart[0].products.forEach((p) => {
               if (p.productId.toString() === product._id.toString()) {
-                cartProductStatus = 1;
+                if (user.pendingCart[0].cartStatus === 'inCart') {
+                  cartProductStatus = 1;
+                }
               }
             });
           }
@@ -666,12 +722,10 @@ const getExclusiveNonVegDishes = async (req, res) => {
         products: products.map((product) => {
           const { avatar, ...rest } = product._doc;
           let cartProductStatus = 0;
-          if (user.pendingCart.length > 0) {
-            user.pendingCart[0].products.forEach((p) => {
-              if (p.productId.toString() === product._id.toString()) {
-                cartProductStatus = 1;
-              }
-            });
+          if (p.productId.toString() === product._id.toString()) {
+            if (user.pendingCart[0].cartStatus === 'inCart') {
+              cartProductStatus = 1;
+            }
           }
           return {
             ...rest,
