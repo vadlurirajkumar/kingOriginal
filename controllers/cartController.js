@@ -60,7 +60,7 @@ const addToCart = async (req, res) => {
           price: product.price,
           productImage: product.avatar.url,
           foodType: product.foodType,
-          cartStatus: product.cartStatus === "inCart" ? 1 : 0,
+          cartStatus: existingCart.status === "inCart" ? 1 : 0,
           trackOrder: "off",
         });
       }

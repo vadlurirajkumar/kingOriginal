@@ -92,8 +92,8 @@ const loginDeliveryBoy = async (req, res) => {
 
 //change password
 const changePassword = async (req, res) => {
-    // const deliveryBoyId = req.params.id;
-    const {newPassword,deliveryBoyId} = req.body;
+  // const deliveryBoyId = req.params.id;
+  const { newPassword, deliveryBoyId } = req.body;
 
   try {
     const deliveryBoy = await DeliveryPerson.findById(deliveryBoyId);
@@ -108,18 +108,18 @@ const changePassword = async (req, res) => {
     await deliveryBoy.save();
 
     const response = {
-      deliveryBoyId:deliveryBoyId,
-      fullName:deliveryBoy.fullname,
-      mobile:deliveryBoy.mobile,
-      password:deliveryBoy.password,
-      status:deliveryBoy.status,
-      area:deliveryBoy.area
-    }
+      deliveryBoyId: deliveryBoyId,
+      fullName: deliveryBoy.fullname,
+      mobile: deliveryBoy.mobile,
+      password: deliveryBoy.password,
+      status: deliveryBoy.status,
+      area: deliveryBoy.area,
+    };
 
     res.status(200).json({
       status: true,
       message: "Password changed successfully",
-      response: response
+      response: response,
     });
   } catch (error) {
     res.status(500).json({
@@ -204,7 +204,7 @@ const getOrders = async (req, res) => {
       user.completedCart.forEach((cart) => {
         if (
           cart.deliveryPerson === deliveryBoy.fullname &&
-          cart.status === "pending for pickup"  // Exclude carts with status "delivered"
+          cart.status === "pending for pickup" // Exclude carts with status "delivered"
         ) {
           formattedOrders.push({
             cartId: cart.cartId,
@@ -223,8 +223,10 @@ const getOrders = async (req, res) => {
       });
     });
 
-     // Sort orders by updatedAt in descending order
-     formattedOrders.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    // Sort orders by updatedAt in descending order
+    formattedOrders.sort(
+      (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+    );
 
     res.status(200).json({
       status: true,
@@ -740,23 +742,27 @@ const viewOrderHistory = async (req, res) => {
             cookingInstructions: cart.cookingInstructions,
             ReceivedAmount: cart.ReceivedAmount,
             status: cart.status,
-            createdAt:cart.createdAt,
+            createdAt: cart.createdAt,
             products: cart.products,
           });
         }
       });
     });
 
-const combinedOrders = [
-  ...deliveryBoy.completedOrders.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)),
-  ...formattedOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
-];
+    const combinedOrders = [
+      ...deliveryBoy.completedOrders.sort(
+        (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+      ),
+      ...formattedOrders.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      ),
+    ];
 
-res.status(200).json({
-  status: true,
-  message: "Order history retrieved successfully",
-  response: combinedOrders,
-});
+    res.status(200).json({
+      status: true,
+      message: "Order history retrieved successfully",
+      response: combinedOrders,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -814,7 +820,9 @@ const pendingHistory = async (req, res) => {
     });
 
     // Sort orders by updatedAt in descending order
-    formattedOrders.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    formattedOrders.sort(
+      (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+    );
 
     res.status(200).json({
       status: true,
@@ -858,7 +866,7 @@ const deliveredHistory = async (req, res) => {
       user.completedCart.forEach((cart) => {
         if (
           cart.deliveryPerson === deliveryBoy.fullname &&
-          (cart.status === "delivered")
+          cart.status === "delivered"
         ) {
           formattedOrders.push({
             cartId: cart.cartId,
@@ -878,7 +886,9 @@ const deliveredHistory = async (req, res) => {
     });
 
     // Sort orders by updatedAt in descending order
-    formattedOrders.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    formattedOrders.sort(
+      (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+    );
 
     res.status(200).json({
       status: true,
@@ -1127,7 +1137,7 @@ const getNotificationsForDeliveryBoy = async (req, res) => {
 //         response: [],
 //       });
 //     }
-    
+
 //     const formattedOrders = [];
 //     orders.forEach((user) => {
 //       user.completedCart.forEach((cart) => {
@@ -1198,7 +1208,7 @@ const sortHistoryByDate = async (req, res) => {
         response: [],
       });
     }
-    
+
     const formattedOrders = orders.reduce((acc, user) => {
       const filteredCarts = user.completedCart.filter((cart) => {
         return (
@@ -1229,9 +1239,10 @@ const sortHistoryByDate = async (req, res) => {
       return acc;
     }, []);
 
-    const combinedOrders = [...deliveryBoy.completedOrders, ...formattedOrders].sort(
-      (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
-    );
+    const combinedOrders = [
+      ...deliveryBoy.completedOrders,
+      ...formattedOrders,
+    ].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
     res.status(200).json({
       status: true,
@@ -1263,5 +1274,5 @@ module.exports = {
   deliveredHistory,
   addFeedback,
   getNotificationsForDeliveryBoy,
-  sortHistoryByDate
+  sortHistoryByDate,
 };

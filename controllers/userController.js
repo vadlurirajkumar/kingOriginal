@@ -24,7 +24,7 @@ const signupUser = async (req, res) => {
       fullname,
       email,
       mobile,
-      location:"",
+      location: "",
       otp,
       otp_expiry: new Date(Date.now() + process.env.OTP_EXPIRE * 60 * 1000),
       status: "active", // set status to 'active' by default
@@ -115,13 +115,11 @@ const login = async (req, res) => {
 
     // Check if user is active
     if (user.status === "inactive") {
-      return res
-        .status(400)
-        .json({
-          status: false,
-          message: "Your account is inactive. Please contact the admin.",
-          response: [],
-        });
+      return res.status(400).json({
+        status: false,
+        message: "Your account is inactive. Please contact the admin.",
+        response: [],
+      });
     }
 
     //@ Generating OTP
@@ -186,14 +184,13 @@ const checkLocationForDelivery = async (req, res) => {
       res.status(403).json({
         status: false,
         message: "Sorry, we cannot deliver to your location.",
-        response:[]
+        response: [],
       });
     }
   } catch (error) {
     res.json({ status: false, message: error.message, response: [] });
   }
 };
-
 
 //resend otp for login time
 const resendOtpForLogin = async (req, res) => {
@@ -279,13 +276,14 @@ const verifyForLogin = async (req, res) => {
     res.json({
       status: true,
       message: `Welcome ${user.fullname}, logged in successfully`,
-      response: [{ ...user._doc, token: token, device_token: user.device_token }],
+      response: [
+        { ...user._doc, token: token, device_token: user.device_token },
+      ],
     });
   } catch (error) {
     res.json({ status: false, message: error.message, response: [] });
   }
 };
-
 
 // update location of user
 const updateLocation = async (req, res) => {
@@ -294,8 +292,8 @@ const updateLocation = async (req, res) => {
       req.data._id,
       {
         location: req.body.location,
-        latitude:req.body.latitude,
-        longitude:req.body.longitude
+        latitude: req.body.latitude,
+        longitude: req.body.longitude,
       },
       { new: true }
     );
@@ -396,38 +394,49 @@ const searchProducts = async (req, res) => {
         response: [],
       });
     }
-    const searchQuery  = req.body.searchQuery;
+    const searchQuery = req.body.searchQuery;
     if (!searchQuery) {
       return res.status(404).json({
         status: false,
-        message: "No products found"
+        message: "No products found",
       });
     }
-    
-    const formattedQuery = searchQuery.toLowerCase().replace(/\s+/g, '');
+
+    const formattedQuery = searchQuery.toLowerCase().replace(/\s+/g, "");
     const products = await productModel.find({});
     const matchingProducts = products.filter((product) => {
-      const productName = product.productName.toLowerCase().replace(/\s+/g, '');
+      const productName = product.productName.toLowerCase().replace(/\s+/g, "");
       return productName.includes(formattedQuery);
     });
 
     if (matchingProducts.length === 0) {
       return res.status(404).json({
         status: false,
-        message: "No matching products found"
+        message: "No matching products found",
       });
     }
 
     const formattedProducts = matchingProducts.map((product) => {
       let cartProductStatus = 0;
-      if (user.pendingCart.length > 0) {
-        user.pendingCart[0].products.forEach((p) => {
+      // if (user.pendingCart.length > 0) {
+      //   if(user.pendingCart.status === 'inCart'){
+      //     user.pendingCart[0].products.forEach((p) => {
+      //       if (p.productId.toString() === product._id.toString()) {
+      //         cartProductStatus = 1;
+      //       }
+      //     });
+      //   }
+      // }
+      const inCartCart = user.pendingCart.find(
+        (cart) => cart.status === "inCart"
+      );
+      if (inCartCart && inCartCart.products) {
+        inCartCart.products.forEach((p) => {
           if (p.productId.toString() === product._id.toString()) {
             cartProductStatus = 1;
           }
         });
       }
-
       return {
         id: product._id,
         price: product.price,
@@ -444,12 +453,11 @@ const searchProducts = async (req, res) => {
       message: "Matching products found",
       response: formattedProducts,
     });
-
   } catch (err) {
     console.error(err);
     res.status(500).send({
-      status:false,
-      message:"Error searching for products"
+      status: false,
+      message: "Error searching for products",
     });
   }
 };
@@ -479,8 +487,8 @@ const deleteUserItSelf = async (req, res) => {
 //get notifications for user
 const getNotificationsForUser = async (req, res) => {
   try {
-    const  userId  = req.data._id;
-    const user = await User.findById(userId, 'notifications');
+    const userId = req.data._id;
+    const user = await User.findById(userId, "notifications");
     if (!user) {
       return res.status(400).json({
         status: false,
@@ -488,11 +496,13 @@ const getNotificationsForUser = async (req, res) => {
       });
     }
 
-    const sortedNotifications = user.notifications.sort((a, b) => b.createdAt - a.createdAt)
+    const sortedNotifications = user.notifications.sort(
+      (a, b) => b.createdAt - a.createdAt
+    );
 
     res.status(201).json({
       status: true,
-      message:"notifications fetch success",
+      message: "notifications fetch success",
       notifications: sortedNotifications,
     });
   } catch (error) {
@@ -503,8 +513,6 @@ const getNotificationsForUser = async (req, res) => {
     });
   }
 };
-
-
 
 module.exports = {
   signupUser,
@@ -519,5 +527,5 @@ module.exports = {
   checkLocationForDelivery,
   searchProducts,
   deleteUserItSelf,
-  getNotificationsForUser
+  getNotificationsForUser,
 };
