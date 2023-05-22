@@ -49,8 +49,7 @@ const addToCart = async (req, res) => {
       if (existingProductIndex !== -1) {
         // if the product already exists in the cart, increase its quantity
         existingCart.products[existingProductIndex].quantity += 1;
-        const cartStatus =
-          existingCart.products[existingProductIndex].cartStatus;
+        existingCart.products[existingProductIndex].cartStatus;
       } else {
         // if the product doesn't exist in the cart, add it
         existingCart.products.push({
@@ -61,8 +60,8 @@ const addToCart = async (req, res) => {
           price: product.price,
           productImage: product.avatar.url,
           foodType: product.foodType,
-          cartStatus: product.cartStatus,
-          trackOrder:"off"
+          cartStatus: product.cartStatus === "inCart" ? 1 : 0,
+          trackOrder: "off",
         });
       }
       // Recalculate the total amount for the cart
@@ -88,7 +87,7 @@ const addToCart = async (req, res) => {
         createdAt: new Date().toLocaleString("en-US", options),
         location: user.location,
         cartId: mongoose.Types.ObjectId(),
-        trackOrder:"off",
+        trackOrder: "off",
         products: [
           {
             productId: productId,
@@ -288,9 +287,7 @@ const getCartForUser = async (req, res) => {
       }));
 
       const orderItemsString = orderItems
-        .map(
-          (item) => `${item.productName} X ${item.productQuantity}`
-        )
+        .map((item) => `${item.productName} X ${item.productQuantity}`)
         .join(", ");
 
       const response = {
@@ -1422,7 +1419,9 @@ const getOrderDetails = async (req, res) => {
             productQuantity: item.quantity,
           }));
 
-          const orderItemsString = orderItems.map((item) => `${item.productName} X ${item.productQuantity}`).join(", ");
+          const orderItemsString = orderItems
+            .map((item) => `${item.productName} X ${item.productQuantity}`)
+            .join(", ");
 
           const response = {
             cartId: cartId,
@@ -1438,7 +1437,9 @@ const getOrderDetails = async (req, res) => {
             GrandTotal: cart.GrandTotal,
             location: user.location,
             deliveryPersonName: dbDetails ? dbDetails.deliveryPersonName : null,
-            deliveryPersonMobile: dbDetails ? dbDetails.deliveryPersonMobile : null,
+            deliveryPersonMobile: dbDetails
+              ? dbDetails.deliveryPersonMobile
+              : null,
             deliveryPersonId: dbDetails ? dbDetails.deliveryPersonId : null,
             trackOrder: "on",
             productCount: cart.products.length,
